@@ -1,0 +1,154 @@
+import cron from 'node-cron';
+import Stothrakazhcha from '../models/Stothrakazhcha';
+import Member from '../models/Member';
+import House from '../models/House';
+import Wallet from '../models/Wallet';
+import Unit from '../models/Unit';
+import Bavanakutayima from '../models/Bavanakutayima';
+
+/**
+ * Process dues for overdue stothrakazhcha
+ * Automatically adds default amount to non-contributors' wallets
+ */
+const processDues = async () => {
+  try {
+    console.log('🕐 [CRON] Processing stothrakazhcha dues...');
+
+    const now = new Date();
+    const overdueStothrakazhchas = await Stothrakazhcha.find({
+      status: 'active',
+      duesProcessed: false,
+      dueDate: { $lte: now },
+      defaultAmount: { $gt: 0 }
+    });
+
+    if (overdueStothrakazhchas.length === 0) {
+      console.log('✅ [CRON] No overdue stothrakazhchas to process');
+      return;
+    }
+
+    console.log(`📊 [CRON] Found ${overdueStothrakazhchas.length} overdue stothrakazhchas`);
+
+    let totalMembersProcessed = 0;
+    let totalHousesProcessed = 0;
+
+    for (const stothrakazhcha of overdueStothrakazhchas) {
+      try {
+        console.log(`  Processing: Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
+
+        const contributorIds = (stothrakazhcha.contributors || []).map(c => String(c.contributorId));
+
+        if (stothrakazhcha.amountType === 'per_member') {
+          const allMembers = await Member.find({
+            churchId: stothrakazhcha.churchId,
+            isActive: true
+          });
+
+          const nonContributors = allMembers.filter(member =>
+            !contributorIds.includes(String(member._id))
+          );
+
+          console.log(`  Adding ₹${stothrakazhcha.defaultAmount} to ${nonContributors.length} members`);
+
+          for (const member of nonContributors) {
+            const ownerName = `${member.firstName} ${member.lastName || ''}`.trim();
+
+            await Wallet.findOneAndUpdate(
+              { ownerId: member._id, walletType: 'member' },
+              {
+                $inc: { balance: stothrakazhcha.defaultAmount },
+                $push: {
+                  transactions: {
+                    transactionId: null,
+                    amount: stothrakazhcha.defaultAmount,
+                    type: `stothrakazhcha_week${stothrakazhcha.weekNumber}_due`,
+                    date: new Date()
+                  }
+                },
+                $setOnInsert: {
+                  ownerModel: 'Member',
+                  ownerName: ownerName
+                }
+              },
+              { upsert: true, new: true }
+            );
+          }
+
+          totalMembersProcessed += nonContributors.length;
+
+        } else if (stothrakazhcha.amountType === 'per_house') {
+          const units = await Unit.find({ churchId: stothrakazhcha.churchId });
+          const unitIds = units.map(u => u._id);
+
+          const bavanakutayimas = await Bavanakutayima.find({ unitId: { $in: unitIds } });
+          const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+
+          const allHouses = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
+
+          const nonContributors = allHouses.filter(house =>
+            !contributorIds.includes(String(house._id))
+          );
+
+          console.log(`  Adding ₹${stothrakazhcha.defaultAmount} to ${nonContributors.length} houses`);
+
+          for (const house of nonContributors) {
+            await Wallet.findOneAndUpdate(
+              { ownerId: house._id, walletType: 'house' },
+              {
+                $inc: { balance: stothrakazhcha.defaultAmount },
+                $push: {
+                  transactions: {
+                    transactionId: null,
+                    amount: stothrakazhcha.defaultAmount,
+                    type: `stothrakazhcha_week${stothrakazhcha.weekNumber}_due`,
+                    date: new Date()
+                  }
+                },
+                $setOnInsert: {
+                  ownerModel: 'House',
+                  ownerName: house.familyName
+                }
+              },
+              { upsert: true, new: true }
+            );
+          }
+
+          totalHousesProcessed += nonContributors.length;
+        }
+
+        // Mark as processed
+        stothrakazhcha.duesProcessed = true;
+        stothrakazhcha.duesProcessedAt = new Date();
+        stothrakazhcha.status = 'processed';
+        await stothrakazhcha.save();
+
+        console.log(`  ✅ Processed: Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
+
+      } catch (error) {
+        console.error(`  ❌ Error processing stothrakazhcha:`, error);
+      }
+    }
+
+    console.log(`✅ [CRON] Stothrakazhcha dues processing complete`);
+    console.log(`   📊 Members: ${totalMembersProcessed}, Houses: ${totalHousesProcessed}`);
+
+  } catch (error) {
+    console.error('❌ [CRON] Error in stothrakazhcha dues processing:', error);
+  }
+};
+
+/**
+ * Schedule automatic stothrakazhcha dues processing
+ * Runs every day at 7:00 AM (1 hour after campaign dues)
+ */
+export const scheduleStothrakazhchaDuesProcessing = () => {
+  // Run every day at 7:00 AM
+  cron.schedule('0 7 * * *', async () => {
+    await processDues();
+  });
+
+  console.log('✅ Stothrakazhcha dues processor scheduled (daily at 7:00 AM)');
+};
+
+// Export for manual execution if needed
+export { processDues };

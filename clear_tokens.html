@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Tokens</title>
+</head>
+<body>
+    <h1>Clearing all authentication tokens...</h1>
+    <script>
+        // Clear all possible token storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear specific keys that might exist
+        ['accessToken', 'refreshToken', 'user', 'member_accessToken', 'member_refreshToken', 'member_user'].forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+        });
+        
+        document.body.innerHTML += '<h2 style="color: green;">✅ All tokens cleared!</h2>';
+        document.body.innerHTML += '<p>Now you can close this page and go to:</p>';
+        document.body.innerHTML += '<a href="http://localhost:3000/church-admin-login" style="font-size: 20px;">Church Admin Login</a>';
+    </script>
+</body>
+</html>
