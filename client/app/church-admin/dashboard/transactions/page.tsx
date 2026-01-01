@@ -35,6 +35,11 @@ export default function TransactionsPage() {
     unit: '',
     bavanakutayima: '',
     house: '',
+    member: '',
+    transactionType: '',
+    paymentMethod: '',
+    dateFrom: '',
+    dateTo: '',
   });
   const api = createRoleApi('church_admin');
 
@@ -45,24 +50,26 @@ export default function TransactionsPage() {
     fetchMembers();
   }, []);
 
+  // Refetch transactions when filters change
+  useEffect(() => {
+    fetchTransactions();
+  }, [filters]);
+
+  // Fetch bavanakutayimas when unit changes
   useEffect(() => {
     if (filters.unit) {
+      console.log('🔍 Fetching bavanakutayimas for unit:', filters.unit);
       fetchBavanakutayimas(filters.unit);
     } else {
       setBavanakutayimas([]);
+      setHouses([]);
     }
   }, [filters.unit]);
 
-  useEffect(() => {
-    if (filters.unit) {
-      fetchBavanakutayimas(filters.unit);
-    } else {
-      setBavanakutayimas([]);
-    }
-  }, [filters.unit]);
-
+  // Fetch houses when bavanakutayima changes
   useEffect(() => {
     if (filters.bavanakutayima) {
+      console.log('🔍 Fetching houses for bavanakutayima:', filters.bavanakutayima);
       fetchHouses(filters.bavanakutayima);
     } else {
       setHouses([]);
@@ -72,9 +79,23 @@ export default function TransactionsPage() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/transactions');
-      console.log('📊 TRANSACTIONS API RESPONSE:', response.data);
-      console.log('📊 TRANSACTIONS DATA:', response.data.data);
+      // Build query parameters from filters
+      const params = new URLSearchParams();
+      if (filters.unit) params.append('unitId', filters.unit);
+      if (filters.bavanakutayima) params.append('bavanakutayimaId', filters.bavanakutayima);
+      if (filters.house) params.append('houseId', filters.house);
+      if (filters.member) params.append('memberId', filters.member);
+      if (filters.transactionType) params.append('transactionType', filters.transactionType);
+      if (filters.paymentMethod) params.append('paymentMethod', filters.paymentMethod);
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
+
+      const queryString = params.toString();
+      const url = queryString ? `/transactions?${queryString}` : '/transactions';
+
+      console.log('📡 Fetching transactions with filters:', url);
+      const response = await api.get(url);
+      console.log('✅ Received', response.data.data?.length, 'transactions');
       setTransactions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -94,19 +115,37 @@ export default function TransactionsPage() {
 
   const fetchBavanakutayimas = async (unitId: string) => {
     try {
+      console.log('📡 API call: /bavanakutayimas?unitId=' + unitId);
       const response = await api.get(`/bavanakutayimas?unitId=${unitId}`);
-      setBavanakutayimas(response.data.data || []);
+      console.log('✅ Bavanakutayimas response:', response.data);
+      const bavanakutayimasList = response.data.data || [];
+      console.log('📊 Found', bavanakutayimasList.length, 'bavanakutayimas');
+      setBavanakutayimas(bavanakutayimasList);
+
+      if (bavanakutayimasList.length === 0) {
+        console.warn('⚠️ No bavanakutayimas found for unit:', unitId);
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ Error fetching bavanakutayimas:', error);
+      setBavanakutayimas([]);
     }
   };
 
   const fetchHouses = async (bavanakutayimaId: string) => {
     try {
+      console.log('📡 API call: /houses?bavanakutayimaId=' + bavanakutayimaId);
       const response = await api.get(`/houses?bavanakutayimaId=${bavanakutayimaId}`);
-      setHouses(response.data.data || []);
+      console.log('✅ Houses response:', response.data);
+      const housesList = response.data.data || [];
+      console.log('📊 Found', housesList.length, 'houses');
+      setHouses(housesList);
+
+      if (housesList.length === 0) {
+        console.warn('⚠️ No houses found for bavanakutayima:', bavanakutayimaId);
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ Error fetching houses:', error);
+      setHouses([]);
     }
   };
 
@@ -201,92 +240,8 @@ export default function TransactionsPage() {
     return allHouses.find((h) => h._id === houseId);
   };
 
-  // Filter transactions based on hierarchy
-  console.log('🔍 CURRENT FILTERS:', filters);
-  console.log('📊 TOTAL TRANSACTIONS:', transactions.length);
-
-  const filteredTransactions = transactions.filter((txn, index) => {
-    if (index === 0) {
-      console.log('📊 SAMPLE TRANSACTION:', txn);
-      console.log('📊 Transaction properties:', {
-        _id: txn._id,
-        churchId: txn.churchId,
-        unitId: txn.unitId,
-        houseId: txn.houseId,
-        memberId: txn.memberId,
-        receiptNumber: txn.receiptNumber,
-      });
-    }
-
-    // Extract IDs from transaction (might be objects or strings)
-    const txnUnitId = typeof txn.unitId === 'object' && txn.unitId?._id
-      ? txn.unitId._id
-      : txn.unitId;
-    const txnHouseId = typeof txn.houseId === 'object' && txn.houseId?._id
-      ? txn.houseId._id
-      : txn.houseId;
-
-    if (index === 0) {
-      console.log('📊 Extracted IDs:', {
-        unitId: txnUnitId,
-        houseId: txnHouseId,
-      });
-    }
-
-    // Try direct properties first
-    if (filters.unit && txnUnitId && txnUnitId !== filters.unit) return false;
-    if (filters.house && txnHouseId && txnHouseId !== filters.house) return false;
-
-    // If transaction has memberId, filter through member's hierarchy
-    if (txn.memberId) {
-      const member = getMemberData(txn.memberId);
-      if (index === 0) console.log('👤 MEMBER FOR TRANSACTION:', member);
-
-      if (!member) return !filters.unit && !filters.bavanakutayima && !filters.house;
-
-      // Extract houseId as string (might be object or string)
-      const memberHouseId = typeof member.houseId === 'object' && member.houseId?._id
-        ? member.houseId._id
-        : member.houseId;
-
-      if (!memberHouseId) return !filters.unit && !filters.bavanakutayima && !filters.house;
-
-      // Filter by house first (direct comparison)
-      if (filters.house && memberHouseId !== filters.house) return false;
-
-      // Check if member has direct hierarchy properties
-      if (filters.unit && member.unitId && member.unitId !== filters.unit) return false;
-      if (filters.bavanakutayima && member.bavanakutayimaId && member.bavanakutayimaId !== filters.bavanakutayima) return false;
-
-      // If member doesn't have direct hierarchy properties, check through house
-      if (!member.unitId || !member.bavanakutayimaId) {
-        const house = getHouseData(memberHouseId);
-        if (index === 0) console.log('🏠 HOUSE FOR MEMBER:', house);
-
-        if (!house) return !filters.unit && !filters.bavanakutayima;
-
-        // Filter by bavanakutayima
-        if (filters.bavanakutayima && (house as any).bavanakutayimaId !== filters.bavanakutayima) return false;
-
-        // Filter by unit
-        if (filters.unit && (house as any).unitId !== filters.unit) return false;
-      }
-    }
-
-    // If we need to filter by bavanakutayima and transaction doesn't have it directly
-    if (filters.bavanakutayima && txnHouseId) {
-      const house = getHouseData(txnHouseId);
-      if (index === 0) console.log('🏠 HOUSE FOR TRANSACTION (for bavanakutayima):', house);
-
-      if (!house || (house as any).bavanakutayimaId !== filters.bavanakutayima) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-
-  console.log('✅ FILTERED TRANSACTIONS COUNT:', filteredTransactions.length);
+  // All filtering is now done server-side, just use the transactions directly
+  const filteredTransactions = transactions;
 
   const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.totalAmount, 0);
   const avgAmount = filteredTransactions.length > 0 ? totalAmount / filteredTransactions.length : 0;
@@ -333,41 +288,164 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <SearchableSelect
-          label="Unit"
-          options={units.map((unit) => ({
-            value: unit._id,
-            label: unit.name,
-          }))}
-          value={filters.unit}
-          onChange={(value) =>
-            setFilters({ ...filters, unit: value, bavanakutayima: '', house: '' })
-          }
-          placeholder="All Units"
-        />
-        <SearchableSelect
-          label="Bavanakutayima"
-          options={bavanakutayimas.map((bk) => ({
-            value: bk._id,
-            label: bk.name,
-          }))}
-          value={filters.bavanakutayima}
-          onChange={(value) => setFilters({ ...filters, bavanakutayima: value, house: '' })}
-          placeholder="All Bavanakutayimas"
-          disabled={!filters.unit}
-        />
-        <SearchableSelect
-          label="House"
-          options={houses.map((house) => ({
-            value: house._id,
-            label: house.familyName,
-          }))}
-          value={filters.house}
-          onChange={(value) => setFilters({ ...filters, house: value })}
-          placeholder="All Houses"
-          disabled={!filters.bavanakutayima}
-        />
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Filters</h3>
+
+        {/* Section 1: Hierarchy Filters */}
+        <div className="mb-6">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs mr-2">Hierarchy</span>
+            Select in order: Unit → Bavanakutayima → House → Member
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <SearchableSelect
+              label="1. Unit"
+              options={[
+                { value: '', label: 'All Units' },
+                ...units.map((unit) => ({
+                  value: unit._id,
+                  label: unit.name,
+                }))
+              ]}
+              value={filters.unit}
+              onChange={(value) =>
+                setFilters({ ...filters, unit: value, bavanakutayima: '', house: '', member: '' })
+              }
+              placeholder="Select Unit"
+            />
+            <SearchableSelect
+              label="2. Bavanakutayima"
+              options={[
+                { value: '', label: 'All Bavanakutayimas' },
+                ...bavanakutayimas.map((bk) => ({
+                  value: bk._id,
+                  label: bk.name,
+                }))
+              ]}
+              value={filters.bavanakutayima}
+              onChange={(value) => setFilters({ ...filters, bavanakutayima: value, house: '', member: '' })}
+              placeholder={filters.unit ? "Select Bavanakutayima" : "Select unit first"}
+              disabled={!filters.unit}
+            />
+            <SearchableSelect
+              label="3. House"
+              options={[
+                { value: '', label: 'All Houses' },
+                ...houses.map((house) => ({
+                  value: house._id,
+                  label: house.familyName,
+                }))
+              ]}
+              value={filters.house}
+              onChange={(value) => setFilters({ ...filters, house: value, member: '' })}
+              placeholder={filters.bavanakutayima ? "Select House" : "Select bavanakutayima first"}
+              disabled={!filters.bavanakutayima}
+            />
+            <SearchableSelect
+              label="4. Member (Optional)"
+              options={[
+                { value: '', label: 'All Members' },
+                ...members
+                  .filter(m => !filters.house || m.houseId === filters.house || (typeof m.houseId === 'object' && m.houseId?._id === filters.house))
+                  .map((member) => ({
+                    value: member._id,
+                    label: `${member.firstName} ${member.lastName || ''}`,
+                  }))
+              ]}
+              value={filters.member}
+              onChange={(value) => setFilters({ ...filters, member: value })}
+              placeholder={filters.house ? "Select Member (optional)" : "Select house first"}
+              disabled={!filters.house}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            💡 Tip: Leave Member empty to see all house payments. Select a specific member to see only their transactions.
+          </p>
+        </div>
+
+        {/* Section 2: Transaction Filters */}
+        <div className="mb-6 border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-2">Transaction Details</span>
+            Filter by type and payment method
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SearchableSelect
+              label="Transaction Type"
+              options={[
+                { value: '', label: 'All Types' },
+                { value: 'lelam', label: 'Lelam' },
+                { value: 'thirunnaal_panam', label: 'Thirunnaal Panam' },
+                { value: 'dashamansham', label: 'Dashamansham' },
+                { value: 'spl_contribution', label: 'Special Contribution' },
+                { value: 'stothrakazhcha', label: 'Stothrakazhcha' },
+              ]}
+              value={filters.transactionType}
+              onChange={(value) => setFilters({ ...filters, transactionType: value })}
+              placeholder="All Types"
+            />
+            <SearchableSelect
+              label="Payment Method"
+              options={[
+                { value: '', label: 'All Methods' },
+                { value: 'cash', label: 'Cash' },
+                { value: 'bank_transfer', label: 'Bank Transfer' },
+                { value: 'upi', label: 'UPI' },
+                { value: 'cheque', label: 'Cheque' },
+              ]}
+              value={filters.paymentMethod}
+              onChange={(value) => setFilters({ ...filters, paymentMethod: value })}
+              placeholder="All Methods"
+            />
+          </div>
+        </div>
+
+        {/* Section 3: Date Range */}
+        <div className="mb-4 border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs mr-2">Date Range</span>
+            Filter by time period
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Clear Filters Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setFilters({
+              unit: '',
+              bavanakutayima: '',
+              house: '',
+              member: '',
+              transactionType: '',
+              paymentMethod: '',
+              dateFrom: '',
+              dateTo: '',
+            })}
+            className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            Clear All Filters
+          </button>
+        </div>
       </div>
 
       <DataTable

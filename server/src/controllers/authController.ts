@@ -266,8 +266,15 @@ export const refreshToken = async (
       return;
     }
 
-    // Find user and verify refresh token matches
-    const user = await User.findById(decoded.id).select('+refreshToken');
+    // Try to find in User model first
+    let user = await User.findById(decoded.id).select('+refreshToken');
+    let isMember = false;
+
+    // If not found in User, try Member model
+    if (!user) {
+      user = await Member.findById(decoded.id).select('+refreshToken') as any;
+      isMember = true;
+    }
 
     if (!user || user.refreshToken !== refreshToken) {
       res.status(401).json({
@@ -298,6 +305,7 @@ export const refreshToken = async (
       message: 'Tokens refreshed successfully',
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
+      userType: isMember ? 'member' : 'user', // For debugging
     });
   } catch (error) {
     next(error);

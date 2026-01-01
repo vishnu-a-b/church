@@ -798,6 +798,17 @@ export const getAllUsers = async (req: AuthRequest, res: Response, next: NextFun
 // Transaction Controllers
 export const getAllTransactions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const {
+      unitId,
+      bavanakutayimaId,
+      houseId,
+      memberId,
+      transactionType,
+      paymentMethod,
+      dateFrom,
+      dateTo
+    } = req.query;
+
     // Church admin restriction: only show transactions from their own church
     const filter: any = {};
     if (req.user?.role === 'church_admin' && req.user.churchId) {
@@ -819,6 +830,88 @@ export const getAllTransactions = async (req: AuthRequest, res: Response, next: 
       ];
     }
 
+    // Apply user-provided filters
+    // Transaction type filter
+    if (transactionType) {
+      filter.transactionType = transactionType;
+    }
+
+    // Payment method filter
+    if (paymentMethod) {
+      filter.paymentMethod = paymentMethod;
+    }
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      filter.paymentDate = {};
+      if (dateFrom) {
+        filter.paymentDate.$gte = new Date(dateFrom as string);
+      }
+      if (dateTo) {
+        const endDate = new Date(dateTo as string);
+        endDate.setHours(23, 59, 59, 999); // Include entire end date
+        filter.paymentDate.$lte = endDate;
+      }
+    }
+
+    // Member filter - direct
+    if (memberId) {
+      filter.memberId = memberId;
+    }
+
+    // Hierarchy filters (unit, bavanakutayima, house)
+    let hierarchyHouseIds: any[] = [];
+    let hierarchyMemberIds: any[] = [];
+
+    if (houseId) {
+      // Direct house filter
+      hierarchyHouseIds.push(houseId);
+      // Also get members from this house
+      const houseMembers = await Member.find({ houseId }).select('_id');
+      hierarchyMemberIds = houseMembers.map(m => m._id);
+    } else if (bavanakutayimaId) {
+      // Get all houses in this bavanakutayima
+      const bavHouses = await House.find({ bavanakutayimaId }).select('_id');
+      hierarchyHouseIds = bavHouses.map(h => h._id);
+      // Get all members in this bavanakutayima
+      const bavMembers = await Member.find({ bavanakutayimaId }).select('_id');
+      hierarchyMemberIds = bavMembers.map(m => m._id);
+    } else if (unitId) {
+      // Get all bavanakutayimas in this unit
+      const unitBavs = await Bavanakutayima.find({ unitId }).select('_id');
+      const bavIds = unitBavs.map(b => b._id);
+      // Get all houses in these bavanakutayimas
+      const unitHouses = await House.find({ bavanakutayimaId: { $in: bavIds } }).select('_id');
+      hierarchyHouseIds = unitHouses.map(h => h._id);
+      // Get all members in these bavanakutayimas
+      const unitMembers = await Member.find({ bavanakutayimaId: { $in: bavIds } }).select('_id');
+      hierarchyMemberIds = unitMembers.map(m => m._id);
+    }
+
+    // Apply hierarchy filters if any were set
+    if (hierarchyHouseIds.length > 0 || hierarchyMemberIds.length > 0) {
+      const hierarchyFilter: any[] = [];
+      if (hierarchyHouseIds.length > 0) {
+        hierarchyFilter.push({ houseId: { $in: hierarchyHouseIds } });
+      }
+      if (hierarchyMemberIds.length > 0) {
+        hierarchyFilter.push({ memberId: { $in: hierarchyMemberIds } });
+      }
+
+      // Merge with existing $or filter if any
+      if (filter.$or) {
+        filter.$and = [
+          { $or: filter.$or },
+          { $or: hierarchyFilter }
+        ];
+        delete filter.$or;
+      } else {
+        filter.$or = hierarchyFilter;
+      }
+    }
+
+    console.log('📊 Transaction filter:', JSON.stringify(filter, null, 2));
+
     const transactions = await Transaction.find(filter)
       .populate('memberId', 'firstName lastName')
       .populate('houseId', 'familyName')
@@ -827,6 +920,9 @@ export const getAllTransactions = async (req: AuthRequest, res: Response, next: 
       .populate('campaignId', 'name')
       .sort({ paymentDate: -1 })
       .limit(1000);
+
+    console.log('✅ Found', transactions.length, 'transactions');
+
     res.json({ success: true, data: transactions });
   } catch (error) {
     next(error);

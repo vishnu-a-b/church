@@ -35,18 +35,19 @@ export function RoleAuthProvider({ children, role, expectedRole }: RoleAuthProvi
   const getStorageKey = (key: string) => `${role}_${key}`;
 
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       console.log(`[${role}] Initializing auth...`);
       if (typeof window !== 'undefined') {
         const accessToken = localStorage.getItem(getStorageKey('accessToken'));
+        const refreshToken = localStorage.getItem(getStorageKey('refreshToken'));
         const savedUser = localStorage.getItem(getStorageKey('user'));
 
-        console.log(`[${role}] Token exists:`, !!accessToken);
-        console.log(`[${role}] Token length:`, accessToken?.length);
+        console.log(`[${role}] Access token exists:`, !!accessToken);
+        console.log(`[${role}] Refresh token exists:`, !!refreshToken);
 
         // Detect and clear invalid tokens
         if (accessToken && (accessToken === 'undefined' || accessToken === 'null' || accessToken.length < 20)) {
-          console.error(`[${role}] ⚠️ INVALID TOKEN DETECTED! Clearing...`);
+          console.error(`[${role}] ⚠️ INVALID ACCESS TOKEN DETECTED! Clearing...`);
           localStorage.removeItem(getStorageKey('user'));
           localStorage.removeItem(getStorageKey('accessToken'));
           localStorage.removeItem(getStorageKey('refreshToken'));
@@ -54,10 +55,9 @@ export function RoleAuthProvider({ children, role, expectedRole }: RoleAuthProvi
           return;
         }
 
-        if (accessToken && savedUser) {
+        if (savedUser) {
           try {
             const parsedUser = JSON.parse(savedUser);
-            console.log(`[${role}] Setting user:`, parsedUser.email, parsedUser.role);
 
             // Validate user role matches expected role
             if (expectedRole && parsedUser.role !== expectedRole) {
@@ -69,14 +69,68 @@ export function RoleAuthProvider({ children, role, expectedRole }: RoleAuthProvi
               return;
             }
 
-            setUser(parsedUser);
-            setTimeout(() => {
-              console.log(`[${role}] Auth loading complete`);
+            // If we have a refresh token, try to verify/refresh the access token
+            if (refreshToken && (!accessToken || accessToken.length < 20)) {
+              console.log(`[${role}] Access token missing or invalid, attempting refresh...`);
+              try {
+                const response = await api.post('/auth/refresh-token', { refreshToken });
+                const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+
+                // Store new tokens
+                localStorage.setItem(getStorageKey('accessToken'), newAccessToken);
+                if (newRefreshToken) {
+                  localStorage.setItem(getStorageKey('refreshToken'), newRefreshToken);
+                }
+
+                console.log(`[${role}] Token refreshed successfully on init`);
+                setUser(parsedUser);
+                setLoading(false);
+                return;
+              } catch (refreshError) {
+                console.error(`[${role}] Token refresh failed on init:`, refreshError);
+                // Clear everything and require re-login
+                localStorage.removeItem(getStorageKey('user'));
+                localStorage.removeItem(getStorageKey('accessToken'));
+                localStorage.removeItem(getStorageKey('refreshToken'));
+                setLoading(false);
+                return;
+              }
+            }
+
+            // If we have both access token and user, verify it's still valid
+            if (accessToken && refreshToken) {
+              console.log(`[${role}] Have both tokens, attempting token verification...`);
+
+              // First, just set the user - let the interceptor handle token refresh when needed
+              setUser(parsedUser);
               setLoading(false);
-            }, 50);
-            return;
+
+              // Optionally verify token in background (non-blocking)
+              api.get('/auth/me')
+                .then(() => {
+                  console.log(`[${role}] Token verified successfully in background`);
+                })
+                .catch((verifyError: any) => {
+                  console.log(`[${role}] Background token verification failed:`, verifyError.message);
+                  // If this fails, it means token refresh also failed
+                  // The interceptor will have already redirected to login if needed
+                });
+
+              return;
+            }
+
+            // If we have access token but no refresh token, just set user
+            if (accessToken) {
+              console.log(`[${role}] Setting user:`, parsedUser.email, parsedUser.role);
+              setUser(parsedUser);
+              setTimeout(() => {
+                console.log(`[${role}] Auth loading complete`);
+                setLoading(false);
+              }, 50);
+              return;
+            }
           } catch (error) {
-            console.error(`[${role}] Error parsing saved user:`, error);
+            console.error(`[${role}] Error during auth init:`, error);
             localStorage.removeItem(getStorageKey('user'));
             localStorage.removeItem(getStorageKey('accessToken'));
             localStorage.removeItem(getStorageKey('refreshToken'));
