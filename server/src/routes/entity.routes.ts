@@ -32,6 +32,7 @@ import {
   updateCampaign,
   deleteCampaign,
   processCampaignDues,
+  addCampaignContribution,
   getAllSpiritualActivities,
   getSpiritualActivityById,
   createSpiritualActivity,
@@ -684,6 +685,7 @@ router.route('/transactions/:id').get(getTransactionById).put(updateTransaction)
 router.route('/campaigns').get(getAllCampaigns).post(createCampaign);
 router.route('/campaigns/:id').get(getCampaignById).put(updateCampaign).delete(deleteCampaign);
 router.post('/campaigns/process-dues', processCampaignDues);
+router.post('/campaigns/:id/contribute', addCampaignContribution);
 
 /**
  * @swagger

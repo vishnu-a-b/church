@@ -1041,11 +1041,52 @@ export const getAllCampaigns = async (req: AuthRequest, res: Response, next: Nex
 
 export const getCampaignById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const campaign = await Campaign.findById(req.params.id).populate('churchId', 'name');
+    const campaign = await Campaign.findById(req.params.id)
+      .populate('churchId', 'name')
+      .lean();
+
     if (!campaign) {
       res.status(404).json({ success: false, error: 'Campaign not found' });
       return;
     }
+
+    // Populate contributors with member/house details
+    if (campaign.contributors && campaign.contributors.length > 0) {
+      const populatedContributors = await Promise.all(
+        campaign.contributors.map(async (contributor: any) => {
+          // Try to find as member first
+          const member = await Member.findById(contributor.contributorId)
+            .select('firstName lastName email houseId')
+            .populate('houseId', 'familyName')
+            .lean();
+
+          if (member) {
+            return {
+              ...contributor,
+              member,
+              house: member.houseId
+            };
+          }
+
+          // If not a member, try as house
+          const house = await House.findById(contributor.contributorId)
+            .select('familyName')
+            .lean();
+
+          if (house) {
+            return {
+              ...contributor,
+              house
+            };
+          }
+
+          // If neither found, return as is
+          return contributor;
+        })
+      );
+      campaign.contributors = populatedContributors;
+    }
+
     res.json({ success: true, data: campaign });
   } catch (error) {
     next(error);
@@ -1396,6 +1437,155 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
         totalMembersProcessed,
         totalHousesProcessed,
         processedCampaigns
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Add contribution to campaign
+export const addCampaignContribution = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { amount, memberId: providedMemberId, houseId: providedHouseId, paymentType } = req.body;
+
+    if (!amount || amount <= 0) {
+      res.status(400).json({ success: false, error: 'Valid amount is required' });
+      return;
+    }
+
+    const campaign = await Campaign.findById(id);
+
+    if (!campaign) {
+      res.status(404).json({ success: false, error: 'Campaign not found' });
+      return;
+    }
+
+    if (!campaign.isActive) {
+      res.status(400).json({ success: false, error: 'Campaign is not active' });
+      return;
+    }
+
+    let memberId: any = undefined;
+    let houseId: any = undefined;
+    let unitId: any = undefined;
+    let distribution: 'member_only' | 'house_only' | 'both';
+    let contributorId: any;
+
+    // Handle member payment
+    if (paymentType === 'member' || (!paymentType && providedMemberId)) {
+      memberId = providedMemberId || req.user?.memberId || req.user?._id;
+
+      if (!memberId) {
+        res.status(400).json({ success: false, error: 'Member ID is required for member payment' });
+        return;
+      }
+
+      // Check if already contributed
+      const hasContributed = campaign.contributors?.some(
+        (c: any) => String(c.contributorId) === String(memberId)
+      );
+
+      if (hasContributed) {
+        res.status(400).json({ success: false, error: 'This member has already contributed to this campaign' });
+        return;
+      }
+
+      // Get member details
+      const member = await Member.findById(memberId);
+      if (!member) {
+        res.status(404).json({ success: false, error: 'Member not found' });
+        return;
+      }
+
+      houseId = member.houseId;
+      unitId = member.unitId;
+      distribution = 'member_only';
+      contributorId = memberId;
+    }
+    // Handle house payment
+    else if (paymentType === 'house' || providedHouseId) {
+      houseId = providedHouseId;
+
+      if (!houseId) {
+        res.status(400).json({ success: false, error: 'House ID is required for house payment' });
+        return;
+      }
+
+      // Check if house already contributed
+      const hasContributed = campaign.contributors?.some(
+        (c: any) => String(c.contributorId) === String(houseId)
+      );
+
+      if (hasContributed) {
+        res.status(400).json({ success: false, error: 'This house has already contributed to this campaign' });
+        return;
+      }
+
+      // Get house details
+      const house = await House.findById(houseId).populate('bavanakutayimaId', 'unitId');
+      if (!house) {
+        res.status(404).json({ success: false, error: 'House not found' });
+        return;
+      }
+
+      // Get unitId from bavanakutayima
+      const bavanakutayima = await Bavanakutayima.findById(house.bavanakutayimaId);
+      unitId = bavanakutayima?.unitId;
+      distribution = 'house_only';
+      contributorId = houseId;
+    } else {
+      res.status(400).json({ success: false, error: 'Payment type must be specified' });
+      return;
+    }
+
+    // Create transaction record
+    const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const transaction = await Transaction.create({
+      receiptNumber,
+      transactionType: 'spl_contribution',
+      contributionMode: campaign.contributionMode,
+      campaignId: campaign._id,
+      distribution,
+      memberAmount: distribution === 'member_only' ? amount : 0,
+      houseAmount: distribution === 'house_only' ? amount : 0,
+      totalAmount: amount,
+      memberId: memberId || undefined,
+      houseId: houseId || undefined,
+      unitId: unitId || undefined,
+      churchId: campaign.churchId,
+      paymentDate: new Date(),
+      paymentMethod: 'cash',
+      notes: `Campaign contribution: ${campaign.name}`,
+      smsNotificationSent: false,
+      createdBy: req.user?._id
+    });
+
+    // Add contribution to Campaign
+    campaign.contributors = campaign.contributors || [];
+    campaign.contributors.push({
+      contributorId,
+      contributedAmount: amount,
+      contributedAt: new Date()
+    } as any);
+
+    campaign.totalCollected = (campaign.totalCollected || 0) + amount;
+    campaign.participantCount = (campaign.participantCount || 0) + 1;
+
+    await campaign.save();
+
+    res.json({
+      success: true,
+      message: 'Contribution added successfully',
+      data: {
+        transaction,
+        campaign: {
+          _id: campaign._id,
+          name: campaign.name,
+          totalCollected: campaign.totalCollected,
+          participantCount: campaign.participantCount
+        }
       }
     });
   } catch (error) {

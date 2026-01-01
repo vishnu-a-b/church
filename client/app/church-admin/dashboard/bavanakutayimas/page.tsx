@@ -6,6 +6,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { toastService } from '@/lib/toastService';
 import { Bavanakutayima, Unit } from '@/types';
 import { Plus, Edit2, Trash2, Search, X, UserPlus } from 'lucide-react';
+import { SearchableSelect } from '@/components/SearchableSelect';
 
 const initialFormState = {
   unitId: '',
@@ -26,7 +27,12 @@ export default function BavanakutayimasPage() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    unit: '',
+  });
   const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Bavanakutayima | null>(null);
   const [formData, setFormData] = useState(initialFormState);
 
@@ -64,6 +70,7 @@ export default function BavanakutayimasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
     const toastId = toastService.info(editing ? 'Updating bavanakutayima...' : 'Creating bavanakutayima...');
 
@@ -97,7 +104,9 @@ export default function BavanakutayimasPage() {
           } catch (adminError: any) {
             console.error('Error creating admin:', adminError);
             toastService.modify(toastId, 'Bavanakutayima created but failed to create admin: ' + (adminError.response?.data?.error || 'Unknown error'), { type: 'warning' });
-          }
+          } finally {
+      setSubmitting(false);
+    }
         } else {
           toastService.modify(toastId, 'Bavanakutayima created successfully!', { type: 'success' });
         }
@@ -131,6 +140,7 @@ export default function BavanakutayimasPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this bavanakutayima?')) return;
+    setDeletingId(id);
 
     const toastId = toastService.info('Deleting bavanakutayima...');
 
@@ -141,6 +151,8 @@ export default function BavanakutayimasPage() {
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Delete failed';
       toastService.modify(toastId, errorMsg, { type: 'error' });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -150,9 +162,13 @@ export default function BavanakutayimasPage() {
 
   const getUnitName = (id: string) => units.find((u) => u._id === id)?.name || 'Unknown';
 
-  const filtered = bavanakutayimas.filter((b) =>
-    b.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = bavanakutayimas.filter((b) => {
+    // Filter by search term
+    if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    // Filter by unit
+    if (filters.unit && b.unitId !== filters.unit) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -174,14 +190,27 @@ export default function BavanakutayimasPage() {
         </button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+        </div>
+
+        <SearchableSelect
+          label="Filter by Unit"
+          options={units.map((unit) => ({
+            value: unit._id,
+            label: unit.name,
+          }))}
+          value={filters.unit}
+          onChange={(value) => setFilters({ ...filters, unit: value })}
+          placeholder="All Units"
         />
       </div>
 
@@ -217,8 +246,12 @@ export default function BavanakutayimasPage() {
                       <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-900 mr-4">
                         <Edit2 className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDelete(item._id)} className="text-red-600 hover:text-red-900">
-                        <Trash2 className="w-5 h-5" />
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        disabled={deletingId === item._id}
+                        className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingId === item._id ? <div className="animate-spin text-sm">⏳</div> : <Trash2 className="w-5 h-5" />}
                       </button>
                     </td>
                   </tr>
@@ -244,20 +277,14 @@ export default function BavanakutayimasPage() {
               <div className="border-b pb-4">
                 <h4 className="text-md font-semibold text-gray-700 mb-3">Bavanakutayima Details</h4>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Unit *</label>
-                    <select
-                      required
-                      value={formData.unitId}
-                      onChange={(e) => setFormData({ ...formData, unitId: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      <option value="">Select a unit</option>
-                      {units.map((u) => (
-                        <option key={u._id} value={u._id}>{u.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    label="Unit"
+                    required
+                    options={units.map((u) => ({ value: u._id, label: u.name }))}
+                    value={formData.unitId}
+                    onChange={(value) => setFormData({ ...formData, unitId: value })}
+                    placeholder="Search and select unit..."
+                  />
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
@@ -379,8 +406,12 @@ export default function BavanakutayimasPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  {editing ? 'Update' : 'Create'}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (editing ? 'Updating...' : 'Creating...') : (editing ? 'Update' : 'Create')}
                 </button>
               </div>
             </form>

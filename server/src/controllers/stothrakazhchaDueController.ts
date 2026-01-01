@@ -117,15 +117,27 @@ export const getDuesForEntity = async (req: AuthRequest, res: Response, next: Ne
 // Process dues for overdue Stothrakazhcha (creates StothrakazhchaDue records)
 export const processStothrakazhchaDues = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const { stothrakazhchaId } = req.body;
+
     console.log('🕐 Processing stothrakazhcha dues...');
 
     const now = new Date();
-    const overdueStothrakazhchas = await Stothrakazhcha.find({
+    const filter: any = {
       status: 'active',
       duesProcessed: false,
-      dueDate: { $lte: now },
       defaultAmount: { $gt: 0 }
-    });
+    };
+
+    // If specific stothrakazhcha ID provided, add it to filter; otherwise filter by due date
+    if (stothrakazhchaId) {
+      filter._id = stothrakazhchaId;
+      console.log(`Processing specific stothrakazhcha: ${stothrakazhchaId}`);
+    } else {
+      filter.dueDate = { $lte: now };
+      console.log('Processing all overdue stothrakazhchas');
+    }
+
+    const overdueStothrakazhchas = await Stothrakazhcha.find(filter);
 
     console.log(`📊 Found ${overdueStothrakazhchas.length} overdue stothrakazhchas`);
 

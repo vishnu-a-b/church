@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { Campaign } from '@/types';
-import { Wallet, TrendingUp, Plus, Clock, UserPlus } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, Clock, UserPlus, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Member {
@@ -32,10 +33,13 @@ interface House {
 }
 
 export default function CampaignsPage() {
+  const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [processingDues, setProcessingDues] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [addingPayment, setAddingPayment] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
@@ -100,11 +104,11 @@ export default function CampaignsPage() {
       return;
     }
     try {
-      const response = await api.get('/bavanakutayimas');
-      const filtered = (response.data?.data || []).filter((b: Bavanakutayima) => b.unitId === unitId);
-      setBavanakutayimas(filtered);
+      const response = await api.get(`/bavanakutayimas?unitId=${unitId}`);
+      setBavanakutayimas(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching bavanakutayimas:', error);
+      setBavanakutayimas([]);
     }
   };
 
@@ -114,11 +118,11 @@ export default function CampaignsPage() {
       return;
     }
     try {
-      const response = await api.get('/houses');
-      const filtered = (response.data?.data || []).filter((h: House) => h.bavanakutayimaId === bavanakutayimaId);
-      setHouses(filtered);
+      const response = await api.get(`/houses?bavanakutayimaId=${bavanakutayimaId}`);
+      setHouses(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching houses:', error);
+      setHouses([]);
     }
   };
 
@@ -128,11 +132,11 @@ export default function CampaignsPage() {
       return;
     }
     try {
-      const response = await api.get('/members');
-      const filtered = (response.data?.data || []).filter((m: Member) => m.houseId === houseId);
-      setMembers(filtered);
+      const response = await api.get(`/members?houseId=${houseId}`);
+      setMembers(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching members:', error);
+      setMembers([]);
     }
   };
 
@@ -171,6 +175,7 @@ export default function CampaignsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       await api.post('/campaigns', formData);
       toast.success('Campaign created successfully!');
@@ -191,6 +196,8 @@ export default function CampaignsPage() {
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(error.response?.data?.error || 'Failed to create campaign');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -245,6 +252,7 @@ export default function CampaignsPage() {
 
     if (!selectedCampaign) return;
 
+    setAddingPayment(true);
     try {
       await api.post(`/campaigns/${selectedCampaign._id}/contribute`, {
         amount: parseFloat(paymentData.amount),
@@ -258,7 +266,13 @@ export default function CampaignsPage() {
     } catch (error: any) {
       console.error('Error adding payment:', error);
       toast.error(error.response?.data?.error || 'Failed to add payment');
+    } finally {
+      setAddingPayment(false);
     }
+  };
+
+  const handleViewPayments = (campaign: Campaign) => {
+    router.push(`/church-admin/dashboard/campaigns/payments?id=${campaign._id}`);
   };
 
   const formatDate = (date: Date) => {
@@ -385,6 +399,13 @@ export default function CampaignsPage() {
                 </div>
               </div>
               <div className="mt-4 space-y-2">
+                <button
+                  onClick={() => handleViewPayments(campaign)}
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                >
+                  <Users className="w-4 h-4" />
+                  View Payments ({campaign.participantCount})
+                </button>
                 <button
                   onClick={() => handleOpenPaymentModal(campaign)}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -568,14 +589,16 @@ export default function CampaignsPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Campaign
+                  {submitting ? 'Creating...' : 'Create Campaign'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -713,15 +736,17 @@ export default function CampaignsPage() {
                     setShowPaymentModal(false);
                     setPaymentData({ memberId: '', amount: '' });
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  disabled={addingPayment}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddPayment}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={addingPayment}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add Payment
+                  {addingPayment ? 'Adding Payment...' : 'Add Payment'}
                 </button>
               </div>
             </div>

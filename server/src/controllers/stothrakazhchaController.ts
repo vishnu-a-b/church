@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import Stothrakazhcha from '../models/Stothrakazhcha';
 import Transaction from '../models/Transaction';
 import Member from '../models/Member';
+import House from '../models/House';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../types';
 
@@ -29,11 +30,41 @@ export const getAllStothrakazhcha = async (req: AuthRequest, res: Response, next
 export const getStothrakazhchaById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const stothrakazhcha = await Stothrakazhcha.findById(req.params.id)
-      .populate('churchId', 'name');
+      .populate('churchId', 'name')
+      .lean();
 
     if (!stothrakazhcha) {
       res.status(404).json({ success: false, error: 'Stothrakazhcha not found' });
       return;
+    }
+
+    // Populate contributors with member/house details
+    if (stothrakazhcha.contributors && stothrakazhcha.contributors.length > 0) {
+      const populatedContributors = await Promise.all(
+        stothrakazhcha.contributors.map(async (contributor: any) => {
+          if (contributor.contributorType === 'Member') {
+            const member = await Member.findById(contributor.contributorId)
+              .select('firstName lastName email houseId')
+              .populate('houseId', 'familyName')
+              .lean();
+            return {
+              ...contributor,
+              member,
+              house: member?.houseId
+            };
+          } else {
+            // It's a House contributor
+            const house = await House.findById(contributor.contributorId)
+              .select('familyName')
+              .lean();
+            return {
+              ...contributor,
+              house
+            };
+          }
+        })
+      );
+      stothrakazhcha.contributors = populatedContributors;
     }
 
     res.json({ success: true, data: stothrakazhcha });
@@ -214,18 +245,22 @@ export const addContribution = async (req: AuthRequest, res: Response, next: Nex
     }
 
     // Create transaction record
+    const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const transaction = await Transaction.create({
+      receiptNumber,
+      transactionType: 'stothrakazhcha',
+      contributionMode: 'variable',
+      distribution: 'member_only',
+      memberAmount: amount,
+      houseAmount: 0,
+      totalAmount: amount,
       churchId: stothrakazhcha.churchId,
       unitId: member.unitId,
-      bavanakutayimaId: member.bavanakutayimaId,
       houseId: member.houseId,
       memberId: memberId,
-      type: 'income',
-      category: 'stothrakazhcha',
-      amount: amount,
-      description: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`,
-      date: new Date(),
-      paymentMethod: 'other',
+      paymentDate: new Date(),
+      paymentMethod: 'cash',
+      notes: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`,
       createdBy: req.user?._id
     });
 
@@ -266,7 +301,38 @@ export const addContribution = async (req: AuthRequest, res: Response, next: Nex
       { upsert: true, new: true }
     );
 
-    const populated = await Stothrakazhcha.findById(stothrakazhcha._id).populate('churchId', 'name');
+    const populated = await Stothrakazhcha.findById(stothrakazhcha._id)
+      .populate('churchId', 'name')
+      .lean();
+
+    // Populate contributors with member/house details
+    if (populated && populated.contributors && populated.contributors.length > 0) {
+      const populatedContributors = await Promise.all(
+        populated.contributors.map(async (contributor: any) => {
+          if (contributor.contributorType === 'Member') {
+            const memberData = await Member.findById(contributor.contributorId)
+              .select('firstName lastName email houseId')
+              .populate('houseId', 'familyName')
+              .lean();
+            return {
+              ...contributor,
+              member: memberData,
+              house: memberData?.houseId
+            };
+          } else {
+            // It's a House contributor
+            const houseData = await House.findById(contributor.contributorId)
+              .select('familyName')
+              .lean();
+            return {
+              ...contributor,
+              house: houseData
+            };
+          }
+        })
+      );
+      populated.contributors = populatedContributors;
+    }
 
     res.json({ success: true, data: populated, message: 'Contribution added successfully' });
   } catch (error) {

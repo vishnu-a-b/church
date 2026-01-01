@@ -33,7 +33,10 @@ export default function ChurchAdminMembersPage() {
   const [houses, setHouses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
   const [allBavanakutayimas, setAllBavanakutayimas] = useState<any[]>([]);
   const [allHouses, setAllHouses] = useState<any[]>([]);
   const [filters, setFilters] = useState({
@@ -170,6 +173,7 @@ export default function ChurchAdminMembersPage() {
   };
 
   const resetForm = () => {
+    setEditingId(null);
     setFormData({
       firstName: '',
       lastName: '',
@@ -194,6 +198,52 @@ export default function ChurchAdminMembersPage() {
     });
     setAllBavanakutayimas([]);
     setAllHouses([]);
+  };
+
+  const handleEdit = async (member: Member) => {
+    setEditingLoadingId(member._id);
+    try {
+      setEditingId(member._id);
+
+      // Extract IDs from populated fields
+      const unitId = typeof member.unitId === 'object' ? member.unitId._id : member.unitId || '';
+      const bavanakutayimaId = typeof member.bavanakutayimaId === 'object' ? member.bavanakutayimaId._id : member.bavanakutayimaId || '';
+      const houseId = typeof member.houseId === 'object' ? member.houseId._id : member.houseId || '';
+
+      // Load cascading data
+      if (unitId) {
+        await fetchAllBavanakutayimas(unitId);
+      }
+      if (bavanakutayimaId) {
+        await fetchAllHouses(bavanakutayimaId);
+      }
+
+      setFormData({
+        firstName: member.firstName || '',
+        lastName: member.lastName || '',
+        gender: member.gender || 'male',
+        dateOfBirth: member.dateOfBirth || '',
+        phone: member.phone || '',
+        email: member.email || '',
+        baptismName: member.baptismName || '',
+        relationToHead: member.relationToHead || 'head',
+        unitId,
+        bavanakutayimaId,
+        houseId,
+        username: member.username || '',
+        password: '',
+        role: member.role || 'member',
+        isActive: member.isActive !== undefined ? member.isActive : true,
+        smsPreferences: {
+          enabled: true,
+          paymentNotifications: true,
+          receiptNotifications: true,
+        },
+      });
+      setShowAddModal(true);
+    } finally {
+      setEditingLoadingId(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -221,14 +271,22 @@ export default function ChurchAdminMembersPage() {
         churchId,
       };
 
-      await api.post('/members', memberData);
-      alert('Member added successfully!');
+      if (editingId) {
+        // Update existing member
+        await api.put(`/members/${editingId}`, memberData);
+        alert('Member updated successfully!');
+      } else {
+        // Create new member
+        await api.post('/members', memberData);
+        alert('Member added successfully!');
+      }
+
       setShowAddModal(false);
       resetForm();
       fetchMembers();
     } catch (error: any) {
-      console.error('Error adding member:', error);
-      alert(error.response?.data?.error || 'Failed to add member');
+      console.error('Error saving member:', error);
+      alert(error.response?.data?.error || 'Failed to save member');
     } finally {
       setFormLoading(false);
     }
@@ -236,12 +294,16 @@ export default function ChurchAdminMembersPage() {
 
   const handleDeleteMember = async (id: string) => {
     if (confirm('Are you sure you want to delete this member?')) {
+      setDeletingId(id);
       try {
         await api.delete(`/members/${id}`);
         fetchMembers();
+        alert('Member deleted successfully!');
       } catch (error) {
         console.error('Error deleting member:', error);
         alert('Failed to delete member');
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -341,8 +403,20 @@ export default function ChurchAdminMembersPage() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><FiEdit /></button>
-          <button onClick={() => handleDeleteMember(row.original._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><FiTrash /></button>
+          <button
+            onClick={() => handleEdit(row.original)}
+            disabled={editingLoadingId === row.original._id || deletingId === row.original._id}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {editingLoadingId === row.original._id ? <div className="animate-spin">⏳</div> : <FiEdit />}
+          </button>
+          <button
+            onClick={() => handleDeleteMember(row.original._id)}
+            disabled={deletingId === row.original._id || editingLoadingId === row.original._id}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {deletingId === row.original._id ? <div className="animate-spin">⏳</div> : <FiTrash />}
+          </button>
         </div>
       ),
     },
@@ -481,7 +555,7 @@ export default function ChurchAdminMembersPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">Add New Member</h2>
+              <h2 className="text-xl font-bold text-gray-800">{editingId ? 'Edit Member' : 'Add New Member'}</h2>
               <button
                 onClick={() => {
                   setShowAddModal(false);
@@ -523,21 +597,17 @@ export default function ChurchAdminMembersPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Gender <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleFormChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    label="Gender"
+                    required
+                    options={[
+                      { value: 'male', label: 'Male' },
+                      { value: 'female', label: 'Female' },
+                    ]}
+                    value={formData.gender}
+                    onChange={(value) => setFormData({ ...formData, gender: value as 'male' | 'female' })}
+                    placeholder="Select gender..."
+                  />
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
@@ -583,24 +653,20 @@ export default function ChurchAdminMembersPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Relation to Head <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="relationToHead"
-                      value={formData.relationToHead}
-                      onChange={handleFormChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="head">Head</option>
-                      <option value="spouse">Spouse</option>
-                      <option value="child">Child</option>
-                      <option value="parent">Parent</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    label="Relation to Head"
+                    required
+                    options={[
+                      { value: 'head', label: 'Head' },
+                      { value: 'spouse', label: 'Spouse' },
+                      { value: 'child', label: 'Child' },
+                      { value: 'parent', label: 'Parent' },
+                      { value: 'other', label: 'Other' },
+                    ]}
+                    value={formData.relationToHead}
+                    onChange={(value) => setFormData({ ...formData, relationToHead: value as 'head' | 'spouse' | 'child' | 'parent' | 'other' })}
+                    placeholder="Select relation..."
+                  />
                 </div>
               </div>
 
@@ -608,67 +674,47 @@ export default function ChurchAdminMembersPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Hierarchy Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Unit <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="unitId"
-                      value={formData.unitId}
-                      onChange={handleFormChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="">Select Unit</option>
-                      {units.map((unit) => (
-                        <option key={unit._id} value={unit._id}>
-                          {unit.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    label="Unit"
+                    required
+                    options={units.map(unit => ({ value: unit._id, label: unit.name }))}
+                    value={formData.unitId}
+                    onChange={(value) => {
+                      setFormData({ ...formData, unitId: value, bavanakutayimaId: '', houseId: '' });
+                      setAllBavanakutayimas([]);
+                      setAllHouses([]);
+                      if (value) {
+                        fetchAllBavanakutayimas(value);
+                      }
+                    }}
+                    placeholder="Search and select unit..."
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bavanakutayima <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="bavanakutayimaId"
-                      value={formData.bavanakutayimaId}
-                      onChange={handleFormChange}
-                      required
-                      disabled={!formData.unitId}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
-                    >
-                      <option value="">Select Bavanakutayima</option>
-                      {allBavanakutayimas.map((bk) => (
-                        <option key={bk._id} value={bk._id}>
-                          {bk.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    label="Bavanakutayima"
+                    required
+                    options={allBavanakutayimas.map(bk => ({ value: bk._id, label: bk.name }))}
+                    value={formData.bavanakutayimaId}
+                    onChange={(value) => {
+                      setFormData({ ...formData, bavanakutayimaId: value, houseId: '' });
+                      setAllHouses([]);
+                      if (value) {
+                        fetchAllHouses(value);
+                      }
+                    }}
+                    placeholder={formData.unitId ? "Search and select bavanakutayima..." : "Select unit first"}
+                    disabled={!formData.unitId}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      House <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="houseId"
-                      value={formData.houseId}
-                      onChange={handleFormChange}
-                      required
-                      disabled={!formData.bavanakutayimaId}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
-                    >
-                      <option value="">Select House</option>
-                      {allHouses.map((house) => (
-                        <option key={house._id} value={house._id}>
-                          {house.familyName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    label="House"
+                    required
+                    options={allHouses.map(house => ({ value: house._id, label: house.familyName }))}
+                    value={formData.houseId}
+                    onChange={(value) => setFormData({ ...formData, houseId: value })}
+                    placeholder={formData.bavanakutayimaId ? "Search and select house..." : "Select bavanakutayima first"}
+                    disabled={!formData.bavanakutayimaId}
+                  />
                 </div>
               </div>
 
@@ -698,19 +744,17 @@ export default function ChurchAdminMembersPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                    <select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleFormChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      <option value="member">Member</option>
-                      <option value="kudumbakutayima_admin">Kudumbakutayima Admin</option>
-                      <option value="unit_admin">Unit Admin</option>
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    label="Role"
+                    options={[
+                      { value: 'member', label: 'Member' },
+                      { value: 'kudumbakutayima_admin', label: 'Kudumbakutayima Admin' },
+                      { value: 'unit_admin', label: 'Unit Admin' },
+                    ]}
+                    value={formData.role}
+                    onChange={(value) => setFormData({ ...formData, role: value })}
+                    placeholder="Select role..."
+                  />
 
                   <div className="flex items-center">
                     <input
@@ -742,7 +786,7 @@ export default function ChurchAdminMembersPage() {
                   disabled={formLoading}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {formLoading ? 'Adding...' : 'Add Member'}
+                  {formLoading ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Member' : 'Add Member')}
                 </button>
               </div>
             </form>

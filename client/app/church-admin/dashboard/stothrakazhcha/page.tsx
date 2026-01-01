@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { Plus, Calendar, DollarSign, Users, TrendingUp, Trash2, Edit, UserPlus } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -55,11 +56,15 @@ interface House {
 }
 
 export default function ChurchAdminStothrakazhchaPage() {
+  const router = useRouter();
   const [stothrakazhchas, setStothrakazhchas] = useState<Stothrakazhcha[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [processingDues, setProcessingDues] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [addingPayment, setAddingPayment] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedStothrakazhcha, setSelectedStothrakazhcha] = useState<Stothrakazhcha | null>(null);
 
@@ -157,11 +162,11 @@ export default function ChurchAdminStothrakazhchaPage() {
       return;
     }
     try {
-      const response = await api.get('/bavanakutayimas');
-      const filtered = (response.data?.data || []).filter((b: Bavanakutayima) => b.unitId === unitId);
-      setBavanakutayimas(filtered);
+      const response = await api.get(`/bavanakutayimas?unitId=${unitId}`);
+      setBavanakutayimas(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching bavanakutayimas:', error);
+      setBavanakutayimas([]);
     }
   };
 
@@ -171,11 +176,11 @@ export default function ChurchAdminStothrakazhchaPage() {
       return;
     }
     try {
-      const response = await api.get('/houses');
-      const filtered = (response.data?.data || []).filter((h: House) => h.bavanakutayimaId === bavanakutayimaId);
-      setHouses(filtered);
+      const response = await api.get(`/houses?bavanakutayimaId=${bavanakutayimaId}`);
+      setHouses(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching houses:', error);
+      setHouses([]);
     }
   };
 
@@ -185,11 +190,11 @@ export default function ChurchAdminStothrakazhchaPage() {
       return;
     }
     try {
-      const response = await api.get('/members');
-      const filtered = (response.data?.data || []).filter((m: Member) => m.houseId === houseId);
-      setMembers(filtered);
+      const response = await api.get(`/members?houseId=${houseId}`);
+      setMembers(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching members:', error);
+      setMembers([]);
     }
   };
 
@@ -228,6 +233,7 @@ export default function ChurchAdminStothrakazhchaPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       if (editingId) {
         await api.put(`/stothrakazhcha/${editingId}`, formData);
@@ -242,6 +248,8 @@ export default function ChurchAdminStothrakazhchaPage() {
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(error.response?.data?.error || 'Failed to save Stothrakazhcha');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -262,6 +270,7 @@ export default function ChurchAdminStothrakazhchaPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this Stothrakazhcha?')) return;
+    setDeletingId(id);
     try {
       await api.delete(`/stothrakazhcha/${id}`);
       toast.success('Stothrakazhcha deleted successfully!');
@@ -269,6 +278,8 @@ export default function ChurchAdminStothrakazhchaPage() {
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(error.response?.data?.error || 'Failed to delete Stothrakazhcha');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -312,6 +323,7 @@ export default function ChurchAdminStothrakazhchaPage() {
 
     if (!selectedStothrakazhcha) return;
 
+    setAddingPayment(true);
     try {
       await api.post(`/stothrakazhcha/${selectedStothrakazhcha._id}/contribute`, {
         amount: parseFloat(paymentData.amount),
@@ -325,7 +337,13 @@ export default function ChurchAdminStothrakazhchaPage() {
     } catch (error: any) {
       console.error('Error adding payment:', error);
       toast.error(error.response?.data?.error || 'Failed to add payment');
+    } finally {
+      setAddingPayment(false);
     }
+  };
+
+  const handleViewPayments = (stothrakazhcha: Stothrakazhcha) => {
+    router.push(`/church-admin/dashboard/stothrakazhcha/payments?id=${stothrakazhcha._id}`);
   };
 
   const resetForm = () => {
@@ -496,6 +514,13 @@ export default function ChurchAdminStothrakazhchaPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
+                        onClick={() => handleViewPayments(item)}
+                        className="text-green-600 hover:text-green-900 mr-3"
+                        title="View Payments"
+                      >
+                        <Users className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => handleOpenPaymentModal(item)}
                         className="text-blue-600 hover:text-blue-900 mr-3"
                         title="Add Payment"
@@ -520,9 +545,10 @@ export default function ChurchAdminStothrakazhchaPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(item._id)}
-                        className="text-red-600 hover:text-red-900"
+                        disabled={deletingId === item._id}
+                        className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {deletingId === item._id ? <div className="animate-spin">⏳</div> : <Trash2 className="w-4 h-4" />}
                       </button>
                     </td>
                   </tr>
@@ -648,9 +674,10 @@ export default function ChurchAdminStothrakazhchaPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                    disabled={submitting}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {editingId ? 'Update' : 'Create'}
+                    {submitting ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update' : 'Create')}
                   </button>
                 </div>
               </form>
@@ -787,9 +814,10 @@ export default function ChurchAdminStothrakazhchaPage() {
                 </button>
                 <button
                   onClick={handleAddPayment}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={addingPayment}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add Payment
+                  {addingPayment ? 'Adding Payment...' : 'Add Payment'}
                 </button>
               </div>
             </div>

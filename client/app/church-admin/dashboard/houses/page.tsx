@@ -14,13 +14,15 @@ export default function HousesPage() {
   const [units, setUnits] = useState<any[]>([]);
   const [bavanakutayimas, setBavanakutayimas] = useState<Bavanakutayima[]>([]);
   const [allBavanakutayimas, setAllBavanakutayimas] = useState<Bavanakutayima[]>([]);
-  const [formBavanakutayimas, setFormBavanakutayimas] = useState<Bavanakutayima[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
+    unit: '',
     bavanakutayima: '',
   });
   const [showModal, setShowModal] = useState(false);
   const [editingHouse, setEditingHouse] = useState<House | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     unitId: '',
     bavanakutayimaId: '',
@@ -46,20 +48,7 @@ export default function HousesPage() {
         api.get('/bavanakutayimas'),
       ]);
       setHouses(housesRes.data?.data || []);
-      // Filter units to only show units from church admin's church
-      const allUnits = unitsRes.data?.data || [];
-      const userChurchId = typeof user?.churchId === 'object' && user.churchId !== null
-        ? (user.churchId as any)._id || (user.churchId as any).id
-        : user?.churchId;
-      const churchUnits = userChurchId
-        ? allUnits.filter((unit: any) => {
-            const unitChurchId = typeof unit.churchId === 'object' && unit.churchId !== null
-              ? (unit.churchId as any)._id || (unit.churchId as any).id
-              : unit.churchId;
-            return unitChurchId?.toString() === userChurchId?.toString();
-          })
-        : allUnits;
-      setUnits(churchUnits);
+      setUnits(unitsRes.data?.data || []);
       setBavanakutayimas(bavanakutayimasRes.data?.data || []);
       setAllBavanakutayimas(bavanakutayimasRes.data?.data || []);
     } catch (error) {
@@ -69,26 +58,10 @@ export default function HousesPage() {
     }
   };
 
-  const fetchBavanakutayimasByUnit = async (unitId: string) => {
-    try {
-      const response = await api.get(`/bavanakutayimas?unitId=${unitId}`);
-      setFormBavanakutayimas(response.data?.data || []);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  // Update bavanakutayimas when unit changes in form
-  useEffect(() => {
-    if (formData.unitId) {
-      fetchBavanakutayimasByUnit(formData.unitId);
-    } else {
-      setFormBavanakutayimas([]);
-    }
-  }, [formData.unitId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       if (editingHouse) {
         await api.put(`/houses/${editingHouse._id}`, formData);
@@ -101,6 +74,8 @@ export default function HousesPage() {
       fetchData();
     } catch (error: any) {
       alert(error.response?.data?.message || 'Operation failed');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -119,22 +94,19 @@ export default function HousesPage() {
       phone: house.phone || '',
       houseNumber: house.houseNumber || '',
     });
-
-    // Fetch bavanakutayimas for this unit
-    if (unitId) {
-      fetchBavanakutayimasByUnit(unitId);
-    }
-
     setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure?')) return;
+    setDeletingId(id);
     try {
       await api.delete(`/houses/${id}`);
       fetchData();
     } catch (error: any) {
       alert(error.response?.data?.message || 'Delete failed');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -148,7 +120,6 @@ export default function HousesPage() {
       phone: '',
       houseNumber: '',
     });
-    setFormBavanakutayimas([]);
   };
 
   const getBavanakutayimaName = (id: string) => {
@@ -156,6 +127,12 @@ export default function HousesPage() {
   };
 
   const filteredHouses = houses.filter((house) => {
+    // Filter by unit
+    if (filters.unit) {
+      const bavanakutayima = allBavanakutayimas.find(bk => bk._id === house.bavanakutayimaId);
+      if (!bavanakutayima || bavanakutayima.unitId !== filters.unit) return false;
+    }
+    // Filter by bavanakutayima
     if (filters.bavanakutayima && house.bavanakutayimaId !== filters.bavanakutayima) return false;
     return true;
   });
@@ -181,7 +158,17 @@ export default function HousesPage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <SearchableSelect
+          label="Filter by Unit"
+          options={units.map((unit) => ({
+            value: unit._id,
+            label: unit.name,
+          }))}
+          value={filters.unit}
+          onChange={(value) => setFilters({ ...filters, unit: value, bavanakutayima: '' })}
+          placeholder="All Units"
+        />
         <SearchableSelect
           label="Filter by Bavanakutayima"
           options={bavanakutayimas.map((bk) => ({
@@ -216,8 +203,12 @@ export default function HousesPage() {
                   <button onClick={() => handleEdit(house)} className="text-blue-600 hover:text-blue-800">
                     <Edit2 className="w-5 h-5" />
                   </button>
-                  <button onClick={() => handleDelete(house._id)} className="text-red-600 hover:text-red-800">
-                    <Trash2 className="w-5 h-5" />
+                  <button
+                    onClick={() => handleDelete(house._id)}
+                    disabled={deletingId === house._id}
+                    className="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deletingId === house._id ? <div className="animate-spin text-sm">⏳</div> : <Trash2 className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -244,39 +235,22 @@ export default function HousesPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Unit *</label>
-                <select
-                  required
-                  value={formData.unitId}
-                  onChange={(e) => setFormData({ ...formData, unitId: e.target.value, bavanakutayimaId: '' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  <option value="">Select a unit</option>
-                  {units.map((unit) => (
-                    <option key={unit._id} value={unit._id}>{unit.name}</option>
-                  ))}
-                </select>
-              </div>
+              <SearchableSelect
+                label="Unit"
+                options={units.map((unit) => ({ value: unit._id, label: unit.name }))}
+                value={formData.unitId}
+                onChange={(value) => setFormData({ ...formData, unitId: value })}
+                placeholder="Search and select unit (optional)..."
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bavanakutayima *</label>
-                <select
-                  required
-                  value={formData.bavanakutayimaId}
-                  onChange={(e) => setFormData({ ...formData, bavanakutayimaId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  disabled={!formData.unitId}
-                >
-                  <option value="">Select a bavanakutayima</option>
-                  {formBavanakutayimas.map((b) => (
-                    <option key={b._id} value={b._id}>{b.name}</option>
-                  ))}
-                </select>
-                {!formData.unitId && (
-                  <p className="text-xs text-gray-500 mt-1">Please select a unit first</p>
-                )}
-              </div>
+              <SearchableSelect
+                label="Bavanakutayima"
+                required
+                options={allBavanakutayimas.map((bk) => ({ value: bk._id, label: bk.name }))}
+                value={formData.bavanakutayimaId}
+                onChange={(value) => setFormData({ ...formData, bavanakutayimaId: value })}
+                placeholder="Search and select bavanakutayima..."
+              />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Family Name *</label>
@@ -337,8 +311,12 @@ export default function HousesPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  {editingHouse ? 'Update' : 'Create'}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (editingHouse ? 'Updating...' : 'Creating...') : (editingHouse ? 'Update' : 'Create')}
                 </button>
               </div>
             </form>

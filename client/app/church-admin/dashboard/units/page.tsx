@@ -26,6 +26,8 @@ export default function UnitsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [formData, setFormData] = useState(initialFormState);
 
@@ -59,6 +61,7 @@ export default function UnitsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
     if (!user?.churchId) {
       toastService.error('Church ID not found. Please contact administrator.');
@@ -99,7 +102,9 @@ export default function UnitsPage() {
           } catch (adminError: any) {
             console.error('Error creating admin:', adminError);
             toastService.modify(toastId, 'Unit created but failed to create admin: ' + (adminError.response?.data?.error || 'Unknown error'), { type: 'warning' });
-          }
+          } finally {
+      setSubmitting(false);
+    }
         } else {
           toastService.modify(toastId, 'Unit created successfully!', { type: 'success' });
         }
@@ -220,8 +225,12 @@ export default function UnitsPage() {
                       <button onClick={() => handleEdit(unit)} className="text-blue-600 hover:text-blue-900 mr-4">
                         <Edit2 className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDeleteUnit(unit._id)} className="text-red-600 hover:text-red-900">
-                        <Trash2 className="w-5 h-5" />
+                      <button
+                        onClick={() => handleDeleteUnit(unit._id)}
+                        disabled={deletingId === unit._id}
+                        className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingId === unit._id ? <div className="animate-spin text-sm">⏳</div> : <Trash2 className="w-5 h-5" />}
                       </button>
                     </td>
                   </tr>
@@ -367,8 +376,12 @@ export default function UnitsPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  {editingUnit ? 'Update' : 'Create'}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (editingUnit ? 'Updating...' : 'Creating...') : (editingUnit ? 'Update' : 'Create')}
                 </button>
               </div>
             </form>

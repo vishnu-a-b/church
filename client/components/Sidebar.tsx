@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -27,8 +27,28 @@ interface SidebarProps {
 
 export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const pathname = usePathname();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  // Auto-expand parent menus when their children are active
+  useEffect(() => {
+    const expanded: string[] = [];
+    const normalizedPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
+
+    menuItems.forEach(item => {
+      if (item.children && item.children.some(child => {
+        const normalizedChildHref = child.href.endsWith('/') && child.href !== '/' ? child.href.slice(0, -1) : child.href;
+        return normalizedPathname === normalizedChildHref || normalizedPathname.startsWith(normalizedChildHref + '/');
+      })) {
+        expanded.push(item.name);
+      }
+    });
+    setExpandedMenus(prev => {
+      // Merge with existing expanded menus
+      const combined = [...new Set([...prev, ...expanded])];
+      return combined;
+    });
+  }, [pathname, menuItems]);
 
   const toggleMenu = (name: string) => {
     setExpandedMenus((prev) =>
@@ -36,7 +56,39 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
     );
   };
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => {
+    // Normalize paths by removing trailing slashes for comparison
+    const normalizedPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
+    const normalizedHref = href.endsWith('/') && href !== '/' ? href.slice(0, -1) : href;
+
+    const active = normalizedPathname === normalizedHref;
+
+    // Debug log
+    console.log('Checking active:', {
+      pathname,
+      normalizedPathname,
+      href,
+      normalizedHref,
+      active
+    });
+
+    return active;
+  };
+
+  const isParentActive = (item: MenuItem) => {
+    if (!item.children) return false;
+    // Normalize pathname for comparison
+    const normalizedPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
+    return item.children.some(child => {
+      const normalizedChildHref = child.href.endsWith('/') && child.href !== '/' ? child.href.slice(0, -1) : child.href;
+      return normalizedPathname === normalizedChildHref || normalizedPathname.startsWith(normalizedChildHref + '/');
+    });
+  };
+
+  // Debug log pathname changes
+  useEffect(() => {
+    console.log('Sidebar pathname changed to:', pathname);
+  }, [pathname]);
 
   return (
     <>
@@ -86,7 +138,11 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
                     <div>
                       <button
                         onClick={() => toggleMenu(item.name)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          isParentActive(item)
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
                       >
                         <div className="flex items-center gap-3">
                           <item.icon className="w-5 h-5" />
@@ -105,10 +161,10 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
                               key={child.href}
                               href={child.href}
                               onClick={() => setIsOpen(false)}
-                              className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                              className={`block px-3 py-2 text-sm rounded-lg transition-all duration-200 border-l-4 ${
                                 isActive(child.href)
-                                  ? 'bg-blue-50 text-blue-600 font-medium'
-                                  : 'text-gray-600 hover:bg-gray-100'
+                                  ? 'bg-blue-100 text-blue-700 font-bold border-blue-600 shadow-sm'
+                                  : 'text-gray-600 hover:bg-gray-100 border-transparent hover:border-gray-300'
                               }`}
                             >
                               {child.name}
@@ -121,13 +177,13 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
                     <Link
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 border-l-4 ${
                         isActive(item.href)
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? 'bg-blue-100 text-blue-700 font-bold border-blue-600 shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-100 border-transparent hover:border-gray-300'
                       }`}
                     >
-                      <item.icon className="w-5 h-5" />
+                      <item.icon className={`w-5 h-5 ${isActive(item.href) ? 'text-blue-700' : ''}`} />
                       {item.name}
                     </Link>
                   )}
