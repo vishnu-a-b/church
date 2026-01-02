@@ -5,7 +5,9 @@ import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
 import { createRoleApi } from '@/lib/roleApi';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, FileDown } from 'lucide-react';
+import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 
 interface Transaction {
   _id: string;
@@ -171,6 +173,85 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleExportToExcel = () => {
+    try {
+      // Prepare data for Excel
+      const excelData = filteredTransactions.map((transaction, index) => {
+        let payerName = '-';
+        if (transaction.memberId) {
+          if (typeof transaction.memberId === 'object') {
+            payerName = `${transaction.memberId.firstName} ${transaction.memberId.lastName || ''}`;
+          } else {
+            const member = getMemberData(transaction.memberId);
+            payerName = member ? `${member.firstName} ${member.lastName || ''}` : '-';
+          }
+        } else if (transaction.houseId) {
+          if (typeof transaction.houseId === 'object') {
+            payerName = transaction.houseId.familyName || '-';
+          } else {
+            const house = getHouseData(transaction.houseId);
+            payerName = house?.familyName || '-';
+          }
+        }
+
+        return {
+          '#': index + 1,
+          'Receipt Number': transaction.receiptNumber,
+          'Type': transaction.transactionType,
+          'Payer': payerName,
+          'Amount (₹)': transaction.totalAmount,
+          'Payment Method': transaction.paymentMethod,
+          'Date': new Date(transaction.paymentDate).toLocaleDateString('en-IN'),
+          'Campaign': transaction.campaignId?.name || '-',
+          'Notes': transaction.notes || '-',
+        };
+      });
+
+      // Add summary row
+      excelData.push({
+        '#': '',
+        'Receipt Number': '',
+        'Type': '',
+        'Payer': '',
+        'Amount (₹)': filteredTransactions.reduce((sum, t) => sum + t.totalAmount, 0),
+        'Payment Method': 'Total:',
+        'Date': '',
+        'Campaign': '',
+        'Notes': '',
+      });
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 5 },  // #
+        { wch: 15 }, // Receipt Number
+        { wch: 20 }, // Type
+        { wch: 25 }, // Payer
+        { wch: 15 }, // Amount
+        { wch: 15 }, // Payment Method
+        { wch: 15 }, // Date
+        { wch: 20 }, // Campaign
+        { wch: 30 }, // Notes
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+
+      // Generate filename
+      const filename = `Transactions_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Download
+      XLSX.writeFile(wb, filename);
+      toast.success('Excel file downloaded successfully!');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast.error('Failed to export to Excel');
+    }
+  };
+
   const columns: ColumnDef<Transaction>[] = [
     {
       accessorKey: 'receiptNumber',
@@ -253,6 +334,14 @@ export default function TransactionsPage() {
           <h1 className="text-2xl font-bold text-gray-800">Financial Transactions</h1>
           <p className="text-gray-600 text-sm">All financial transactions across the system</p>
         </div>
+        <button
+          onClick={handleExportToExcel}
+          disabled={filteredTransactions.length === 0}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FileDown className="w-5 h-5" />
+          Export to Excel
+        </button>
       </div>
 
       {/* Stats */}

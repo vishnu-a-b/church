@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Transaction } from '@/types';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, FileDown } from 'lucide-react';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -128,6 +130,86 @@ export default function TransactionsPage() {
     return allHouses.find((h) => h._id === houseId);
   };
 
+  const handleExportToExcel = () => {
+    try {
+      // Prepare data for Excel
+      const excelData = filteredTransactions.map((transaction, index) => {
+        let payerName = '-';
+        if (transaction.memberId) {
+          if (typeof transaction.memberId === 'object') {
+            payerName = `${transaction.memberId.firstName} ${transaction.memberId.lastName || ''}`;
+          } else {
+            const member = getMemberData(transaction.memberId);
+            payerName = member ? `${member.firstName} ${member.lastName || ''}` : '-';
+          }
+        } else if (transaction.houseId) {
+          if (typeof transaction.houseId === 'object') {
+            payerName = transaction.houseId.familyName || '-';
+          } else {
+            const house = getHouseData(transaction.houseId);
+            payerName = house?.familyName || '-';
+          }
+        }
+
+        return {
+          '#': index + 1,
+          'Receipt Number': transaction.receiptNumber,
+          'Type': transaction.transactionType,
+          'Payer': payerName,
+          'Amount (₹)': transaction.totalAmount,
+          'Payment Method': transaction.paymentMethod,
+          'Date': formatDate(transaction.paymentDate),
+          'Campaign': transaction.campaignId?.name || '-',
+          'Notes': transaction.notes || '-',
+        };
+      });
+
+      // Add summary row
+      const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.totalAmount, 0);
+      excelData.push({
+        '#': '',
+        'Receipt Number': '',
+        'Type': '',
+        'Payer': '',
+        'Amount (₹)': totalAmount,
+        'Payment Method': 'Total:',
+        'Date': '',
+        'Campaign': '',
+        'Notes': '',
+      });
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 5 },  // #
+        { wch: 15 }, // Receipt Number
+        { wch: 20 }, // Type
+        { wch: 25 }, // Payer
+        { wch: 15 }, // Amount
+        { wch: 15 }, // Payment Method
+        { wch: 15 }, // Date
+        { wch: 20 }, // Campaign
+        { wch: 30 }, // Notes
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+
+      // Generate filename
+      const filename = `Transactions_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Download
+      XLSX.writeFile(wb, filename);
+      toast.success('Excel file downloaded successfully!');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast.error('Failed to export to Excel');
+    }
+  };
+
   const filteredTransactions = transactions.filter((txn: any) => {
     // Extract IDs from transaction (might be objects or strings)
     const txnChurchId = typeof txn.churchId === 'object' && txn.churchId?._id
@@ -198,9 +280,19 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">Transactions</h2>
-        <p className="text-gray-600">View all financial transactions</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Transactions</h2>
+          <p className="text-gray-600">View all financial transactions</p>
+        </div>
+        <button
+          onClick={handleExportToExcel}
+          disabled={filteredTransactions.length === 0}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FileDown className="w-5 h-5" />
+          Export to Excel
+        </button>
       </div>
 
       {/* Filters */}

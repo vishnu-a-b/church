@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { Campaign } from '@/types';
-import { ArrowLeft, UserPlus, Users, DollarSign, Calendar, TrendingUp } from 'lucide-react';
+import { ArrowLeft, UserPlus, Users, DollarSign, Calendar, TrendingUp, FileDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import * as XLSX from 'xlsx';
 
 interface Member {
   _id: string;
@@ -266,6 +267,57 @@ export default function CampaignPaymentsPage() {
     });
   };
 
+  const handleExportToExcel = () => {
+    try {
+      // Prepare data for Excel
+      const excelData = filteredPayments.map((payment, index) => ({
+        '#': index + 1,
+        'Member Name': `${payment.member?.firstName || ''} ${payment.member?.lastName || ''}`,
+        'Email': payment.member?.email || '-',
+        'House': payment.house?.familyName || '-',
+        'Amount (₹)': payment.amount || 0,
+        'Date': payment.contributedAt ? formatDate(payment.contributedAt) : '-',
+      }));
+
+      // Add summary row
+      excelData.push({
+        '#': '',
+        'Member Name': '',
+        'Email': '',
+        'House': 'Total Collected:',
+        'Amount (₹)': payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+        'Date': '',
+      });
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 5 },  // #
+        { wch: 25 }, // Member Name
+        { wch: 30 }, // Email
+        { wch: 20 }, // House
+        { wch: 15 }, // Amount
+        { wch: 15 }, // Date
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Campaign Payments');
+
+      // Generate filename
+      const filename = `${campaign?.name || 'Campaign'}_Payments_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Download
+      XLSX.writeFile(wb, filename);
+      toast.success('Excel file downloaded successfully!');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast.error('Failed to export to Excel');
+    }
+  };
+
   if (!campaignId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -342,13 +394,23 @@ export default function CampaignPaymentsPage() {
             <p className="text-gray-600">Campaign Payments & Contributors</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowPaymentModal(true)}
-          className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-        >
-          <UserPlus className="w-5 h-5" />
-          Add Payment
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExportToExcel}
+            disabled={payments.length === 0}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileDown className="w-5 h-5" />
+            Export to Excel
+          </button>
+          <button
+            onClick={() => setShowPaymentModal(true)}
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <UserPlus className="w-5 h-5" />
+            Add Payment
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
