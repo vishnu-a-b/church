@@ -164,7 +164,8 @@ export default function BavanakutayimasPage() {
 
   const filtered = bavanakutayimas.filter((b) => {
     // Filter by search term
-    if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !(b.hierarchicalNumber && b.hierarchicalNumber.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
     // Filter by unit
     if (filters.unit && b.unitId !== filters.unit) return false;
     return true;
@@ -219,6 +220,7 @@ export default function BavanakutayimasPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hierarchical ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Leader</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Unit</th>
@@ -227,12 +229,15 @@ export default function BavanakutayimasPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
-                <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-500">No records found</td></tr>
+                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No records found</td></tr>
               ) : (
                 filtered.map((item) => (
                   <tr key={item._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-blue-600">{item.hierarchicalNumber || '-'}</div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{item.name}</div>
                     </td>

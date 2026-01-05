@@ -71,6 +71,7 @@ export interface IHouse extends Document {
   address?: string;
   phone?: string;
   houseCode?: string;
+  hierarchicalNumber?: string; // Virtual field
 }
 
 // Member Types (Merged with User - all in one model)
@@ -109,6 +110,8 @@ export interface IMember extends Document {
     paymentNotifications: boolean;
     receiptNotifications: boolean;
   };
+
+  hierarchicalNumber?: string; // Virtual field
 
   // Method for password comparison
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -217,6 +220,24 @@ export interface IStothrakazhchaDue extends Document {
   stothrakazhchaId: Types.ObjectId;
   weekNumber: number;
   year: number;
+  dueForId: Types.ObjectId;
+  dueForModel: 'Member' | 'House';
+  dueForName: string;
+  amount: number;
+  isPaid: boolean;
+  paidAmount: number;
+  balance: number;
+  transactionId?: Types.ObjectId;
+  paidAt?: Date;
+  dueDate: Date;
+  createdAt: Date;
+  notes?: string;
+}
+
+export interface ICampaignDue extends Document {
+  churchId: Types.ObjectId;
+  campaignId: Types.ObjectId;
+  campaignName: string;
   dueForId: Types.ObjectId;
   dueForModel: 'Member' | 'House';
   dueForName: string;

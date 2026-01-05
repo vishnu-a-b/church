@@ -136,16 +136,18 @@ export default function TransactionsPage() {
       const excelData = filteredTransactions.map((transaction, index) => {
         let payerName = '-';
         if (transaction.memberId) {
-          if (typeof transaction.memberId === 'object') {
-            payerName = `${transaction.memberId.firstName} ${transaction.memberId.lastName || ''}`;
-          } else {
+          if (typeof transaction.memberId === 'object' && transaction.memberId !== null) {
+            const member = transaction.memberId as { _id: string; firstName: string; lastName: string };
+            payerName = `${member.firstName} ${member.lastName || ''}`;
+          } else if (typeof transaction.memberId === 'string') {
             const member = getMemberData(transaction.memberId);
             payerName = member ? `${member.firstName} ${member.lastName || ''}` : '-';
           }
         } else if (transaction.houseId) {
-          if (typeof transaction.houseId === 'object') {
-            payerName = transaction.houseId.familyName || '-';
-          } else {
+          if (typeof transaction.houseId === 'object' && transaction.houseId !== null) {
+            const house = transaction.houseId as { _id: string; familyName: string };
+            payerName = house.familyName || '-';
+          } else if (typeof transaction.houseId === 'string') {
             const house = getHouseData(transaction.houseId);
             payerName = house?.familyName || '-';
           }
@@ -159,7 +161,7 @@ export default function TransactionsPage() {
           'Amount (₹)': transaction.totalAmount,
           'Payment Method': transaction.paymentMethod,
           'Date': formatDate(transaction.paymentDate),
-          'Campaign': transaction.campaignId?.name || '-',
+          'Campaign': (typeof transaction.campaignId === 'object' && transaction.campaignId !== null ? transaction.campaignId.name : null) || '-',
           'Notes': transaction.notes || '-',
         };
       });
@@ -176,7 +178,7 @@ export default function TransactionsPage() {
         'Date': '',
         'Campaign': '',
         'Notes': '',
-      });
+      } as any);
 
       // Create worksheet
       const ws = XLSX.utils.json_to_sheet(excelData);
@@ -346,7 +348,7 @@ export default function TransactionsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>

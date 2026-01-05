@@ -15,7 +15,7 @@ export default function UsersPage() {
     username: '',
     email: '',
     password: '',
-    role: 'member' as 'super_admin' | 'unit_admin' | 'member',
+    role: 'member' as 'super_admin' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin' | 'member',
     isActive: true,
   });
 

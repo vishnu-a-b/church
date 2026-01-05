@@ -20,8 +20,9 @@ interface Transaction {
   paymentDate: string;
   churchId?: string;
   unitId?: string;
-  houseId?: string;
-  memberId?: { _id: string; firstName: string; lastName: string; houseId?: string };
+  houseId?: string | { _id: string; familyName: string; hierarchicalNumber?: string };
+  memberId?: string | { _id: string; firstName: string; lastName: string; houseId?: string; hierarchicalNumber?: string };
+  campaignId?: string | { _id: string; name: string };
   notes?: string;
 }
 
@@ -202,14 +203,14 @@ export default function TransactionsPage() {
           'Amount (₹)': transaction.totalAmount,
           'Payment Method': transaction.paymentMethod,
           'Date': new Date(transaction.paymentDate).toLocaleDateString('en-IN'),
-          'Campaign': transaction.campaignId?.name || '-',
+          'Campaign': (typeof transaction.campaignId === 'object' ? transaction.campaignId?.name : null) || '-',
           'Notes': transaction.notes || '-',
         };
       });
 
       // Add summary row
       excelData.push({
-        '#': '',
+        '#': '' as any,
         'Receipt Number': '',
         'Type': '',
         'Payer': '',
@@ -254,6 +255,26 @@ export default function TransactionsPage() {
 
   const columns: ColumnDef<Transaction>[] = [
     {
+      header: 'Hierarchical ID',
+      cell: ({ row }) => {
+        if (row.original.memberId && typeof row.original.memberId === 'object') {
+          return (
+            <span className="text-blue-600 font-semibold">
+              {row.original.memberId.hierarchicalNumber || '-'}
+            </span>
+          );
+        }
+        if (row.original.houseId && typeof row.original.houseId === 'object') {
+          return (
+            <span className="text-blue-600 font-semibold">
+              {row.original.houseId.hierarchicalNumber || '-'}
+            </span>
+          );
+        }
+        return <span className="text-blue-600 font-semibold">-</span>;
+      },
+    },
+    {
       accessorKey: 'receiptNumber',
       header: 'Receipt #',
     },
@@ -269,10 +290,10 @@ export default function TransactionsPage() {
     {
       header: 'Payer',
       cell: ({ row }) => {
-        if (row.original.memberId) {
+        if (row.original.memberId && typeof row.original.memberId === 'object') {
           return `${row.original.memberId.firstName} ${row.original.memberId.lastName || ''}`;
         }
-        if (row.original.houseId) {
+        if (row.original.houseId && typeof row.original.houseId === 'object') {
           return row.original.houseId.familyName;
         }
         return '-';
@@ -299,7 +320,7 @@ export default function TransactionsPage() {
     },
     {
       header: 'Campaign',
-      cell: ({ row }) => row.original.campaignId?.name || '-',
+      cell: ({ row }) => (typeof row.original.campaignId === 'object' ? row.original.campaignId?.name : null) || '-',
     },
     {
       accessorKey: 'notes',
@@ -345,7 +366,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>

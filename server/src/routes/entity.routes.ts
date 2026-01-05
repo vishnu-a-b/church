@@ -33,6 +33,8 @@ import {
   deleteCampaign,
   processCampaignDues,
   addCampaignContribution,
+  getAllDues,
+  payDue,
   getAllSpiritualActivities,
   getSpiritualActivityById,
   createSpiritualActivity,
@@ -59,6 +61,7 @@ import {
   deleteEvent,
   getActiveNews,
   getActiveEvents,
+  globalSearch,
 } from '../controllers/entityController';
 import {
   getAllStothrakazhcha,
@@ -98,6 +101,9 @@ const router = Router();
 
 // All routes require authentication
 router.use(protect);
+
+// Global Search
+router.get('/search', globalSearch);
 
 /**
  * @swagger
@@ -686,6 +692,10 @@ router.route('/campaigns').get(getAllCampaigns).post(createCampaign);
 router.route('/campaigns/:id').get(getCampaignById).put(updateCampaign).delete(deleteCampaign);
 router.post('/campaigns/process-dues', processCampaignDues);
 router.post('/campaigns/:id/contribute', addCampaignContribution);
+
+// Unified Dues endpoint (Campaign + Stothrakazhcha)
+router.get('/dues', getAllDues);
+router.post('/dues/pay', payDue);
 
 /**
  * @swagger

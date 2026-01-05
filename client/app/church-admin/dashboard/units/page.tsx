@@ -159,7 +159,8 @@ export default function UnitsPage() {
   };
 
   const filteredUnits = units.filter((unit) =>
-    unit.name.toLowerCase().includes(searchTerm.toLowerCase())
+    unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (unit.hierarchicalNumber && unit.hierarchicalNumber.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -198,8 +199,8 @@ export default function UnitsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hierarchical ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Unit Number</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Church</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
@@ -213,10 +214,10 @@ export default function UnitsPage() {
                 filteredUnits.map((unit) => (
                   <tr key={unit._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{unit.name}</div>
+                      <div className="text-sm font-semibold text-blue-600">{unit.hierarchicalNumber || unit.unitNumber || '-'}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                      <div className="text-sm text-gray-900">{unit.unitNumber || '-'}</div>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{unit.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                       <div className="text-sm text-gray-900">{getChurchName()}</div>

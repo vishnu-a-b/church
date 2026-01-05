@@ -278,7 +278,7 @@ export default function StothrakazhchaPaymentsPage() {
 
       // Add summary row
       excelData.push({
-        '#': '',
+        '#': '' as any,
         'Member Name': '',
         'Email': '',
         'House': 'Total Collected:',
@@ -521,6 +521,9 @@ export default function StothrakazhchaPaymentsPage() {
                     #
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hierarchical ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Member
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -539,6 +542,11 @@ export default function StothrakazhchaPaymentsPage() {
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {startIndex + index + 1}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-blue-600">
+                        {payment.member?.hierarchicalNumber || payment.house?.hierarchicalNumber || '-'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -566,7 +574,7 @@ export default function StothrakazhchaPaymentsPage() {
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={3} className="px-6 py-4 text-right text-sm font-semibold text-gray-700">
+                  <td colSpan={4} className="px-6 py-4 text-right text-sm font-semibold text-gray-700">
                     Total Collected:
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-green-600">

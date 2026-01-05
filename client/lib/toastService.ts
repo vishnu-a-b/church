@@ -126,7 +126,7 @@ class ToastService {
       promise,
       messages,
       { ...this.defaultOptions, ...options }
-    );
+    ) as Promise<T>;
   }
 }
 

@@ -168,4 +168,27 @@ memberSchema.index({ uniqueId: 1 });
 memberSchema.index({ firstName: 1, lastName: 1 });
 memberSchema.index({ isActive: 1 });
 
+// Virtual field for hierarchical number
+// Will be computed as: churchNumber-unitNumber-bavanakutayimaNumber-houseNumber-memberNumber
+// The house.bavanakutayimaId.unitId.churchId data needs to be populated for this to work
+memberSchema.virtual('hierarchicalNumber').get(function() {
+  if (this.populated('houseId') && typeof this.houseId === 'object' && 'houseNumber' in this.houseId) {
+    const house = this.houseId as any;
+    if (house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object' && 'bavanakutayimaNumber' in house.bavanakutayimaId) {
+      const bk = house.bavanakutayimaId;
+      if (bk.unitId && typeof bk.unitId === 'object' && 'unitNumber' in bk.unitId) {
+        const unit = bk.unitId;
+        if (unit.churchId && typeof unit.churchId === 'object' && 'churchNumber' in unit.churchId) {
+          return `${unit.churchId.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}-${this.memberNumber}`;
+        }
+      }
+    }
+  }
+  return String(this.memberNumber);
+});
+
+// Ensure virtuals are included in JSON
+memberSchema.set('toJSON', { virtuals: true });
+memberSchema.set('toObject', { virtuals: true });
+
 export default mongoose.model<IMember>('Member', memberSchema);

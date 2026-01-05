@@ -6,6 +6,9 @@ import Member from '../models/Member';
 import User from '../models/User';
 import Transaction from '../models/Transaction';
 import Campaign from '../models/Campaign';
+import CampaignDue from '../models/CampaignDue';
+import StothrakazhchaDue from '../models/StothrakazhchaDue';
+import Stothrakazhcha from '../models/Stothrakazhcha';
 import SpiritualActivity from '../models/SpiritualActivity';
 import News from '../models/News';
 import Event from '../models/Event';
@@ -21,7 +24,7 @@ export const getAllUnits = async (req: AuthRequest, res: Response, next: NextFun
       filter.churchId = req.user.churchId;
     }
 
-    const units = await Unit.find(filter).populate('churchId', 'name uniqueId').sort({ uniqueId: 1 });
+    const units = await Unit.find(filter).populate('churchId', 'name uniqueId churchNumber').sort({ uniqueId: 1 });
     res.json({ success: true, data: units });
   } catch (error) {
     next(error);
@@ -30,7 +33,7 @@ export const getAllUnits = async (req: AuthRequest, res: Response, next: NextFun
 
 export const getUnitById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const unit = await Unit.findById(req.params.id).populate('churchId', 'name uniqueId');
+    const unit = await Unit.findById(req.params.id).populate('churchId', 'name uniqueId churchNumber');
     if (!unit) {
       res.status(404).json({ success: false, error: 'Unit not found' });
       return;
@@ -75,8 +78,8 @@ export const createUnit = async (req: AuthRequest, res: Response, next: NextFunc
     const lastUnit = await Unit.findOne({ churchId }).sort({ unitNumber: -1 });
     const unitNumber = lastUnit ? lastUnit.unitNumber + 1 : 1;
 
-    // Generate uniqueId: {churchUniqueId}-U{paddedUnitNumber}
-    const uniqueId = `${church.uniqueId}-U${String(unitNumber).padStart(3, '0')}`;
+    // Generate uniqueId: {churchUniqueId}-{unitNumber}
+    const uniqueId = `${church.uniqueId}-${unitNumber}`;
 
     // Create unit with generated fields
     const unit = await Unit.create({
@@ -185,8 +188,20 @@ export const getAllBavanakutayimas = async (req: AuthRequest, res: Response, nex
       filter.unitId = { $in: unitIds };
     }
 
+    // Unit admin restriction: only show bavanakutayimas from their unit
+    if (req.user?.role === 'unit_admin' && req.user.unitId) {
+      filter.unitId = req.user.unitId;
+    }
+
     const bavanakutayimas = await Bavanakutayima.find(filter)
-      .populate('unitId', 'name uniqueId')
+      .populate({
+        path: 'unitId',
+        select: 'name uniqueId unitNumber',
+        populate: {
+          path: 'churchId',
+          select: 'name uniqueId churchNumber'
+        }
+      })
       .sort({ uniqueId: 1 });
     res.json({ success: true, data: bavanakutayimas });
   } catch (error) {
@@ -196,7 +211,14 @@ export const getAllBavanakutayimas = async (req: AuthRequest, res: Response, nex
 
 export const getBavanakutayimaById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const bavanakutayima = await Bavanakutayima.findById(req.params.id).populate('unitId', 'name uniqueId');
+    const bavanakutayima = await Bavanakutayima.findById(req.params.id).populate({
+      path: 'unitId',
+      select: 'name uniqueId unitNumber',
+      populate: {
+        path: 'churchId',
+        select: 'name uniqueId churchNumber'
+      }
+    });
     if (!bavanakutayima) {
       res.status(404).json({ success: false, error: 'Bavanakutayima not found' });
       return;
@@ -241,7 +263,7 @@ export const createBavanakutayima = async (req: AuthRequest, res: Response, next
     const bavanakutayimaNumber = lastBK ? lastBK.bavanakutayimaNumber + 1 : 1;
 
     // Generate uniqueId: {unitUniqueId}-BK{paddedNumber}
-    const uniqueId = `${unit.uniqueId}-BK${String(bavanakutayimaNumber).padStart(3, '0')}`;
+    const uniqueId = `${unit.uniqueId}-${bavanakutayimaNumber}`;
 
     // Create bavanakutayima with generated fields
     const bavanakutayima = await Bavanakutayima.create({
@@ -357,13 +379,31 @@ export const getAllHouses = async (req: AuthRequest, res: Response, next: NextFu
       filter.bavanakutayimaId = { $in: bavanakutayimaIds };
     }
 
+    // Unit admin restriction: only show houses from their unit
+    if (req.user?.role === 'unit_admin' && req.user.unitId) {
+      const bavanakutayimas = await Bavanakutayima.find({ unitId: req.user.unitId }).select('_id');
+      const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+      filter.bavanakutayimaId = { $in: bavanakutayimaIds };
+    }
+
     // Kudumbakutayima admin restriction: only show houses from their bavanakutayima
     if (req.user?.role === 'kudumbakutayima_admin' && req.user.bavanakutayimaId) {
       filter.bavanakutayimaId = req.user.bavanakutayimaId;
     }
 
     const houses = await House.find(filter)
-      .populate('bavanakutayimaId', 'name uniqueId')
+      .populate({
+        path: 'bavanakutayimaId',
+        select: 'name uniqueId bavanakutayimaNumber',
+        populate: {
+          path: 'unitId',
+          select: 'name uniqueId unitNumber',
+          populate: {
+            path: 'churchId',
+            select: 'name uniqueId churchNumber'
+          }
+        }
+      })
       .sort({ uniqueId: 1 });
     res.json({ success: true, data: houses });
   } catch (error) {
@@ -373,7 +413,18 @@ export const getAllHouses = async (req: AuthRequest, res: Response, next: NextFu
 
 export const getHouseById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const house = await House.findById(req.params.id).populate('bavanakutayimaId', 'name uniqueId');
+    const house = await House.findById(req.params.id).populate({
+      path: 'bavanakutayimaId',
+      select: 'name uniqueId bavanakutayimaNumber',
+      populate: {
+        path: 'unitId',
+        select: 'name uniqueId unitNumber',
+        populate: {
+          path: 'churchId',
+          select: 'name uniqueId churchNumber'
+        }
+      }
+    });
     if (!house) {
       res.status(404).json({ success: false, error: 'House not found' });
       return;
@@ -419,7 +470,7 @@ export const createHouse = async (req: AuthRequest, res: Response, next: NextFun
     const houseNumber = lastHouse ? lastHouse.houseNumber + 1 : 1;
 
     // Generate uniqueId: {bavanakutayimaUniqueId}-H{paddedNumber}
-    const uniqueId = `${bavanakutayima.uniqueId}-H${String(houseNumber).padStart(3, '0')}`;
+    const uniqueId = `${bavanakutayima.uniqueId}-${houseNumber}`;
 
     // Create house with generated fields
     const house = await House.create({
@@ -545,15 +596,47 @@ export const getAllMembers = async (req: AuthRequest, res: Response, next: NextF
     const filter: any = {};
     if (req.user?.role === 'church_admin' && req.user.churchId) {
       filter.churchId = req.user.churchId;
+      // Exclude super_admin from church admin view
+      filter.role = { $ne: 'super_admin' };
+    }
+
+    // Unit admin restriction: only show members from their unit
+    if (req.user?.role === 'unit_admin' && req.user.unitId) {
+      filter.unitId = req.user.unitId;
+      // Exclude super_admin and church_admin from unit admin view
+      filter.role = { $nin: ['super_admin', 'church_admin'] };
     }
 
     // Kudumbakutayima admin restriction: only show members from their bavanakutayima
     if (req.user?.role === 'kudumbakutayima_admin' && req.user.bavanakutayimaId) {
       filter.bavanakutayimaId = req.user.bavanakutayimaId;
+      // Exclude super_admin, church_admin, and unit_admin from kudumbakutayima admin view
+      filter.role = { $nin: ['super_admin', 'church_admin', 'unit_admin'] };
     }
 
+    // Apply additional query filters (for hierarchical filtering)
+    const { unitId, bavanakutayimaId, houseId } = req.query;
+    if (unitId) filter.unitId = unitId;
+    if (bavanakutayimaId) filter.bavanakutayimaId = bavanakutayimaId;
+    if (houseId) filter.houseId = houseId;
+
     const members = await Member.find(filter)
-      .populate('houseId', 'familyName uniqueId')
+      .populate({
+        path: 'houseId',
+        select: 'familyName uniqueId houseNumber',
+        populate: {
+          path: 'bavanakutayimaId',
+          select: 'name uniqueId bavanakutayimaNumber',
+          populate: {
+            path: 'unitId',
+            select: 'name uniqueId unitNumber',
+            populate: {
+              path: 'churchId',
+              select: 'name uniqueId churchNumber'
+            }
+          }
+        }
+      })
       .sort({ uniqueId: 1 });
     res.json({ success: true, data: members });
   } catch (error) {
@@ -564,10 +647,25 @@ export const getAllMembers = async (req: AuthRequest, res: Response, next: NextF
 export const getMemberById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const member = await Member.findById(req.params.id)
-      .populate('houseId', 'familyName uniqueId')
-      .populate('churchId', 'name uniqueId')
-      .populate('unitId', 'name uniqueId')
-      .populate('bavanakutayimaId', 'name uniqueId');
+      .populate({
+        path: 'houseId',
+        select: 'familyName uniqueId houseNumber',
+        populate: {
+          path: 'bavanakutayimaId',
+          select: 'name uniqueId bavanakutayimaNumber',
+          populate: {
+            path: 'unitId',
+            select: 'name uniqueId unitNumber',
+            populate: {
+              path: 'churchId',
+              select: 'name uniqueId churchNumber'
+            }
+          }
+        }
+      })
+      .populate('churchId', 'name uniqueId churchNumber')
+      .populate('unitId', 'name uniqueId unitNumber')
+      .populate('bavanakutayimaId', 'name uniqueId bavanakutayimaNumber');
     if (!member) {
       res.status(404).json({ success: false, error: 'Member not found' });
       return;
@@ -630,7 +728,7 @@ export const createMember = async (req: AuthRequest, res: Response, next: NextFu
     const memberNumber = lastMember ? lastMember.memberNumber + 1 : 1;
 
     // Generate uniqueId: {houseUniqueId}-M{paddedNumber}
-    const uniqueId = `${house.uniqueId}-M${String(memberNumber).padStart(3, '0')}`;
+    const uniqueId = `${house.uniqueId}-${memberNumber}`;
 
     // Create member with generated fields (without username/password - those go in User model)
     const member = await Member.create({
@@ -782,6 +880,22 @@ export const getAllUsers = async (req: AuthRequest, res: Response, next: NextFun
     const filter: any = {};
     if (req.user?.role === 'church_admin' && req.user.churchId) {
       filter.churchId = req.user.churchId;
+      // Exclude super_admin from church admin view
+      filter.role = { $ne: 'super_admin' };
+    }
+
+    // Unit admin restriction: only show users from their unit
+    if (req.user?.role === 'unit_admin' && req.user.unitId) {
+      filter.unitId = req.user.unitId;
+      // Exclude super_admin and church_admin from unit admin view
+      filter.role = { $nin: ['super_admin', 'church_admin'] };
+    }
+
+    // Kudumbakutayima admin restriction: only show users from their bavanakutayima
+    if (req.user?.role === 'kudumbakutayima_admin' && req.user.bavanakutayimaId) {
+      filter.bavanakutayimaId = req.user.bavanakutayimaId;
+      // Exclude super_admin, church_admin, and unit_admin from kudumbakutayima admin view
+      filter.role = { $nin: ['super_admin', 'church_admin', 'unit_admin'] };
     }
 
     const users = await User.find(filter)
@@ -813,6 +927,11 @@ export const getAllTransactions = async (req: AuthRequest, res: Response, next: 
     const filter: any = {};
     if (req.user?.role === 'church_admin' && req.user.churchId) {
       filter.churchId = req.user.churchId;
+    }
+
+    // Unit admin restriction: only show transactions from their unit
+    if (req.user?.role === 'unit_admin' && req.user.unitId) {
+      filter.unitId = req.user.unitId;
     }
 
     // Kudumbakutayima admin restriction: only show transactions from their bavanakutayima
@@ -913,8 +1032,42 @@ export const getAllTransactions = async (req: AuthRequest, res: Response, next: 
     console.log('📊 Transaction filter:', JSON.stringify(filter, null, 2));
 
     const transactions = await Transaction.find(filter)
-      .populate('memberId', 'firstName lastName')
-      .populate('houseId', 'familyName')
+      .populate({
+        path: 'memberId',
+        select: 'firstName lastName memberNumber hierarchicalNumber',
+        populate: {
+          path: 'houseId',
+          select: 'familyName houseNumber',
+          populate: {
+            path: 'bavanakutayimaId',
+            select: 'name bavanakutayimaNumber',
+            populate: {
+              path: 'unitId',
+              select: 'name unitNumber',
+              populate: {
+                path: 'churchId',
+                select: 'name churchNumber'
+              }
+            }
+          }
+        }
+      })
+      .populate({
+        path: 'houseId',
+        select: 'familyName houseNumber hierarchicalNumber',
+        populate: {
+          path: 'bavanakutayimaId',
+          select: 'name bavanakutayimaNumber',
+          populate: {
+            path: 'unitId',
+            select: 'name unitNumber',
+            populate: {
+              path: 'churchId',
+              select: 'name churchNumber'
+            }
+          }
+        }
+      })
       .populate('unitId', 'name')
       .populate('churchId', 'name')
       .populate('campaignId', 'name')
@@ -1152,27 +1305,89 @@ export const getCampaignById = async (req: AuthRequest, res: Response, next: Nex
         campaign.contributors.map(async (contributor: any) => {
           // Try to find as member first
           const member = await Member.findById(contributor.contributorId)
-            .select('firstName lastName email houseId')
-            .populate('houseId', 'familyName')
+            .select('firstName lastName email houseId memberNumber')
+            .populate({
+              path: 'houseId',
+              select: 'familyName houseNumber',
+              populate: {
+                path: 'bavanakutayimaId',
+                select: 'name bavanakutayimaNumber',
+                populate: {
+                  path: 'unitId',
+                  select: 'name unitNumber',
+                  populate: {
+                    path: 'churchId',
+                    select: 'name churchNumber'
+                  }
+                }
+              }
+            })
             .lean();
 
           if (member) {
+            // Manually compute hierarchical number
+            let hierarchicalNumber;
+            if (member && typeof member.houseId === 'object' && member.houseId !== null) {
+              const house = member.houseId as any;
+              if (house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+                const bk = house.bavanakutayimaId;
+                if (bk.unitId && typeof bk.unitId === 'object') {
+                  const unit = bk.unitId;
+                  if (unit.churchId && typeof unit.churchId === 'object') {
+                    const church = unit.churchId;
+                    hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}-${member.memberNumber}`;
+                  }
+                }
+              }
+            }
+
             return {
               ...contributor,
-              member,
+              member: {
+                ...member,
+                hierarchicalNumber
+              },
               house: member.houseId
             };
           }
 
           // If not a member, try as house
           const house = await House.findById(contributor.contributorId)
-            .select('familyName')
+            .select('familyName houseNumber')
+            .populate({
+              path: 'bavanakutayimaId',
+              select: 'name bavanakutayimaNumber',
+              populate: {
+                path: 'unitId',
+                select: 'name unitNumber',
+                populate: {
+                  path: 'churchId',
+                  select: 'name churchNumber'
+                }
+              }
+            })
             .lean();
 
           if (house) {
+            // Manually compute hierarchical number
+            let hierarchicalNumber;
+            if (house && house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+              const bk = house.bavanakutayimaId as any;
+              if (bk.unitId && typeof bk.unitId === 'object') {
+                const unit = bk.unitId;
+                if (unit.churchId && typeof unit.churchId === 'object') {
+                  const church = unit.churchId;
+                  hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}`;
+                }
+              }
+            }
+
             return {
               ...contributor,
-              house
+              house: {
+                ...house,
+                hierarchicalNumber
+              }
             };
           }
 
@@ -1437,10 +1652,30 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
 
           console.log(`  ${nonContributors.length} members haven't contributed`);
 
-          // Add minimum amount to wallets of non-contributors
+          // Add minimum amount to wallets of non-contributors AND create due records
           for (const member of nonContributors) {
             const ownerName = `${member.firstName} ${member.lastName || ''}`.trim();
 
+            // Create CampaignDue record
+            await CampaignDue.findOneAndUpdate(
+              { campaignId: campaign._id, dueForId: member._id },
+              {
+                churchId: campaign.churchId,
+                campaignId: campaign._id,
+                campaignName: campaign.name,
+                dueForId: member._id,
+                dueForModel: 'Member',
+                dueForName: ownerName,
+                amount: campaign.minimumAmount,
+                isPaid: false,
+                paidAmount: 0,
+                balance: campaign.minimumAmount,
+                dueDate: campaign.dueDate || new Date()
+              },
+              { upsert: true, new: true }
+            );
+
+            // Update wallet balance
             await Wallet.findOneAndUpdate(
               { ownerId: member._id, walletType: 'member' },
               {
@@ -1480,8 +1715,28 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
 
           console.log(`  ${nonContributors.length} houses haven't contributed`);
 
-          // Add minimum amount to wallets of non-contributors
+          // Add minimum amount to wallets of non-contributors AND create due records
           for (const house of nonContributors) {
+            // Create CampaignDue record
+            await CampaignDue.findOneAndUpdate(
+              { campaignId: campaign._id, dueForId: house._id },
+              {
+                churchId: campaign.churchId,
+                campaignId: campaign._id,
+                campaignName: campaign.name,
+                dueForId: house._id,
+                dueForModel: 'House',
+                dueForName: house.familyName,
+                amount: campaign.minimumAmount,
+                isPaid: false,
+                paidAmount: 0,
+                balance: campaign.minimumAmount,
+                dueDate: campaign.dueDate || new Date()
+              },
+              { upsert: true, new: true }
+            );
+
+            // Update wallet balance
             await Wallet.findOneAndUpdate(
               { ownerId: house._id, walletType: 'house' },
               {
@@ -1701,6 +1956,14 @@ export const getAllSpiritualActivities = async (req: AuthRequest, res: Response,
       filter.memberId = { $in: memberIds };
     }
 
+    // Unit admin restriction: only show activities from members in their unit
+    if (req.user?.role === 'unit_admin' && req.user.unitId) {
+      // Get all members from this unit
+      const unitMembers = await Member.find({ unitId: req.user.unitId }).select('_id');
+      const memberIds = unitMembers.map(m => m._id);
+      filter.memberId = { $in: memberIds };
+    }
+
     // Kudumbakutayima admin restriction: only show activities from members in their bavanakutayima
     if (req.user?.role === 'kudumbakutayima_admin' && req.user.bavanakutayimaId) {
       // Get all members from this bavanakutayima
@@ -1734,12 +1997,7 @@ export const getSpiritualActivityById = async (req: AuthRequest, res: Response, 
 
 export const createSpiritualActivity = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // Unit admin restriction: read-only access
-    if (req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
-      res.status(403).json({ success: false, error: 'Unit admins have read-only access' });
-      return;
-    }
-
+    // Unit admins and Kudumbakutayima admins CAN create spiritual activities
     const activity = await SpiritualActivity.create(req.body);
     const populated = await SpiritualActivity.findById(activity._id).populate('memberId', 'firstName lastName');
     res.status(201).json({ success: true, data: populated });
@@ -1750,12 +2008,7 @@ export const createSpiritualActivity = async (req: AuthRequest, res: Response, n
 
 export const updateSpiritualActivity = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // Unit admin restriction: read-only access
-    if (req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
-      res.status(403).json({ success: false, error: 'Unit admins have read-only access' });
-      return;
-    }
-
+    // Unit admins and Kudumbakutayima admins CAN update spiritual activities
     const activity = await SpiritualActivity.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
       .populate('memberId', 'firstName lastName');
     if (!activity) {
@@ -1770,12 +2023,7 @@ export const updateSpiritualActivity = async (req: AuthRequest, res: Response, n
 
 export const deleteSpiritualActivity = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // Unit admin restriction: read-only access
-    if (req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
-      res.status(403).json({ success: false, error: 'Unit admins have read-only access' });
-      return;
-    }
-
+    // Unit admins and Kudumbakutayima admins CAN delete spiritual activities
     const activity = await SpiritualActivity.findByIdAndDelete(req.params.id);
     if (!activity) {
       res.status(404).json({ success: false, error: 'Spiritual activity not found' });
@@ -2373,6 +2621,462 @@ export const getActiveEvents = async (req: AuthRequest, res: Response, next: Nex
       .populate('churchId', 'name')
       .sort({ startDate: 1 });
     res.json({ success: true, data: events });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get All Dues (Campaign + Stothrakazhcha)
+export const getAllDues = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { unitId, bavanakutayimaId, houseId, memberId } = req.query;
+
+    // Build filter based on query params and user role
+    const filter: any = { isPaid: false }; // Only show unpaid dues
+
+    // Church admin restriction: only show dues from their own church
+    if (req.user?.role === 'church_admin' && req.user.churchId) {
+      filter.churchId = req.user.churchId;
+    }
+
+    // Get member and house IDs based on hierarchy filters
+    let memberIds: any[] = [];
+    let houseIds: any[] = [];
+
+    if (memberId) {
+      memberIds = [memberId];
+    } else if (houseId) {
+      houseIds = [houseId];
+      // Also get members from this house
+      const members = await Member.find({ houseId, isActive: true });
+      memberIds = members.map(m => m._id);
+    } else if (bavanakutayimaId) {
+      const houses = await House.find({ bavanakutayimaId });
+      houseIds = houses.map(h => h._id);
+      const members = await Member.find({ houseId: { $in: houseIds }, isActive: true });
+      memberIds = members.map(m => m._id);
+    } else if (unitId) {
+      const bavanakutayimas = await Bavanakutayima.find({ unitId });
+      const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+      const houses = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
+      houseIds = houses.map(h => h._id);
+      const members = await Member.find({ houseId: { $in: houseIds }, isActive: true });
+      memberIds = members.map(m => m._id);
+    }
+
+    // Fetch campaign dues
+    const campaignDuesFilter = { ...filter };
+    if (memberIds.length > 0 || houseIds.length > 0) {
+      campaignDuesFilter.$or = [];
+      if (memberIds.length > 0) {
+        campaignDuesFilter.$or.push({ dueForId: { $in: memberIds }, dueForModel: 'Member' });
+      }
+      if (houseIds.length > 0) {
+        campaignDuesFilter.$or.push({ dueForId: { $in: houseIds }, dueForModel: 'House' });
+      }
+    }
+
+    // Fetch campaign dues with populated entities to get hierarchical numbers
+    const campaignDues = await CampaignDue.find(campaignDuesFilter)
+      .sort({ dueDate: 1, createdAt: -1 })
+      .lean();
+
+    // Fetch stothrakazhcha dues
+    const stothrakazhchaDues = await StothrakazhchaDue.find(campaignDuesFilter)
+      .sort({ dueDate: 1, createdAt: -1 })
+      .lean();
+
+    // Populate each due's entity to get hierarchical number
+    const populateDue = async (due: any) => {
+      let hierarchicalNumber = undefined;
+
+      if (due.dueForModel === 'Member') {
+        const member = await Member.findById(due.dueForId)
+          .select('memberNumber')
+          .populate({
+            path: 'houseId',
+            select: 'houseNumber',
+            populate: {
+              path: 'bavanakutayimaId',
+              select: 'bavanakutayimaNumber',
+              populate: {
+                path: 'unitId',
+                select: 'unitNumber',
+                populate: {
+                  path: 'churchId',
+                  select: 'churchNumber'
+                }
+              }
+            }
+          })
+          .lean();
+
+        // Manually compute hierarchical number from populated data
+        if (member && typeof member.houseId === 'object' && member.houseId !== null) {
+          const house = member.houseId as any;
+          if (house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+            const bk = house.bavanakutayimaId;
+            if (bk.unitId && typeof bk.unitId === 'object') {
+              const unit = bk.unitId;
+              if (unit.churchId && typeof unit.churchId === 'object') {
+                const church = unit.churchId;
+                hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}-${member.memberNumber}`;
+              }
+            }
+          }
+        }
+      } else {
+        const house = await House.findById(due.dueForId)
+          .select('houseNumber')
+          .populate({
+            path: 'bavanakutayimaId',
+            select: 'bavanakutayimaNumber',
+            populate: {
+              path: 'unitId',
+              select: 'unitNumber',
+              populate: {
+                path: 'churchId',
+                select: 'churchNumber'
+              }
+            }
+          })
+          .lean();
+
+        // Manually compute hierarchical number from populated data
+        if (house && house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+          const bk = house.bavanakutayimaId as any;
+          if (bk.unitId && typeof bk.unitId === 'object') {
+            const unit = bk.unitId;
+            if (unit.churchId && typeof unit.churchId === 'object') {
+              const church = unit.churchId;
+              hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}`;
+            }
+          }
+        }
+      }
+
+      return hierarchicalNumber;
+    };
+
+    const campaignDuesWithHierarchy = await Promise.all(
+      campaignDues.map(async (due) => ({
+        _id: due._id,
+        name: due.dueForName,
+        type: due.dueForModel.toLowerCase() as 'member' | 'house',
+        campaignName: due.campaignName,
+        dueAmount: due.amount,
+        paidAmount: due.paidAmount,
+        remainingAmount: due.balance,
+        campaignId: due.campaignId,
+        dueForId: due.dueForId,
+        hierarchicalNumber: await populateDue(due)
+      }))
+    );
+
+    const stothrakazhchaDuesWithHierarchy = await Promise.all(
+      stothrakazhchaDues.map(async (due) => ({
+        _id: due._id,
+        name: due.dueForName,
+        type: due.dueForModel.toLowerCase() as 'member' | 'house',
+        campaignName: `Stothrakazhcha Week ${due.weekNumber}, ${due.year}`,
+        dueAmount: due.amount,
+        paidAmount: due.paidAmount,
+        remainingAmount: due.balance,
+        stothrakazhchaId: due.stothrakazhchaId,
+        dueForId: due.dueForId,
+        hierarchicalNumber: await populateDue(due)
+      }))
+    );
+
+    // Transform to unified format
+    const allDues = [...campaignDuesWithHierarchy, ...stothrakazhchaDuesWithHierarchy];
+
+    res.json({ success: true, data: allDues });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// Pay a Due (Campaign or Stothrakazhcha)
+export const payDue = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { dueId, dueType, amount, paymentMethod } = req.body;
+
+    if (!dueId || !dueType || !amount || !paymentMethod) {
+      res.status(400).json({
+        success: false,
+        error: "Missing required fields"
+      });
+      return;
+    }
+
+    const paymentAmount = parseFloat(amount);
+    if (paymentAmount <= 0) {
+      res.status(400).json({ success: false, error: "Invalid amount" });
+      return;
+    }
+
+    let due: any;
+    let contributorType: "member" | "house";
+
+    if (dueType === "campaign") {
+      due = await CampaignDue.findById(dueId);
+    } else if (dueType === "stothrakazhcha") {
+      due = await StothrakazhchaDue.findById(dueId);
+    }
+
+    if (!due) {
+      res.status(404).json({ success: false, error: "Due not found" });
+      return;
+    }
+
+    contributorType = due.dueForModel.toLowerCase();
+
+    if (paymentAmount > due.balance) {
+      res.status(400).json({ success: false, error: "Amount exceeds balance" });
+      return;
+    }
+
+    // Generate receipt number
+    const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // Ensure createdBy is set
+    if (!req.user?._id) {
+      res.status(401).json({ success: false, error: "User not authenticated" });
+      return;
+    }
+
+    const transaction = await Transaction.create({
+      receiptNumber,
+      churchId: due.churchId,
+      transactionType: dueType === "campaign" ? "campaign_contribution" : "stothrakazhcha",
+      totalAmount: paymentAmount,
+      memberAmount: contributorType === "member" ? paymentAmount : 0,
+      houseAmount: contributorType === "house" ? paymentAmount : 0,
+      memberId: contributorType === "member" ? due.dueForId : undefined,
+      houseId: contributorType === "house" ? due.dueForId : undefined,
+      paymentMethod: paymentMethod,
+      paymentDate: new Date(),
+      notes: `Due payment for ${due.dueForName}`,
+      createdBy: req.user._id
+    });
+
+    due.paidAmount += paymentAmount;
+    due.balance -= paymentAmount;
+    due.isPaid = due.balance === 0;
+    if (due.isPaid) due.paidAt = new Date();
+    due.transactionId = transaction._id;
+    await due.save();
+
+    if (dueType === "campaign") {
+      const campaign = await Campaign.findById(due.campaignId);
+      if (campaign) {
+        campaign.contributors = campaign.contributors || [];
+        const existing = campaign.contributors.find((c: any) => String(c.contributorId) === String(due.dueForId));
+        if (existing) {
+          existing.contributedAmount += paymentAmount;
+        } else {
+          campaign.contributors.push({
+            contributorId: due.dueForId,
+            contributedAmount: paymentAmount,
+            contributedAt: new Date()
+          } as any);
+        }
+        campaign.totalCollected = (campaign.totalCollected || 0) + paymentAmount;
+        campaign.participantCount = campaign.contributors.length;
+        await campaign.save();
+      }
+    } else {
+      const stoth = await Stothrakazhcha.findById(due.stothrakazhchaId);
+      if (stoth) {
+        stoth.contributors = stoth.contributors || [];
+        const existing = stoth.contributors.find((c: any) => String(c.contributorId) === String(due.dueForId));
+        if (existing) {
+          existing.amount += paymentAmount;
+        } else {
+          const capitalizedType = contributorType === "member" ? "Member" : "House";
+          stoth.contributors.push({
+            contributorId: due.dueForId,
+            contributorType: capitalizedType,
+            amount: paymentAmount,
+            contributedAt: new Date()
+          } as any);
+        }
+        stoth.totalCollected = (stoth.totalCollected || 0) + paymentAmount;
+        await stoth.save();
+      }
+    }
+
+    await Wallet.findOneAndUpdate(
+      { ownerId: due.dueForId, walletType: contributorType },
+      { $inc: { balance: -paymentAmount } }
+    );
+
+    res.json({
+      success: true,
+      message: "Payment processed successfully",
+      data: { transaction, due: { _id: due._id, paidAmount: due.paidAmount, balance: due.balance, isPaid: due.isPaid } }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+// Global Search
+export const globalSearch = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || typeof query !== 'string' || query.trim().length < 2) {
+      res.json({ success: true, data: { members: [], houses: [], transactions: [] } });
+      return;
+    }
+
+    const searchTerm = query.trim();
+    // Escape special regex characters for hierarchical ID search
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const filter: any = {};
+
+    // Church admin restriction
+    if (req.user?.role === 'church_admin' && req.user.churchId) {
+      filter.churchId = req.user.churchId;
+    }
+
+    // Search Members (name, email, uniqueId, memberNumber)
+    const memberFilter = {
+      ...filter,
+      $or: [
+        { firstName: { $regex: escapedTerm, $options: 'i' } },
+        { lastName: { $regex: escapedTerm, $options: 'i' } },
+        { email: { $regex: escapedTerm, $options: 'i' } },
+        { uniqueId: { $regex: escapedTerm, $options: 'i' } },
+        ...(isNaN(Number(searchTerm)) ? [] : [{ memberNumber: Number(searchTerm) }])
+      ]
+    };
+
+    const members = await Member.find(memberFilter)
+      .populate({
+        path: 'houseId',
+        select: 'familyName houseNumber',
+        populate: {
+          path: 'bavanakutayimaId',
+          select: 'name bavanakutayimaNumber',
+          populate: {
+            path: 'unitId',
+            select: 'name unitNumber',
+            populate: {
+              path: 'churchId',
+              select: 'name churchNumber'
+            }
+          }
+        }
+      })
+      .limit(10)
+      .lean();
+
+    // Compute hierarchical numbers for members
+    const membersWithHierarchy = members.map(member => {
+      let hierarchicalNumber;
+      if (member.houseId && typeof member.houseId === 'object') {
+        const house = member.houseId as any;
+        if (house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+          const bk = house.bavanakutayimaId;
+          if (bk.unitId && typeof bk.unitId === 'object') {
+            const unit = bk.unitId;
+            if (unit.churchId && typeof unit.churchId === 'object') {
+              const church = unit.churchId;
+              hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}-${member.memberNumber}`;
+            }
+          }
+        }
+      }
+      return {
+        _id: member._id,
+        name: `${member.firstName} ${member.lastName || ''}`.trim(),
+        email: member.email,
+        hierarchicalNumber,
+        uniqueId: member.uniqueId,
+        type: 'member'
+      };
+    });
+
+    // Search Houses (familyName, uniqueId, houseNumber)
+    const houseFilter = {
+      $or: [
+        { familyName: { $regex: escapedTerm, $options: 'i' } },
+        { uniqueId: { $regex: escapedTerm, $options: 'i' } },
+        ...(isNaN(Number(searchTerm)) ? [] : [{ houseNumber: Number(searchTerm) }])
+      ]
+    };
+
+    const houses = await House.find(houseFilter)
+      .populate({
+        path: 'bavanakutayimaId',
+        select: 'name bavanakutayimaNumber',
+        populate: {
+          path: 'unitId',
+          select: 'name unitNumber',
+          populate: {
+            path: 'churchId',
+            select: 'name churchNumber'
+          }
+        }
+      })
+      .limit(10)
+      .lean();
+
+    // Compute hierarchical numbers for houses
+    const housesWithHierarchy = houses.map(house => {
+      let hierarchicalNumber;
+      if (house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+        const bk = house.bavanakutayimaId as any;
+        if (bk.unitId && typeof bk.unitId === 'object') {
+          const unit = bk.unitId;
+          if (unit.churchId && typeof unit.churchId === 'object') {
+            const church = unit.churchId;
+            hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}`;
+          }
+        }
+      }
+      return {
+        _id: house._id,
+        name: house.familyName,
+        hierarchicalNumber,
+        uniqueId: house.uniqueId,
+        type: 'house'
+      };
+    });
+
+    // Search Transactions (receiptNumber)
+    const transactionFilter = {
+      ...filter,
+      receiptNumber: { $regex: escapedTerm, $options: 'i' }
+    };
+
+    const transactions = await Transaction.find(transactionFilter)
+      .limit(10)
+      .lean();
+
+    const transactionsFormatted = transactions.map(txn => ({
+      _id: txn._id,
+      receiptNumber: txn.receiptNumber,
+      amount: txn.totalAmount,
+      date: txn.paymentDate,
+      type: 'transaction'
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        members: membersWithHierarchy,
+        houses: housesWithHierarchy,
+        transactions: transactionsFormatted
+      }
+    });
   } catch (error) {
     next(error);
   }

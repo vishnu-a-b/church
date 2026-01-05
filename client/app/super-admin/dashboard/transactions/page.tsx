@@ -18,10 +18,11 @@ interface Transaction {
   houseAmount?: number;
   paymentMethod: string;
   paymentDate: string;
-  churchId?: string;
-  unitId?: string;
-  houseId?: string;
-  memberId?: { _id: string; firstName: string; lastName: string; houseId?: string };
+  churchId?: string | { _id: string };
+  unitId?: string | { _id: string };
+  houseId?: string | { _id: string; familyName: string };
+  memberId?: string | { _id: string; firstName: string; lastName: string; houseId?: string };
+  campaignId?: string | { _id: string; name: string };
   notes?: string;
 }
 
@@ -152,16 +153,18 @@ export default function TransactionsPage() {
       const excelData = filteredTransactions.map((transaction, index) => {
         let payerName = '-';
         if (transaction.memberId) {
-          if (typeof transaction.memberId === 'object') {
-            payerName = `${transaction.memberId.firstName} ${transaction.memberId.lastName || ''}`;
-          } else {
+          if (typeof transaction.memberId === 'object' && transaction.memberId !== null) {
+            const member = transaction.memberId as { _id: string; firstName: string; lastName: string };
+            payerName = `${member.firstName} ${member.lastName || ''}`;
+          } else if (typeof transaction.memberId === 'string') {
             const member = getMemberData(transaction.memberId);
             payerName = member ? `${member.firstName} ${member.lastName || ''}` : '-';
           }
         } else if (transaction.houseId) {
-          if (typeof transaction.houseId === 'object') {
-            payerName = transaction.houseId.familyName || '-';
-          } else {
+          if (typeof transaction.houseId === 'object' && transaction.houseId !== null) {
+            const house = transaction.houseId as { _id: string; familyName: string };
+            payerName = house.familyName || '-';
+          } else if (typeof transaction.houseId === 'string') {
             const house = getHouseData(transaction.houseId);
             payerName = house?.familyName || '-';
           }
@@ -175,7 +178,7 @@ export default function TransactionsPage() {
           'Amount (₹)': transaction.totalAmount,
           'Payment Method': transaction.paymentMethod,
           'Date': new Date(transaction.paymentDate).toLocaleDateString('en-IN'),
-          'Campaign': transaction.campaignId?.name || '-',
+          'Campaign': (typeof transaction.campaignId === 'object' && transaction.campaignId !== null ? transaction.campaignId.name : null) || '-',
           'Notes': transaction.notes || '-',
         };
       });
@@ -191,7 +194,7 @@ export default function TransactionsPage() {
         'Date': '',
         'Campaign': '',
         'Notes': '',
-      });
+      } as any);
 
       // Create worksheet
       const ws = XLSX.utils.json_to_sheet(excelData);
@@ -242,10 +245,10 @@ export default function TransactionsPage() {
     {
       header: 'Payer',
       cell: ({ row }) => {
-        if (row.original.memberId) {
+        if (row.original.memberId && typeof row.original.memberId === 'object') {
           return `${row.original.memberId.firstName} ${row.original.memberId.lastName || ''}`;
         }
-        if (row.original.houseId) {
+        if (row.original.houseId && typeof row.original.houseId === 'object') {
           return row.original.houseId.familyName;
         }
         return '-';
@@ -272,7 +275,7 @@ export default function TransactionsPage() {
     },
     {
       header: 'Campaign',
-      cell: ({ row }) => row.original.campaignId?.name || '-',
+      cell: ({ row }) => (typeof row.original.campaignId === 'object' ? row.original.campaignId?.name : null) || '-',
     },
     {
       accessorKey: 'notes',
@@ -377,7 +380,8 @@ export default function TransactionsPage() {
 
     // If we need to filter by bavanakutayima and transaction doesn't have it directly
     if (filters.bavanakutayima && txnHouseId) {
-      const house = getHouseData(txnHouseId);
+      const houseId = typeof txnHouseId === 'string' ? txnHouseId : txnHouseId;
+      const house = typeof houseId === 'string' ? getHouseData(houseId) : null;
       if (index === 0) console.log('🏠 HOUSE FOR TRANSACTION (for bavanakutayima):', house);
 
       if (!house || (house as any).bavanakutayimaId !== filters.bavanakutayima) {

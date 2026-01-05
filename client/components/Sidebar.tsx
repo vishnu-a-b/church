@@ -23,9 +23,10 @@ interface SidebarProps {
   color: string;
   userEmail: string;
   onLogout: () => void;
+  collapsed?: boolean;
 }
 
-export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout }: SidebarProps) {
+export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout, collapsed = false }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
@@ -61,18 +62,7 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
     const normalizedPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
     const normalizedHref = href.endsWith('/') && href !== '/' ? href.slice(0, -1) : href;
 
-    const active = normalizedPathname === normalizedHref;
-
-    // Debug log
-    console.log('Checking active:', {
-      pathname,
-      normalizedPathname,
-      href,
-      normalizedHref,
-      active
-    });
-
-    return active;
+    return normalizedPathname === normalizedHref;
   };
 
   const isParentActive = (item: MenuItem) => {
@@ -85,10 +75,6 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
     });
   };
 
-  // Debug log pathname changes
-  useEffect(() => {
-    console.log('Sidebar pathname changed to:', pathname);
-  }, [pathname]);
 
   return (
     <>
@@ -110,23 +96,32 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 z-40 h-screen bg-white shadow-xl transform transition-all duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
+        } lg:translate-x-0 ${collapsed ? 'lg:w-20' : 'lg:w-64'}`}
+        style={{ width: collapsed ? '5rem' : '16rem' }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className={`p-6 ${color} bg-gradient-to-br`}>
-            <div className="flex items-center gap-3 text-white mb-2">
-              <BsBuilding className="w-8 h-8" />
-              <div>
-                <h2 className="font-bold text-lg">{title}</h2>
-                <p className="text-xs opacity-90">{subtitle}</p>
+          <div className={`p-6 ${color} bg-gradient-to-br transition-all duration-300`}>
+            {collapsed ? (
+              <div className="flex flex-col items-center text-white">
+                <BsBuilding className="w-8 h-8" />
               </div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-white border-opacity-20">
-              <p className="text-xs text-white opacity-75 truncate">{userEmail}</p>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 text-white mb-2">
+                  <BsBuilding className="w-8 h-8" />
+                  <div>
+                    <h2 className="font-bold text-lg">{title}</h2>
+                    <p className="text-xs opacity-90">{subtitle}</p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-white border-opacity-20">
+                  <p className="text-xs text-white opacity-75 truncate">{userEmail}</p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Navigation */}
@@ -181,10 +176,11 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
                         isActive(item.href)
                           ? 'bg-blue-100 text-blue-700 font-bold border-blue-600 shadow-sm'
                           : 'text-gray-700 hover:bg-gray-100 border-transparent hover:border-gray-300'
-                      }`}
+                      } ${collapsed ? 'justify-center' : ''}`}
+                      title={collapsed ? item.name : ''}
                     >
                       <item.icon className={`w-5 h-5 ${isActive(item.href) ? 'text-blue-700' : ''}`} />
-                      {item.name}
+                      {!collapsed && <span>{item.name}</span>}
                     </Link>
                   )}
                 </div>
@@ -196,10 +192,13 @@ export function Sidebar({ menuItems, title, subtitle, color, userEmail, onLogout
           <div className="p-4 border-t">
             <button
               onClick={onLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors ${
+                collapsed ? 'justify-center' : ''
+              }`}
+              title={collapsed ? 'Logout' : ''}
             >
               <FiLogOut className="w-5 h-5" />
-              Logout
+              {!collapsed && <span>Logout</span>}
             </button>
           </div>
         </div>

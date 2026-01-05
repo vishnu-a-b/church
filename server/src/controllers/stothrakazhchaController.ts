@@ -44,22 +44,86 @@ export const getStothrakazhchaById = async (req: AuthRequest, res: Response, nex
         stothrakazhcha.contributors.map(async (contributor: any) => {
           if (contributor.contributorType === 'Member') {
             const member = await Member.findById(contributor.contributorId)
-              .select('firstName lastName email houseId')
-              .populate('houseId', 'familyName')
+              .select('firstName lastName email houseId memberNumber')
+              .populate({
+                path: 'houseId',
+                select: 'familyName houseNumber',
+                populate: {
+                  path: 'bavanakutayimaId',
+                  select: 'name bavanakutayimaNumber',
+                  populate: {
+                    path: 'unitId',
+                    select: 'name unitNumber',
+                    populate: {
+                      path: 'churchId',
+                      select: 'name churchNumber'
+                    }
+                  }
+                }
+              })
               .lean();
+
+            // Manually compute hierarchical number
+            let hierarchicalNumber;
+            if (member && typeof member.houseId === 'object' && member.houseId !== null) {
+              const house = member.houseId as any;
+              if (house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+                const bk = house.bavanakutayimaId;
+                if (bk.unitId && typeof bk.unitId === 'object') {
+                  const unit = bk.unitId;
+                  if (unit.churchId && typeof unit.churchId === 'object') {
+                    const church = unit.churchId;
+                    hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}-${member.memberNumber}`;
+                  }
+                }
+              }
+            }
+
             return {
               ...contributor,
-              member,
+              member: {
+                ...member,
+                hierarchicalNumber
+              },
               house: member?.houseId
             };
           } else {
             // It's a House contributor
             const house = await House.findById(contributor.contributorId)
-              .select('familyName')
+              .select('familyName houseNumber')
+              .populate({
+                path: 'bavanakutayimaId',
+                select: 'name bavanakutayimaNumber',
+                populate: {
+                  path: 'unitId',
+                  select: 'name unitNumber',
+                  populate: {
+                    path: 'churchId',
+                    select: 'name churchNumber'
+                  }
+                }
+              })
               .lean();
+
+            // Manually compute hierarchical number
+            let hierarchicalNumber;
+            if (house && house.bavanakutayimaId && typeof house.bavanakutayimaId === 'object') {
+              const bk = house.bavanakutayimaId as any;
+              if (bk.unitId && typeof bk.unitId === 'object') {
+                const unit = bk.unitId;
+                if (unit.churchId && typeof unit.churchId === 'object') {
+                  const church = unit.churchId;
+                  hierarchicalNumber = `${church.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${house.houseNumber}`;
+                }
+              }
+            }
+
             return {
               ...contributor,
-              house
+              house: {
+                ...house,
+                hierarchicalNumber
+              }
             };
           }
         })

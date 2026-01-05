@@ -47,7 +47,20 @@ export const createChurch = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const church = await Church.create(req.body);
+    // Get the next church number
+    const lastChurch = await Church.findOne().sort({ churchNumber: -1 });
+    const churchNumber = lastChurch ? lastChurch.churchNumber + 1 : 1;
+
+    // Generate simple numeric uniqueId
+    const uniqueId = String(churchNumber);
+
+    // Create church with generated fields
+    const church = await Church.create({
+      ...req.body,
+      churchNumber,
+      uniqueId,
+    });
+
     res.status(201).json({
       success: true,
       data: church,

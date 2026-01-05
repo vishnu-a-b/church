@@ -135,7 +135,10 @@ export default function HousesPage() {
     // Filter by bavanakutayima
     if (filters.bavanakutayima && house.bavanakutayimaId !== filters.bavanakutayima) return false;
     return true;
-  });
+  }).filter((house) =>
+    house.familyName.toLowerCase().includes('') ||
+    (house.hierarchicalNumber && house.hierarchicalNumber.toLowerCase().includes(''))
+  );
 
   return (
     <div className="space-y-6">
@@ -181,47 +184,56 @@ export default function HousesPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          [...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-              <div className="h-6 bg-gray-200 rounded mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded"></div>
-            </div>
-          ))
-        ) : filteredHouses.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-500">No houses found</div>
-        ) : (
-          filteredHouses.map((house) => (
-            <div key={house._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="flex space-x-2">
-                  <button onClick={() => handleEdit(house)} className="text-blue-600 hover:text-blue-800">
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(house._id)}
-                    disabled={deletingId === house._id}
-                    className="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {deletingId === house._id ? <div className="animate-spin text-sm">⏳</div> : <Trash2 className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">{house.familyName}</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                {house.houseNumber && <p>House #: {house.houseNumber}</p>}
-                {house.headOfFamily && <p>Head: {house.headOfFamily}</p>}
-                {house.phone && <p>Phone: {house.phone}</p>}
-                <p className="text-xs text-gray-500">{getBavanakutayimaName(house.bavanakutayimaId)}</p>
-              </div>
-            </div>
-          ))
-        )}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hierarchical ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Family Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Head of Family</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Bavanakutayima</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+              ) : filteredHouses.length === 0 ? (
+                <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">No houses found</td></tr>
+              ) : (
+                filteredHouses.map((house) => (
+                  <tr key={house._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-blue-600">{house.hierarchicalNumber || house.houseNumber || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{house.familyName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                      <div className="text-sm text-gray-900">{house.headOfFamily || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                      <div className="text-sm text-gray-900">{getBavanakutayimaName(house.bavanakutayimaId)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button onClick={() => handleEdit(house)} className="text-blue-600 hover:text-blue-900 mr-4">
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(house._id)}
+                        disabled={deletingId === house._id}
+                        className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingId === house._id ? <div className="animate-spin text-sm">⏳</div> : <Trash2 className="w-5 h-5" />}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showModal && (

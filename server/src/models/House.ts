@@ -47,4 +47,24 @@ const houseSchema = new Schema<IHouse>(
 
 houseSchema.index({ bavanakutayimaId: 1 });
 
+// Virtual field for hierarchical number
+// Will be computed as: churchNumber-unitNumber-bavanakutayimaNumber-houseNumber
+// The bavanakutayima.unitId.churchId data needs to be populated for this to work
+houseSchema.virtual('hierarchicalNumber').get(function() {
+  if (this.populated('bavanakutayimaId') && typeof this.bavanakutayimaId === 'object' && 'bavanakutayimaNumber' in this.bavanakutayimaId) {
+    const bk = this.bavanakutayimaId as any;
+    if (bk.unitId && typeof bk.unitId === 'object' && 'unitNumber' in bk.unitId) {
+      const unit = bk.unitId;
+      if (unit.churchId && typeof unit.churchId === 'object' && 'churchNumber' in unit.churchId) {
+        return `${unit.churchId.churchNumber}-${unit.unitNumber}-${bk.bavanakutayimaNumber}-${this.houseNumber}`;
+      }
+    }
+  }
+  return String(this.houseNumber);
+});
+
+// Ensure virtuals are included in JSON
+houseSchema.set('toJSON', { virtuals: true });
+houseSchema.set('toObject', { virtuals: true });
+
 export default mongoose.model<IHouse>('House', houseSchema);

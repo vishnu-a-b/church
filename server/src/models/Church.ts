@@ -74,4 +74,13 @@ const churchSchema = new Schema<IChurch>(
   }
 );
 
+// Virtual field for hierarchical number (just the church number)
+churchSchema.virtual('hierarchicalNumber').get(function() {
+  return String(this.churchNumber);
+});
+
+// Ensure virtuals are included in JSON
+churchSchema.set('toJSON', { virtuals: true });
+churchSchema.set('toObject', { virtuals: true });
+
 export default mongoose.model<IChurch>('Church', churchSchema);

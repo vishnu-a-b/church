@@ -222,7 +222,7 @@ export default function CampaignsPage() {
     setFormData({
       name: campaign.name,
       campaignType: campaign.campaignType,
-      contributionMode: campaign.contributionMode,
+      contributionMode: campaign.contributionMode || 'fixed',
       amountType: campaign.amountType,
       fixedAmount: campaign.fixedAmount,
       minimumAmount: campaign.minimumAmount || 0,

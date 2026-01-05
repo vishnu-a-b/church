@@ -3,7 +3,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: 'super_admin' | 'unit_admin' | 'member';
+  role: 'super_admin' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin' | 'member';
   churchId?: string;
   unitId?: string;
   memberId?: string;
@@ -31,7 +31,7 @@ export interface RegisterData {
   email: string;
   password: string;
   confirmPassword?: string;
-  role?: 'super_admin' | 'unit_admin' | 'member';
+  role?: 'super_admin' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin' | 'member';
   churchId?: string;
   unitId?: string;
   memberId?: string;
@@ -48,6 +48,8 @@ export interface Church {
   phone?: string;
   email?: string;
   settings: ChurchSettings;
+  churchNumber?: number;
+  hierarchicalNumber?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,6 +69,7 @@ export interface Unit {
   name: string;
   unitNumber?: string;
   adminUserId?: string;
+  hierarchicalNumber?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,6 +80,7 @@ export interface Bavanakutayima {
   unitId: string;
   name: string;
   leaderName?: string;
+  hierarchicalNumber?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -90,6 +94,7 @@ export interface House {
   address?: string;
   phone?: string;
   houseNumber?: string;
+  hierarchicalNumber?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -108,6 +113,7 @@ export interface Member {
   relationToHead: 'head' | 'spouse' | 'child' | 'parent' | 'other';
   isActive: boolean;
   smsPreferences: SMSPreferences;
+  hierarchicalNumber?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -149,13 +155,13 @@ export interface Transaction {
   receiptNumber: string;
   transactionType: TransactionType;
   contributionMode?: ContributionMode;
-  campaignId?: string;
+  campaignId?: string | { _id: string; name: string };
   distribution?: Distribution;
   memberAmount: number;
   houseAmount: number;
   totalAmount: number;
-  memberId?: string;
-  houseId?: string;
+  memberId?: string | { _id: string; firstName: string; lastName: string; houseId?: string };
+  houseId?: string | { _id: string; familyName: string };
   unitId?: string;
   churchId: string;
   paymentDate: Date;
@@ -178,7 +184,9 @@ export interface Campaign {
   campaignType: CampaignType;
   name: string;
   description?: string;
+  contributionMode?: ContributionMode;
   fixedAmount: number;
+  minimumAmount?: number;
   amountType: AmountType;
   startDate: Date;
   endDate?: Date;

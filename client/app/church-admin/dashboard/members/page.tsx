@@ -24,6 +24,7 @@ interface Member {
   dateOfBirth?: string;
   baptismName?: string;
   relationToHead?: 'head' | 'spouse' | 'child' | 'parent' | 'other';
+  hierarchicalNumber?: string;
 }
 
 export default function ChurchAdminMembersPage() {
@@ -337,6 +338,13 @@ export default function ChurchAdminMembersPage() {
   };
 
   const columns: ColumnDef<Member>[] = [
+    {
+      accessorKey: 'hierarchicalNumber',
+      header: 'Hierarchical ID',
+      cell: ({ row }) => (
+        <div className="text-sm font-semibold text-blue-600">{row.original.hierarchicalNumber || '-'}</div>
+      ),
+    },
     {
       accessorKey: 'firstName',
       header: 'Name',
