@@ -142,14 +142,15 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <ToastContainer />
 
       {/* Top Navbar */}
-      <nav className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 z-40 transition-all duration-300"
-           style={{ left: sidebarCollapsed ? '5rem' : '16rem' }}>
-        <div className="h-full px-4 flex items-center justify-between">
+      <nav className={`fixed top-0 right-0 h-16 bg-white border-b border-gray-200 z-40 transition-all duration-300 left-0 ${
+        sidebarCollapsed ? 'lg:left-20' : 'lg:left-64'
+      }`}>
+        <div className="h-full pl-16 pr-4 lg:px-4 flex items-center justify-between">
           {/* Left side - Sidebar toggle and Search bar */}
           <div className="flex items-center gap-4 flex-1 max-w-2xl">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+              className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
               title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               <FiMenu className="w-5 h-5 text-gray-600" />
@@ -301,11 +302,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main content - offset for sidebar and top navbar */}
-      <main className="min-h-screen transition-all duration-300"
-            style={{
-              marginLeft: sidebarCollapsed ? '5rem' : '16rem',
-              marginTop: '4rem'
-            }}>
+      <main className={`min-h-screen transition-all duration-300 mt-16 ml-0 ${
+        sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+      }`}>
         <div className="p-4 lg:p-8">
           {children}
         </div>

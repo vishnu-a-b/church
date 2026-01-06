@@ -160,8 +160,9 @@ export interface ITransaction extends Document {
 }
 
 // Campaign Types
-export type CampaignType = 'stothrakazhcha' | 'spl_contribution' | 'general_fund' | 'building_fund' | 'charity' | 'other';
+export type CampaignType = 'spl_contribution' | 'general_fund' | 'building_fund' | 'charity' | 'other';
 export type AmountType = 'per_house' | 'per_member' | 'flexible';
+export type CampaignTargetType = 'all' | 'specific_members' | 'specific_houses';
 
 export interface ICampaign extends Document {
   churchId: Types.ObjectId;
@@ -172,6 +173,13 @@ export interface ICampaign extends Document {
   fixedAmount?: number;
   minimumAmount?: number;
   amountType: AmountType;
+  isCompulsory: boolean;
+  targetType: CampaignTargetType;
+  specificTargets?: Array<{
+    targetId: Types.ObjectId;
+    targetModel: 'Member' | 'House';
+    amount: number;
+  }>;
   contributors?: Array<{
     contributorId: Types.ObjectId;
     contributedAmount: number;

@@ -1518,11 +1518,15 @@ const processCampaignDues = async (req, res, next) => {
             contributionMode: 'variable',
             isActive: true,
             duesProcessed: false,
-            minimumAmount: { $gt: 0 }
+            $or: [
+                { minimumAmount: { $gt: 0 } },
+                { 'specificTargets.0': { $exists: true } } // Has at least one specific target
+            ]
         };
         // If specific campaign ID provided, add it to filter; otherwise filter by due date
         if (campaignId) {
             filter._id = campaignId;
+            delete filter.contributionMode; // Allow any contribution mode for specific campaign
             console.log(`Processing specific campaign: ${campaignId}`);
         }
         else {
@@ -1539,16 +1543,43 @@ const processCampaignDues = async (req, res, next) => {
                 console.log(`📊 Processing campaign: ${campaign.name}`);
                 const contributorIds = (campaign.contributors || []).map(c => String(c.contributorId));
                 if (campaign.amountType === 'per_member') {
-                    // Find all active members in the campaign's church who haven't contributed
-                    const allMembers = await Member_1.default.find({
-                        churchId: campaign.churchId,
-                        isActive: true
-                    });
-                    const nonContributors = allMembers.filter(member => !contributorIds.includes(String(member._id)));
-                    console.log(`  ${nonContributors.length} members haven't contributed`);
+                    let membersToProcess = [];
+                    // Check if campaign targets specific members
+                    if (campaign.targetType === 'specific_members' && campaign.specificTargets && campaign.specificTargets.length > 0) {
+                        // Process only specific members
+                        const specificMemberIds = campaign.specificTargets
+                            .filter(t => t.targetModel === 'Member')
+                            .map(t => t.targetId);
+                        membersToProcess = await Member_1.default.find({
+                            _id: { $in: specificMemberIds },
+                            isActive: true
+                        });
+                        console.log(`  Campaign targets ${membersToProcess.length} specific members`);
+                    }
+                    else {
+                        // Find all active members in the campaign's church who haven't contributed
+                        const allMembers = await Member_1.default.find({
+                            churchId: campaign.churchId,
+                            isActive: true
+                        });
+                        membersToProcess = allMembers.filter(member => !contributorIds.includes(String(member._id)));
+                        console.log(`  ${membersToProcess.length} members haven't contributed`);
+                    }
                     // Add minimum amount to wallets of non-contributors AND create due records
-                    for (const member of nonContributors) {
+                    for (const member of membersToProcess) {
+                        // Skip if already contributed (for specific targets)
+                        if (contributorIds.includes(String(member._id))) {
+                            continue;
+                        }
                         const ownerName = `${member.firstName} ${member.lastName || ''}`.trim();
+                        // Get amount for this member (from specificTargets or use minimumAmount)
+                        let dueAmount = campaign.minimumAmount || 0;
+                        if (campaign.targetType === 'specific_members' && campaign.specificTargets) {
+                            const target = campaign.specificTargets.find(t => String(t.targetId) === String(member._id) && t.targetModel === 'Member');
+                            if (target) {
+                                dueAmount = target.amount;
+                            }
+                        }
                         // Create CampaignDue record
                         await CampaignDue_1.default.findOneAndUpdate({ campaignId: campaign._id, dueForId: member._id }, {
                             churchId: campaign.churchId,
@@ -1557,19 +1588,19 @@ const processCampaignDues = async (req, res, next) => {
                             dueForId: member._id,
                             dueForModel: 'Member',
                             dueForName: ownerName,
-                            amount: campaign.minimumAmount,
+                            amount: dueAmount,
                             isPaid: false,
                             paidAmount: 0,
-                            balance: campaign.minimumAmount,
+                            balance: dueAmount,
                             dueDate: campaign.dueDate || new Date()
                         }, { upsert: true, new: true });
                         // Update wallet balance
                         await Wallet_1.default.findOneAndUpdate({ ownerId: member._id, walletType: 'member' }, {
-                            $inc: { balance: campaign.minimumAmount },
+                            $inc: { balance: dueAmount },
                             $push: {
                                 transactions: {
                                     transactionId: null,
-                                    amount: campaign.minimumAmount,
+                                    amount: dueAmount,
                                     type: `campaign_${campaign.campaignType}_due`,
                                     date: new Date()
                                 }
@@ -1580,19 +1611,45 @@ const processCampaignDues = async (req, res, next) => {
                             }
                         }, { upsert: true, new: true });
                     }
-                    totalMembersProcessed += nonContributors.length;
+                    totalMembersProcessed += membersToProcess.length;
                 }
                 else if (campaign.amountType === 'per_house') {
-                    // Find all houses in the campaign's church who haven't contributed
-                    const units = await Unit_1.default.find({ churchId: campaign.churchId });
-                    const unitIds = units.map(u => u._id);
-                    const bavanakutayimas = await Bavanakutayima_1.default.find({ unitId: { $in: unitIds } });
-                    const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
-                    const allHouses = await House_1.default.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
-                    const nonContributors = allHouses.filter(house => !contributorIds.includes(String(house._id)));
-                    console.log(`  ${nonContributors.length} houses haven't contributed`);
+                    let housesToProcess = [];
+                    // Check if campaign targets specific houses
+                    if (campaign.targetType === 'specific_houses' && campaign.specificTargets && campaign.specificTargets.length > 0) {
+                        // Process only specific houses
+                        const specificHouseIds = campaign.specificTargets
+                            .filter(t => t.targetModel === 'House')
+                            .map(t => t.targetId);
+                        housesToProcess = await House_1.default.find({
+                            _id: { $in: specificHouseIds }
+                        });
+                        console.log(`  Campaign targets ${housesToProcess.length} specific houses`);
+                    }
+                    else {
+                        // Find all houses in the campaign's church who haven't contributed
+                        const units = await Unit_1.default.find({ churchId: campaign.churchId });
+                        const unitIds = units.map(u => u._id);
+                        const bavanakutayimas = await Bavanakutayima_1.default.find({ unitId: { $in: unitIds } });
+                        const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+                        const allHouses = await House_1.default.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
+                        housesToProcess = allHouses.filter(house => !contributorIds.includes(String(house._id)));
+                        console.log(`  ${housesToProcess.length} houses haven't contributed`);
+                    }
                     // Add minimum amount to wallets of non-contributors AND create due records
-                    for (const house of nonContributors) {
+                    for (const house of housesToProcess) {
+                        // Skip if already contributed (for specific targets)
+                        if (contributorIds.includes(String(house._id))) {
+                            continue;
+                        }
+                        // Get amount for this house (from specificTargets or use minimumAmount)
+                        let dueAmount = campaign.minimumAmount || 0;
+                        if (campaign.targetType === 'specific_houses' && campaign.specificTargets) {
+                            const target = campaign.specificTargets.find(t => String(t.targetId) === String(house._id) && t.targetModel === 'House');
+                            if (target) {
+                                dueAmount = target.amount;
+                            }
+                        }
                         // Create CampaignDue record
                         await CampaignDue_1.default.findOneAndUpdate({ campaignId: campaign._id, dueForId: house._id }, {
                             churchId: campaign.churchId,
@@ -1601,19 +1658,19 @@ const processCampaignDues = async (req, res, next) => {
                             dueForId: house._id,
                             dueForModel: 'House',
                             dueForName: house.familyName,
-                            amount: campaign.minimumAmount,
+                            amount: dueAmount,
                             isPaid: false,
                             paidAmount: 0,
-                            balance: campaign.minimumAmount,
+                            balance: dueAmount,
                             dueDate: campaign.dueDate || new Date()
                         }, { upsert: true, new: true });
                         // Update wallet balance
                         await Wallet_1.default.findOneAndUpdate({ ownerId: house._id, walletType: 'house' }, {
-                            $inc: { balance: campaign.minimumAmount },
+                            $inc: { balance: dueAmount },
                             $push: {
                                 transactions: {
                                     transactionId: null,
-                                    amount: campaign.minimumAmount,
+                                    amount: dueAmount,
                                     type: `campaign_${campaign.campaignType}_due`,
                                     date: new Date()
                                 }
@@ -1624,7 +1681,7 @@ const processCampaignDues = async (req, res, next) => {
                             }
                         }, { upsert: true, new: true });
                     }
-                    totalHousesProcessed += nonContributors.length;
+                    totalHousesProcessed += housesToProcess.length;
                 }
                 // Mark campaign as processed
                 campaign.duesProcessed = true;
@@ -2705,19 +2762,22 @@ const globalSearch = async (req, res, next) => {
             return;
         }
         const searchTerm = query.trim();
+        // Escape special regex characters for hierarchical ID search
+        const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const filter = {};
         // Church admin restriction
         if (req.user?.role === 'church_admin' && req.user.churchId) {
             filter.churchId = req.user.churchId;
         }
-        // Search Members (name, email, hierarchicalNumber, uniqueId)
+        // Search Members (name, email, uniqueId, memberNumber)
         const memberFilter = {
             ...filter,
             $or: [
-                { firstName: { $regex: searchTerm, $options: 'i' } },
-                { lastName: { $regex: searchTerm, $options: 'i' } },
-                { email: { $regex: searchTerm, $options: 'i' } },
-                { uniqueId: { $regex: searchTerm, $options: 'i' } }
+                { firstName: { $regex: escapedTerm, $options: 'i' } },
+                { lastName: { $regex: escapedTerm, $options: 'i' } },
+                { email: { $regex: escapedTerm, $options: 'i' } },
+                { uniqueId: { $regex: escapedTerm, $options: 'i' } },
+                ...(isNaN(Number(searchTerm)) ? [] : [{ memberNumber: Number(searchTerm) }])
             ]
         };
         const members = await Member_1.default.find(memberFilter)
@@ -2764,11 +2824,12 @@ const globalSearch = async (req, res, next) => {
                 type: 'member'
             };
         });
-        // Search Houses (familyName, hierarchicalNumber, uniqueId)
+        // Search Houses (familyName, uniqueId, houseNumber)
         const houseFilter = {
             $or: [
-                { familyName: { $regex: searchTerm, $options: 'i' } },
-                { uniqueId: { $regex: searchTerm, $options: 'i' } }
+                { familyName: { $regex: escapedTerm, $options: 'i' } },
+                { uniqueId: { $regex: escapedTerm, $options: 'i' } },
+                ...(isNaN(Number(searchTerm)) ? [] : [{ houseNumber: Number(searchTerm) }])
             ]
         };
         const houses = await House_1.default.find(houseFilter)
@@ -2810,7 +2871,7 @@ const globalSearch = async (req, res, next) => {
         // Search Transactions (receiptNumber)
         const transactionFilter = {
             ...filter,
-            receiptNumber: { $regex: searchTerm, $options: 'i' }
+            receiptNumber: { $regex: escapedTerm, $options: 'i' }
         };
         const transactions = await Transaction_1.default.find(transactionFilter)
             .limit(10)

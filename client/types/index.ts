@@ -175,8 +175,16 @@ export interface Transaction {
 }
 
 // Campaign Types
-export type CampaignType = 'stothrakazhcha' | 'spl_contribution';
-export type AmountType = 'per_house' | 'per_member';
+export type CampaignType = 'spl_contribution' | 'general_fund' | 'building_fund' | 'charity' | 'other';
+export type AmountType = 'per_house' | 'per_member' | 'flexible';
+export type CampaignTargetType = 'all' | 'specific_members' | 'specific_houses';
+
+export interface CampaignTarget {
+  targetId: string;
+  targetModel: 'Member' | 'House';
+  amount: number;
+  name?: string; // For display purposes
+}
 
 export interface Campaign {
   _id: string;
@@ -188,6 +196,9 @@ export interface Campaign {
   fixedAmount: number;
   minimumAmount?: number;
   amountType: AmountType;
+  isCompulsory: boolean;
+  targetType: CampaignTargetType;
+  specificTargets?: CampaignTarget[];
   startDate: Date;
   endDate?: Date;
   dueDate?: Date;

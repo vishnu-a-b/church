@@ -53,12 +53,14 @@ export default function CampaignsPage() {
   const itemsPerPage = 10;
 
   // Hierarchy data
+  const [churches, setChurches] = useState<any[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [bavanakutayimas, setBavanakutayimas] = useState<Bavanakutayima[]>([]);
   const [houses, setHouses] = useState<House[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
 
   // Selected hierarchy
+  const [selectedChurch, setSelectedChurch] = useState('');
   const [selectedUnit, setSelectedUnit] = useState('');
   const [selectedBavanakutayima, setSelectedBavanakutayima] = useState('');
   const [selectedHouse, setSelectedHouse] = useState('');
@@ -88,13 +90,23 @@ export default function CampaignsPage() {
     isCompulsory: true,
     targetType: 'all' as 'all' | 'specific_members' | 'specific_houses',
     specificTargets: [] as Array<{ targetId: string; targetModel: 'Member' | 'House'; amount: number; name?: string }>,
+    churchId: '',
   });
-  const api = createRoleApi('church_admin');
+  const api = createRoleApi('super_admin');
 
   useEffect(() => {
-    fetchCampaigns();
-    fetchUnits();
+    fetchChurches();
   }, []);
+
+  useEffect(() => {
+    if (selectedChurch) {
+      fetchCampaigns();
+      fetchUnits(selectedChurch);
+    } else {
+      setCampaigns([]);
+      setUnits([]);
+    }
+  }, [selectedChurch]);
 
   // Fetch members or houses when targetType changes
   useEffect(() => {
@@ -105,9 +117,20 @@ export default function CampaignsPage() {
     }
   }, [formData.targetType]);
 
-  const fetchCampaigns = async () => {
+  const fetchChurches = async () => {
     try {
-      const response = await api.get('/campaigns');
+      const response = await api.get('/churches');
+      setChurches(response.data?.data || []);
+    } catch (error) {
+      console.error('Error fetching churches:', error);
+    }
+  };
+
+  const fetchCampaigns = async () => {
+    if (!selectedChurch) return;
+    setLoading(true);
+    try {
+      const response = await api.get(`/campaigns?churchId=${selectedChurch}`);
       setCampaigns(response.data?.data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -116,9 +139,9 @@ export default function CampaignsPage() {
     }
   };
 
-  const fetchUnits = async () => {
+  const fetchUnits = async (churchId: string) => {
     try {
-      const response = await api.get('/units');
+      const response = await api.get(`/units?churchId=${churchId}`);
       setUnits(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching units:', error);
@@ -169,9 +192,10 @@ export default function CampaignsPage() {
 
   // Fetch all members for target selection
   const fetchAllMembers = async () => {
+    if (!selectedChurch) return;
     setLoadingTargets(true);
     try {
-      const response = await api.get('/members');
+      const response = await api.get(`/members?churchId=${selectedChurch}`);
       setAllMembers(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching all members:', error);
@@ -183,9 +207,10 @@ export default function CampaignsPage() {
 
   // Fetch all houses for target selection
   const fetchAllHouses = async () => {
+    if (!selectedChurch) return;
     setLoadingTargets(true);
     try {
-      const response = await api.get('/houses');
+      const response = await api.get(`/houses?churchId=${selectedChurch}`);
       setAllHouses(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching all houses:', error);
@@ -270,13 +295,18 @@ export default function CampaignsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedChurch) {
+      toast.error('Please select a church first');
+      return;
+    }
     setSubmitting(true);
     try {
+      const dataToSubmit = { ...formData, churchId: selectedChurch };
       if (editingId) {
-        await api.put(`/campaigns/${editingId}`, formData);
+        await api.put(`/campaigns/${editingId}`, dataToSubmit);
         toast.success('Campaign updated successfully!');
       } else {
-        await api.post('/campaigns', formData);
+        await api.post('/campaigns', dataToSubmit);
         toast.success('Campaign created successfully!');
       }
       setShowModal(false);
@@ -307,6 +337,7 @@ export default function CampaignsPage() {
       isCompulsory: true,
       targetType: 'all' as 'all' | 'specific_members' | 'specific_houses',
       specificTargets: [],
+      churchId: selectedChurch,
     });
   };
 
@@ -511,6 +542,26 @@ export default function CampaignsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Church Selector */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Church *</label>
+        <select
+          value={selectedChurch}
+          onChange={(e) => setSelectedChurch(e.target.value)}
+          className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+        >
+          <option value="">-- Select a Church --</option>
+          {churches.map((church) => (
+            <option key={church._id} value={church._id}>
+              {church.name}
+            </option>
+          ))}
+        </select>
+        {!selectedChurch && (
+          <p className="text-sm text-orange-600 mt-2">Please select a church to view and manage campaigns</p>
+        )}
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Campaigns</h2>
@@ -519,7 +570,7 @@ export default function CampaignsPage() {
         <div className="flex gap-3">
           <button
             onClick={() => handleProcessDues()}
-            disabled={processingDues}
+            disabled={processingDues || !selectedChurch}
             className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Process overdue variable campaigns and add dues to non-contributors"
           >
@@ -540,7 +591,8 @@ export default function CampaignsPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            disabled={!selectedChurch}
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
             Create Campaign

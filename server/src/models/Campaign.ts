@@ -10,7 +10,7 @@ const campaignSchema = new Schema<ICampaign>(
     },
     campaignType: {
       type: String,
-      enum: ['stothrakazhcha', 'spl_contribution', 'general_fund', 'building_fund', 'charity', 'other'],
+      enum: ['spl_contribution', 'general_fund', 'building_fund', 'charity', 'other'],
       required: [true, 'Campaign type is required'],
     },
     name: {
@@ -45,6 +45,30 @@ const campaignSchema = new Schema<ICampaign>(
       enum: ['per_house', 'per_member', 'flexible'],
       required: [true, 'Amount type is required'],
     },
+    isCompulsory: {
+      type: Boolean,
+      default: true,
+    },
+    targetType: {
+      type: String,
+      enum: ['all', 'specific_members', 'specific_houses'],
+      default: 'all',
+    },
+    specificTargets: [{
+      targetId: {
+        type: Schema.Types.ObjectId,
+        refPath: 'specificTargets.targetModel',
+      },
+      targetModel: {
+        type: String,
+        enum: ['Member', 'House'],
+      },
+      amount: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+    }],
     contributors: [{
       contributorId: {
         type: Schema.Types.ObjectId,

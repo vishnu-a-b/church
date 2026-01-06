@@ -15,6 +15,7 @@
     "db:clear": "ts-node-dev --transpile-only src/clearDatabase.ts",
     "db:reset": "ts-node-dev --transpile-only src/seedComplete.ts",
     "migrate:hierarchical": "ts-node-dev --transpile-only src/scripts/migrate-hierarchical-numbers.ts",
+    "create:superadmin": "ts-node-dev --transpile-only src/scripts/create-super-admin.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

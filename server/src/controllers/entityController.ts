@@ -1429,26 +1429,53 @@ export const createCampaign = async (req: AuthRequest, res: Response, next: Next
     if (campaign.contributionMode === 'fixed' && campaign.fixedAmount && campaign.fixedAmount > 0) {
       try {
         if (campaign.amountType === 'per_member') {
-          // Find all active members in the campaign's church
-          const members = await Member.find({
-            churchId: campaign.churchId,
-            isActive: true
-          });
+          let membersToProcess: any[] = [];
 
-          console.log(`📊 Campaign created: Adding ${campaign.fixedAmount} to ${members.length} member wallets`);
+          // Check if campaign targets specific members
+          if (campaign.targetType === 'specific_members' && campaign.specificTargets && campaign.specificTargets.length > 0) {
+            const specificMemberIds = campaign.specificTargets
+              .filter(t => t.targetModel === 'Member')
+              .map(t => t.targetId);
+
+            membersToProcess = await Member.find({
+              _id: { $in: specificMemberIds },
+              isActive: true
+            });
+
+            console.log(`📊 Campaign created: Adding amounts to ${membersToProcess.length} specific member wallets`);
+          } else {
+            // Find all active members in the campaign's church
+            membersToProcess = await Member.find({
+              churchId: campaign.churchId,
+              isActive: true
+            });
+
+            console.log(`📊 Campaign created: Adding ${campaign.fixedAmount} to ${membersToProcess.length} member wallets`);
+          }
 
           // Update or create wallet for each member
-          for (const member of members) {
+          for (const member of membersToProcess) {
             const ownerName = `${member.firstName} ${member.lastName || ''}`.trim();
+
+            // Get amount for this member (from specificTargets or use fixedAmount)
+            let amount = campaign.fixedAmount;
+            if (campaign.targetType === 'specific_members' && campaign.specificTargets) {
+              const target = campaign.specificTargets.find(t =>
+                String(t.targetId) === String(member._id) && t.targetModel === 'Member'
+              );
+              if (target) {
+                amount = target.amount;
+              }
+            }
 
             await Wallet.findOneAndUpdate(
               { ownerId: member._id, walletType: 'member' },
               {
-                $inc: { balance: campaign.fixedAmount },
+                $inc: { balance: amount },
                 $push: {
                   transactions: {
                     transactionId: null,
-                    amount: campaign.fixedAmount,
+                    amount: amount,
                     type: `campaign_${campaign.campaignType}`,
                     date: new Date()
                   }
@@ -1463,34 +1490,60 @@ export const createCampaign = async (req: AuthRequest, res: Response, next: Next
           }
 
           // Update campaign participant count
-          campaign.participantCount = members.length;
+          campaign.participantCount = membersToProcess.length;
           await campaign.save();
 
         } else if (campaign.amountType === 'per_house') {
-          // Find all houses in the campaign's church
-          // First get all units in this church
-          const units = await Unit.find({ churchId: campaign.churchId });
-          const unitIds = units.map(u => u._id);
+          let housesToProcess: any[] = [];
 
-          // Get all bavanakutayimas in these units
-          const bavanakutayimas = await Bavanakutayima.find({ unitId: { $in: unitIds } });
-          const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+          // Check if campaign targets specific houses
+          if (campaign.targetType === 'specific_houses' && campaign.specificTargets && campaign.specificTargets.length > 0) {
+            const specificHouseIds = campaign.specificTargets
+              .filter(t => t.targetModel === 'House')
+              .map(t => t.targetId);
 
-          // Get all houses in these bavanakutayimas
-          const houses = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
+            housesToProcess = await House.find({
+              _id: { $in: specificHouseIds }
+            });
 
-          console.log(`📊 Campaign created: Adding ${campaign.fixedAmount} to ${houses.length} house wallets`);
+            console.log(`📊 Campaign created: Adding amounts to ${housesToProcess.length} specific house wallets`);
+          } else {
+            // Find all houses in the campaign's church
+            // First get all units in this church
+            const units = await Unit.find({ churchId: campaign.churchId });
+            const unitIds = units.map(u => u._id);
+
+            // Get all bavanakutayimas in these units
+            const bavanakutayimas = await Bavanakutayima.find({ unitId: { $in: unitIds } });
+            const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+
+            // Get all houses in these bavanakutayimas
+            housesToProcess = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
+
+            console.log(`📊 Campaign created: Adding ${campaign.fixedAmount} to ${housesToProcess.length} house wallets`);
+          }
 
           // Update or create wallet for each house
-          for (const house of houses) {
+          for (const house of housesToProcess) {
+            // Get amount for this house (from specificTargets or use fixedAmount)
+            let amount = campaign.fixedAmount;
+            if (campaign.targetType === 'specific_houses' && campaign.specificTargets) {
+              const target = campaign.specificTargets.find(t =>
+                String(t.targetId) === String(house._id) && t.targetModel === 'House'
+              );
+              if (target) {
+                amount = target.amount;
+              }
+            }
+
             await Wallet.findOneAndUpdate(
               { ownerId: house._id, walletType: 'house' },
               {
-                $inc: { balance: campaign.fixedAmount },
+                $inc: { balance: amount },
                 $push: {
                   transactions: {
                     transactionId: null,
-                    amount: campaign.fixedAmount,
+                    amount: amount,
                     type: `campaign_${campaign.campaignType}`,
                     date: new Date()
                   }
@@ -1505,7 +1558,7 @@ export const createCampaign = async (req: AuthRequest, res: Response, next: Next
           }
 
           // Update campaign participant count
-          campaign.participantCount = houses.length;
+          campaign.participantCount = housesToProcess.length;
           await campaign.save();
         }
       } catch (walletError) {
@@ -1613,12 +1666,16 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
       contributionMode: 'variable',
       isActive: true,
       duesProcessed: false,
-      minimumAmount: { $gt: 0 }
+      $or: [
+        { minimumAmount: { $gt: 0 } },
+        { 'specificTargets.0': { $exists: true } } // Has at least one specific target
+      ]
     };
 
     // If specific campaign ID provided, add it to filter; otherwise filter by due date
     if (campaignId) {
       filter._id = campaignId;
+      delete filter.contributionMode; // Allow any contribution mode for specific campaign
       console.log(`Processing specific campaign: ${campaignId}`);
     } else {
       filter.dueDate = { $lte: now };
@@ -1640,21 +1697,54 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
         const contributorIds = (campaign.contributors || []).map(c => String(c.contributorId));
 
         if (campaign.amountType === 'per_member') {
-          // Find all active members in the campaign's church who haven't contributed
-          const allMembers = await Member.find({
-            churchId: campaign.churchId,
-            isActive: true
-          });
+          let membersToProcess: any[] = [];
 
-          const nonContributors = allMembers.filter(member =>
-            !contributorIds.includes(String(member._id))
-          );
+          // Check if campaign targets specific members
+          if (campaign.targetType === 'specific_members' && campaign.specificTargets && campaign.specificTargets.length > 0) {
+            // Process only specific members
+            const specificMemberIds = campaign.specificTargets
+              .filter(t => t.targetModel === 'Member')
+              .map(t => t.targetId);
 
-          console.log(`  ${nonContributors.length} members haven't contributed`);
+            membersToProcess = await Member.find({
+              _id: { $in: specificMemberIds },
+              isActive: true
+            });
+
+            console.log(`  Campaign targets ${membersToProcess.length} specific members`);
+          } else {
+            // Find all active members in the campaign's church who haven't contributed
+            const allMembers = await Member.find({
+              churchId: campaign.churchId,
+              isActive: true
+            });
+
+            membersToProcess = allMembers.filter(member =>
+              !contributorIds.includes(String(member._id))
+            );
+
+            console.log(`  ${membersToProcess.length} members haven't contributed`);
+          }
 
           // Add minimum amount to wallets of non-contributors AND create due records
-          for (const member of nonContributors) {
+          for (const member of membersToProcess) {
+            // Skip if already contributed (for specific targets)
+            if (contributorIds.includes(String(member._id))) {
+              continue;
+            }
+
             const ownerName = `${member.firstName} ${member.lastName || ''}`.trim();
+
+            // Get amount for this member (from specificTargets or use minimumAmount)
+            let dueAmount = campaign.minimumAmount || 0;
+            if (campaign.targetType === 'specific_members' && campaign.specificTargets) {
+              const target = campaign.specificTargets.find(t =>
+                String(t.targetId) === String(member._id) && t.targetModel === 'Member'
+              );
+              if (target) {
+                dueAmount = target.amount;
+              }
+            }
 
             // Create CampaignDue record
             await CampaignDue.findOneAndUpdate(
@@ -1666,10 +1756,10 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
                 dueForId: member._id,
                 dueForModel: 'Member',
                 dueForName: ownerName,
-                amount: campaign.minimumAmount,
+                amount: dueAmount,
                 isPaid: false,
                 paidAmount: 0,
-                balance: campaign.minimumAmount,
+                balance: dueAmount,
                 dueDate: campaign.dueDate || new Date()
               },
               { upsert: true, new: true }
@@ -1679,11 +1769,11 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
             await Wallet.findOneAndUpdate(
               { ownerId: member._id, walletType: 'member' },
               {
-                $inc: { balance: campaign.minimumAmount },
+                $inc: { balance: dueAmount },
                 $push: {
                   transactions: {
                     transactionId: null,
-                    amount: campaign.minimumAmount,
+                    amount: dueAmount,
                     type: `campaign_${campaign.campaignType}_due`,
                     date: new Date()
                   }
@@ -1697,26 +1787,58 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
             );
           }
 
-          totalMembersProcessed += nonContributors.length;
+          totalMembersProcessed += membersToProcess.length;
 
         } else if (campaign.amountType === 'per_house') {
-          // Find all houses in the campaign's church who haven't contributed
-          const units = await Unit.find({ churchId: campaign.churchId });
-          const unitIds = units.map(u => u._id);
+          let housesToProcess: any[] = [];
 
-          const bavanakutayimas = await Bavanakutayima.find({ unitId: { $in: unitIds } });
-          const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+          // Check if campaign targets specific houses
+          if (campaign.targetType === 'specific_houses' && campaign.specificTargets && campaign.specificTargets.length > 0) {
+            // Process only specific houses
+            const specificHouseIds = campaign.specificTargets
+              .filter(t => t.targetModel === 'House')
+              .map(t => t.targetId);
 
-          const allHouses = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
+            housesToProcess = await House.find({
+              _id: { $in: specificHouseIds }
+            });
 
-          const nonContributors = allHouses.filter(house =>
-            !contributorIds.includes(String(house._id))
-          );
+            console.log(`  Campaign targets ${housesToProcess.length} specific houses`);
+          } else {
+            // Find all houses in the campaign's church who haven't contributed
+            const units = await Unit.find({ churchId: campaign.churchId });
+            const unitIds = units.map(u => u._id);
 
-          console.log(`  ${nonContributors.length} houses haven't contributed`);
+            const bavanakutayimas = await Bavanakutayima.find({ unitId: { $in: unitIds } });
+            const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+
+            const allHouses = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } });
+
+            housesToProcess = allHouses.filter(house =>
+              !contributorIds.includes(String(house._id))
+            );
+
+            console.log(`  ${housesToProcess.length} houses haven't contributed`);
+          }
 
           // Add minimum amount to wallets of non-contributors AND create due records
-          for (const house of nonContributors) {
+          for (const house of housesToProcess) {
+            // Skip if already contributed (for specific targets)
+            if (contributorIds.includes(String(house._id))) {
+              continue;
+            }
+
+            // Get amount for this house (from specificTargets or use minimumAmount)
+            let dueAmount = campaign.minimumAmount || 0;
+            if (campaign.targetType === 'specific_houses' && campaign.specificTargets) {
+              const target = campaign.specificTargets.find(t =>
+                String(t.targetId) === String(house._id) && t.targetModel === 'House'
+              );
+              if (target) {
+                dueAmount = target.amount;
+              }
+            }
+
             // Create CampaignDue record
             await CampaignDue.findOneAndUpdate(
               { campaignId: campaign._id, dueForId: house._id },
@@ -1727,10 +1849,10 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
                 dueForId: house._id,
                 dueForModel: 'House',
                 dueForName: house.familyName,
-                amount: campaign.minimumAmount,
+                amount: dueAmount,
                 isPaid: false,
                 paidAmount: 0,
-                balance: campaign.minimumAmount,
+                balance: dueAmount,
                 dueDate: campaign.dueDate || new Date()
               },
               { upsert: true, new: true }
@@ -1740,11 +1862,11 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
             await Wallet.findOneAndUpdate(
               { ownerId: house._id, walletType: 'house' },
               {
-                $inc: { balance: campaign.minimumAmount },
+                $inc: { balance: dueAmount },
                 $push: {
                   transactions: {
                     transactionId: null,
-                    amount: campaign.minimumAmount,
+                    amount: dueAmount,
                     type: `campaign_${campaign.campaignType}_due`,
                     date: new Date()
                   }
@@ -1758,7 +1880,7 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
             );
           }
 
-          totalHousesProcessed += nonContributors.length;
+          totalHousesProcessed += housesToProcess.length;
         }
 
         // Mark campaign as processed

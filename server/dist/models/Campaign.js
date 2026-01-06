@@ -77,6 +77,30 @@ const campaignSchema = new mongoose_1.Schema({
         enum: ['per_house', 'per_member', 'flexible'],
         required: [true, 'Amount type is required'],
     },
+    isCompulsory: {
+        type: Boolean,
+        default: true,
+    },
+    targetType: {
+        type: String,
+        enum: ['all', 'specific_members', 'specific_houses'],
+        default: 'all',
+    },
+    specificTargets: [{
+            targetId: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                refPath: 'specificTargets.targetModel',
+            },
+            targetModel: {
+                type: String,
+                enum: ['Member', 'House'],
+            },
+            amount: {
+                type: Number,
+                required: true,
+                min: 0,
+            },
+        }],
     contributors: [{
             contributorId: {
                 type: mongoose_1.Schema.Types.ObjectId,
