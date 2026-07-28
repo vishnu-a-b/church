@@ -1,6 +1,10 @@
 // PM2 process definitions for the Church app (no Docker).
-// Lives at the repo root because it spans both server/ and client/ —
-// unlike edv, where only the backend runs under PM2.
+//
+// Only the API runs under PM2. The client is a static Next.js export
+// (next.config.js: output: 'export') — nginx serves client/out/ directly off
+// disk, no Node process or port needed for it (see the nginx reference config
+// this pipeline points at). `deploy.sh` still builds client/out/ on every
+// deploy; PM2 just has nothing to do with it.
 module.exports = {
   apps: [
     {
@@ -29,27 +33,6 @@ module.exports = {
 
       out_file: '/var/log/pm2/church-api-out.log',
       error_file: '/var/log/pm2/church-api-err.log',
-      merge_logs: true,
-      log_date_format: 'YYYY-MM-DD HH:mm:ss',
-    },
-    {
-      name: 'church-web',
-      // Static Next.js export (next.config.js: output: 'export') — served via
-      // the `serve` package, not `next start` (which doesn't serve a static export).
-      // Requires `npm install -g serve` on the server once (see scripts/server-setup.sh).
-      script: 'serve',
-      args: ['-s', 'out', '-l', '5011'],
-      cwd: '/home/projects/church/client',
-      instances: 1,
-      exec_mode: 'fork',
-      watch: false,
-
-      autorestart: true,
-      max_restarts: 10,
-      restart_delay: 3000,
-
-      out_file: '/var/log/pm2/church-web-out.log',
-      error_file: '/var/log/pm2/church-web-err.log',
       merge_logs: true,
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
     },

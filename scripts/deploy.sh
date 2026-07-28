@@ -85,8 +85,9 @@ echo "▶ [5/6] Building client (static export)..."
 cd "$CLIENT_DIR"
 npm ci
 npm run build            # next build (output: 'export') → out/
+                          # nginx serves this directory directly — no process/port for it
 
-echo "▶ [6/6] Reloading PM2..."
+echo "▶ [6/6] Reloading PM2 (church-api only — the client has no process to manage)..."
 mkdir -p "$LOG_DIR"
 cd "$PROJECT_DIR"
 pm2 reload ecosystem.config.js --env production --update-env 2>/dev/null \

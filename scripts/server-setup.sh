@@ -4,12 +4,13 @@
 #
 # Assumes Node.js and PM2 are already installed (from setting up edv on this same
 # server). This script only adds what the Church app needs on top of that:
-# `serve` (to host the Next.js static export) and the project directory/first deploy.
+# the project directory and first deploy. The client is a static Next.js
+# export — nginx serves client/out/ directly off disk, no process/port for it.
 #
 # Does NOT touch nginx or SSL/certbot — that's handled manually. Once this app is
 # running, point your nginx config at:
-#   api.offerings.stmaryselthuruth.org  ->  127.0.0.1:5010   (church-api)
-#   <your client domain>                ->  127.0.0.1:5011   (church-web)
+#   api.offerings.stmaryselthuruth.org  ->  127.0.0.1:5010        (church-api, proxied)
+#   <your client domain>                ->  /home/projects/church/client/out  (served directly)
 set -euo pipefail
 
 PROJECT_DIR="/home/projects/church"
@@ -19,9 +20,6 @@ PM2_LOG_DIR="/var/log/pm2"
 echo "==> Checking Node.js / PM2 (should already be present from the edv setup)..."
 command -v node >/dev/null || { echo "Node.js not found — install it first (see edv/scripts/server-setup.sh)"; exit 1; }
 command -v pm2  >/dev/null || { echo "PM2 not found — install it first: npm install -g pm2"; exit 1; }
-
-echo "==> Installing 'serve' (hosts the Next.js static export)..."
-npm install -g serve
 
 echo "==> Creating directories..."
 mkdir -p "$PROJECT_DIR" "$PM2_LOG_DIR"
