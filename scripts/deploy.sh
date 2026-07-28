@@ -18,6 +18,14 @@ CLIENT_DIR="$PROJECT_DIR/client"
 LOG_DIR="/var/log/pm2"
 API_URL="https://api.offerings.stmaryselthuruth.org"
 
+# git pull happens FIRST, before anything else — including the env-var guard
+# checks below. If a future fix changes what's required/how it's validated,
+# this ordering means a bad/outdated guard on disk can never block the pull
+# that would fix it — it always gets a chance to update itself before failing.
+echo "▶ [1/6] Pulling latest code..."
+cd "$PROJECT_DIR"
+git pull --rebase origin main
+
 : "${MONGODB_URI:?MONGODB_URI is not set}"
 : "${CLIENT_DOMAIN:?CLIENT_DOMAIN is not set}"
 
@@ -34,10 +42,6 @@ set_env_var() {
   fi
   echo "${key}=${value}" >> "$file"
 }
-
-echo "▶ [1/6] Pulling latest code..."
-cd "$PROJECT_DIR"
-git pull --rebase origin main
 
 echo "▶ [2/6] Updating server/.env..."
 touch "$SERVER_DIR/.env"
