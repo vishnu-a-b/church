@@ -43,6 +43,6 @@ jobs:
           key:      ${{ secrets.SSH_KEY }}
           port:     ${{ secrets.SSH_PORT || 22 }}
           envs: "MONGODB_URI,JWT_SECRET,JWT_ACCESS_TOKEN_EXPIRE,JWT_REFRESH_TOKEN_EXPIRE,REFRESH_TOKEN_SECRET,SMS_ENABLED,SMS_PROVIDER,FAST2SMS_API_KEY,SMS_SENDER_ID,EMAIL_ENABLED,EMAIL_HOST,EMAIL_PORT,EMAIL_SECURE,EMAIL_USERNAME,EMAIL_PASSWORD,EMAIL_FROM,EDV_BRIDGE_ENABLED,EDV_BRIDGE_API_URL,CLIENT_DOMAIN"
+          script_stop: true
           script: |
-            cd /home/projects/church
-            bash scripts/deploy.sh
+            cd /home/projects/church && bash scripts/deploy.sh
