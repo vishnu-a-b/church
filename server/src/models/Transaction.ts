@@ -11,7 +11,7 @@ const transactionSchema = new Schema<ITransaction>(
     },
     transactionType: {
       type: String,
-      enum: ['lelam', 'thirunnaal_panam', 'dashamansham', 'spl_contribution', 'stothrakazhcha'],
+      enum: ['lelam', 'thirunnaal_panam', 'dashamansham', 'spl_contribution', 'stothrakazhcha', 'monthly_support'],
       required: [true, 'Transaction type is required'],
     },
     contributionMode: {
@@ -49,6 +49,10 @@ const transactionSchema = new Schema<ITransaction>(
       type: Schema.Types.ObjectId,
       ref: 'House',
     },
+    donorId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Donor',
+    },
     unitId: {
       type: Schema.Types.ObjectId,
       ref: 'Unit',
@@ -84,6 +88,19 @@ const transactionSchema = new Schema<ITransaction>(
       ref: 'User',
       required: [true, 'Created by is required'],
     },
+    edvSynced: {
+      type: Boolean,
+      default: false,
+    },
+    edvVoucherId: {
+      type: String,
+    },
+    edvSyncError: {
+      type: String,
+    },
+    edvSyncedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -109,5 +126,6 @@ transactionSchema.index({ paymentMethod: 1 });
 transactionSchema.index({ campaignId: 1 });
 transactionSchema.index({ paymentDate: -1 });
 transactionSchema.index({ createdBy: 1 });
+transactionSchema.index({ edvSynced: 1, createdAt: 1 });
 
 export default mongoose.model<ITransaction>('Transaction', transactionSchema);

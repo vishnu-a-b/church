@@ -67,6 +67,10 @@ const churchSchema = new Schema<IChurch>(
         type: String,
         default: 'INR',
       },
+      edvApiKey: {
+        type: String,
+        select: false,
+      },
     },
   },
   {

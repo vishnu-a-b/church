@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { protect } from '../middleware/auth.middleware';
 import {
+  verifyEmail,
+  updateEmailPreferences,
+} from '../controllers/emailVerificationController';
+import {
   getAllUnits,
   getUnitById,
   createUnit,
@@ -96,10 +100,29 @@ import {
   updateChurch,
   deleteChurch,
 } from '../controllers/churchController';
+import {
+  createPlan as createMonthlySupportPlan,
+  getAllPlans as getAllMonthlySupportPlans,
+  getPlanById as getMonthlySupportPlanById,
+  updatePlan as updateMonthlySupportPlan,
+  deletePlan as deleteMonthlySupportPlan,
+  getDuesForPlan as getMonthlySupportDuesForPlan,
+  getMyMonthlySupportDues,
+} from '../controllers/monthlySupportController';
+import {
+  createDonor,
+  getAllDonors,
+  getDonorById,
+  updateDonor,
+} from '../controllers/donorController';
 
 const router = Router();
 
-// All routes require authentication
+// Public Email Verification Routes (no auth required)
+router.get('/verify-email', verifyEmail);
+router.post('/verify-email/preferences', updateEmailPreferences);
+
+// All routes below require authentication
 router.use(protect);
 
 // Global Search
@@ -788,5 +811,15 @@ router.route('/stothrakazhcha-dues/:id').get(getStothrakazhchaDueById).delete(de
 router.post('/stothrakazhcha-dues/process', processStothrakazhchaDues);
 router.post('/stothrakazhcha-dues/:id/pay', markDueAsPaid);
 router.get('/stothrakazhcha-dues/entity/:entityType/:entityId', getDuesForEntity);
+
+// Monthly Support Routes
+router.route('/monthly-support-plans').get(getAllMonthlySupportPlans).post(createMonthlySupportPlan);
+router.route('/monthly-support-plans/:id').get(getMonthlySupportPlanById).put(updateMonthlySupportPlan).delete(deleteMonthlySupportPlan);
+router.get('/monthly-support-plans/:id/dues', getMonthlySupportDuesForPlan);
+router.get('/monthly-support-dues/mine', getMyMonthlySupportDues);
+
+// Donor Routes (outside supporters)
+router.route('/donors').get(getAllDonors).post(createDonor);
+router.route('/donors/:id').get(getDonorById).put(updateDonor);
 
 export default router;

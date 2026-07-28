@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.routes';
 import entityRoutes from './routes/entity.routes';
 import swaggerSpec from './config/swagger';
 import { scheduleCampaignDuesProcessing } from './jobs/campaignDuesProcessor';
+import { scheduleEdvBridgeRetryProcessing } from './jobs/edvBridgeRetryProcessor';
+import { scheduleMonthlySupportProcessing } from './jobs/monthlySupportProcessor';
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +22,8 @@ connectDB();
 
 // Schedule automated campaign dues processing
 scheduleCampaignDuesProcessing();
+scheduleEdvBridgeRetryProcessing();
+scheduleMonthlySupportProcessing();
 
 // Middleware - CORS enabled for all origins
 app.use(cors({

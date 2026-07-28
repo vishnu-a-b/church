@@ -39,6 +39,7 @@ export interface IChurch extends Document {
     smsApiKey?: string;
     smsSenderId: string;
     currency: string;
+    edvApiKey?: string;
   };
 }
 
@@ -111,6 +112,11 @@ export interface IMember extends Document {
     receiptNotifications: boolean;
   };
 
+  // Email verification and preferences
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  emailNotificationsEnabled: boolean;
+
   hierarchicalNumber?: string; // Virtual field
 
   // Method for password comparison
@@ -133,7 +139,7 @@ export interface IWallet extends Document {
 }
 
 // Transaction Types
-export type TransactionType = 'lelam' | 'thirunnaal_panam' | 'dashamansham' | 'spl_contribution' | 'stothrakazhcha' | 'general_fund' | 'building_fund' | 'charity' | 'other';
+export type TransactionType = 'lelam' | 'thirunnaal_panam' | 'dashamansham' | 'spl_contribution' | 'stothrakazhcha' | 'general_fund' | 'building_fund' | 'charity' | 'other' | 'monthly_support';
 export type ContributionMode = 'fixed' | 'variable';
 export type Distribution = 'member_only' | 'house_only' | 'both';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'upi' | 'cheque';
@@ -149,6 +155,7 @@ export interface ITransaction extends Document {
   totalAmount: number;
   memberId?: Types.ObjectId;
   houseId?: Types.ObjectId;
+  donorId?: Types.ObjectId;
   unitId?: Types.ObjectId;
   churchId: Types.ObjectId;
   paymentDate: Date;
@@ -157,6 +164,10 @@ export interface ITransaction extends Document {
   smsNotificationSent: boolean;
   smsLogId?: Types.ObjectId;
   createdBy: Types.ObjectId;
+  edvSynced: boolean;
+  edvVoucherId?: string;
+  edvSyncError?: string;
+  edvSyncedAt?: Date;
 }
 
 // Campaign Types
@@ -248,6 +259,54 @@ export interface ICampaignDue extends Document {
   campaignName: string;
   dueForId: Types.ObjectId;
   dueForModel: 'Member' | 'House';
+  dueForName: string;
+  amount: number;
+  isPaid: boolean;
+  paidAmount: number;
+  balance: number;
+  transactionId?: Types.ObjectId;
+  paidAt?: Date;
+  dueDate: Date;
+  createdAt: Date;
+  notes?: string;
+}
+
+// Donor Types (outside supporters — not part of the church membership hierarchy)
+export interface IDonor extends Document {
+  churchId: Types.ObjectId;
+  name: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+  isActive: boolean;
+  createdBy?: Types.ObjectId;
+}
+
+// Monthly Support Types
+export interface IMonthlySupportPlan extends Document {
+  churchId: Types.ObjectId;
+  name: string;
+  description?: string;
+  defaultAmount: number;
+  dayOfMonth: number;
+  members: Array<{
+    memberId?: Types.ObjectId;
+    donorId?: Types.ObjectId;
+    amount?: number;
+  }>;
+  startDate: Date;
+  endDate?: Date;
+  isActive: boolean;
+  createdBy?: Types.ObjectId;
+}
+
+export interface IMonthlySupportDue extends Document {
+  churchId: Types.ObjectId;
+  planId: Types.ObjectId;
+  planName: string;
+  periodMonth: string; // "YYYY-MM"
+  dueForId: Types.ObjectId;
+  dueForModel: 'Member' | 'Donor';
   dueForName: string;
   amount: number;
   isPaid: boolean;

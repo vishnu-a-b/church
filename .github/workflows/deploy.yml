@@ -1,0 +1,48 @@
+name: Deploy — Church App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          MONGODB_URI:             ${{ secrets.MONGODB_URI }}
+          JWT_SECRET:               ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_TOKEN_EXPIRE:  ${{ secrets.JWT_ACCESS_TOKEN_EXPIRE }}
+          JWT_REFRESH_TOKEN_EXPIRE: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRE }}
+          REFRESH_TOKEN_SECRET:     ${{ secrets.REFRESH_TOKEN_SECRET }}
+          SMS_ENABLED:              ${{ secrets.SMS_ENABLED }}
+          SMS_PROVIDER:             ${{ secrets.SMS_PROVIDER }}
+          FAST2SMS_API_KEY:         ${{ secrets.FAST2SMS_API_KEY }}
+          SMS_SENDER_ID:            ${{ secrets.SMS_SENDER_ID }}
+          EMAIL_ENABLED:            ${{ secrets.EMAIL_ENABLED }}
+          EMAIL_HOST:               ${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT:               ${{ secrets.EMAIL_PORT }}
+          EMAIL_SECURE:             ${{ secrets.EMAIL_SECURE }}
+          EMAIL_USERNAME:           ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD:           ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_FROM:               ${{ secrets.EMAIL_FROM }}
+          EDV_BRIDGE_ENABLED:       ${{ secrets.EDV_BRIDGE_ENABLED }}
+          EDV_BRIDGE_API_URL:       ${{ secrets.EDV_BRIDGE_API_URL }}
+          CLIENT_DOMAIN:            ${{ secrets.CLIENT_DOMAIN }}
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:      ${{ secrets.SSH_KEY }}
+          port:     ${{ secrets.SSH_PORT || 22 }}
+          envs: "MONGODB_URI,JWT_SECRET,JWT_ACCESS_TOKEN_EXPIRE,JWT_REFRESH_TOKEN_EXPIRE,REFRESH_TOKEN_SECRET,SMS_ENABLED,SMS_PROVIDER,FAST2SMS_API_KEY,SMS_SENDER_ID,EMAIL_ENABLED,EMAIL_HOST,EMAIL_PORT,EMAIL_SECURE,EMAIL_USERNAME,EMAIL_PASSWORD,EMAIL_FROM,EDV_BRIDGE_ENABLED,EDV_BRIDGE_API_URL,CLIENT_DOMAIN"
+          script: |
+            cd /home/projects/church
+            bash scripts/deploy.sh

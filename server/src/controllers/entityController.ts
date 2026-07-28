@@ -13,7 +13,12 @@ import SpiritualActivity from '../models/SpiritualActivity';
 import News from '../models/News';
 import Event from '../models/Event';
 import Wallet from '../models/Wallet';
+import MonthlySupportDue from '../models/MonthlySupportDue';
 import { AuthRequest } from '../types';
+import { generateVerificationToken } from './emailVerificationController';
+import { sendWelcomeEmail, sendTransactionNotification, MemberHierarchyInfo, TransactionDetails } from '../services/emailService';
+import { pushTransactionToEdv } from '../services/edvBridgeService';
+import edvBridgeConfig from '../config/edvBridge';
 
 // Unit Controllers
 export const getAllUnits = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -33,11 +38,21 @@ export const getAllUnits = async (req: AuthRequest, res: Response, next: NextFun
 
 export const getUnitById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const unit = await Unit.findById(req.params.id).populate('churchId', 'name uniqueId churchNumber');
+    const unit = await Unit.findById(req.params.id);
     if (!unit) {
       res.status(404).json({ success: false, error: 'Unit not found' });
       return;
     }
+
+    // Church admin restriction: can only view units from their own church
+    if (req.user?.role === 'church_admin') {
+      if (!req.user.churchId || String(unit.churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Church admins can only view units from their own church' });
+        return;
+      }
+    }
+
+    await unit.populate('churchId', 'name uniqueId churchNumber');
     res.json({ success: true, data: unit });
   } catch (error) {
     next(error);
@@ -211,7 +226,34 @@ export const getAllBavanakutayimas = async (req: AuthRequest, res: Response, nex
 
 export const getBavanakutayimaById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const bavanakutayima = await Bavanakutayima.findById(req.params.id).populate({
+    const bavanakutayima = await Bavanakutayima.findById(req.params.id);
+    if (!bavanakutayima) {
+      res.status(404).json({ success: false, error: 'Bavanakutayima not found' });
+      return;
+    }
+
+    // Unit admin restriction: can only view bavanakutayimas from their own unit
+    if (req.user?.role === 'unit_admin') {
+      if (!req.user.unitId || String(bavanakutayima.unitId) !== String(req.user.unitId)) {
+        res.status(403).json({ success: false, error: 'Unit admins can only view bavanakutayimas from their own unit' });
+        return;
+      }
+    }
+
+    // Church admin restriction: can only view bavanakutayimas from units in their own church
+    if (req.user?.role === 'church_admin') {
+      if (!req.user.churchId) {
+        res.status(403).json({ success: false, error: 'Church admin must have a church assigned' });
+        return;
+      }
+      const unit = await Unit.findById(bavanakutayima.unitId);
+      if (!unit || String(unit.churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Church admins can only view bavanakutayimas from units in their own church' });
+        return;
+      }
+    }
+
+    await bavanakutayima.populate({
       path: 'unitId',
       select: 'name uniqueId unitNumber',
       populate: {
@@ -219,10 +261,6 @@ export const getBavanakutayimaById = async (req: AuthRequest, res: Response, nex
         select: 'name uniqueId churchNumber'
       }
     });
-    if (!bavanakutayima) {
-      res.status(404).json({ success: false, error: 'Bavanakutayima not found' });
-      return;
-    }
     res.json({ success: true, data: bavanakutayima });
   } catch (error) {
     next(error);
@@ -413,7 +451,49 @@ export const getAllHouses = async (req: AuthRequest, res: Response, next: NextFu
 
 export const getHouseById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const house = await House.findById(req.params.id).populate({
+    const house = await House.findById(req.params.id);
+    if (!house) {
+      res.status(404).json({ success: false, error: 'House not found' });
+      return;
+    }
+
+    // Kudumbakutayima admin restriction: can only view houses from their own bavanakutayima
+    if (req.user?.role === 'kudumbakutayima_admin') {
+      if (!req.user.bavanakutayimaId || String(house.bavanakutayimaId) !== String(req.user.bavanakutayimaId)) {
+        res.status(403).json({ success: false, error: 'Kudumbakutayima admins can only view houses from their own bavanakutayima' });
+        return;
+      }
+    }
+
+    // Unit admin / Church admin restriction: verify via the house's bavanakutayima
+    if (req.user?.role === 'unit_admin' || req.user?.role === 'church_admin') {
+      const bavanakutayima = await Bavanakutayima.findById(house.bavanakutayimaId);
+      if (!bavanakutayima) {
+        res.status(404).json({ success: false, error: 'Bavanakutayima not found' });
+        return;
+      }
+
+      if (req.user.role === 'unit_admin') {
+        if (!req.user.unitId || String(bavanakutayima.unitId) !== String(req.user.unitId)) {
+          res.status(403).json({ success: false, error: 'Unit admins can only view houses from their own unit' });
+          return;
+        }
+      }
+
+      if (req.user.role === 'church_admin') {
+        if (!req.user.churchId) {
+          res.status(403).json({ success: false, error: 'Church admin must have a church assigned' });
+          return;
+        }
+        const unit = await Unit.findById(bavanakutayima.unitId);
+        if (!unit || String(unit.churchId) !== String(req.user.churchId)) {
+          res.status(403).json({ success: false, error: 'Church admins can only view houses from their own church' });
+          return;
+        }
+      }
+    }
+
+    await house.populate({
       path: 'bavanakutayimaId',
       select: 'name uniqueId bavanakutayimaNumber',
       populate: {
@@ -425,10 +505,6 @@ export const getHouseById = async (req: AuthRequest, res: Response, next: NextFu
         }
       }
     });
-    if (!house) {
-      res.status(404).json({ success: false, error: 'House not found' });
-      return;
-    }
     res.json({ success: true, data: house });
   } catch (error) {
     next(error);
@@ -646,8 +722,46 @@ export const getAllMembers = async (req: AuthRequest, res: Response, next: NextF
 
 export const getMemberById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const member = await Member.findById(req.params.id)
-      .populate({
+    const member = await Member.findById(req.params.id);
+    if (!member) {
+      res.status(404).json({ success: false, error: 'Member not found' });
+      return;
+    }
+
+    // Member restriction: can only view their own record (use /members/me for self-service)
+    if (req.user?.role === 'member') {
+      if (!req.user.memberId || String(member._id) !== String(req.user.memberId)) {
+        res.status(403).json({ success: false, error: 'Members can only view their own record' });
+        return;
+      }
+    }
+
+    // Kudumbakutayima admin restriction: can only view members from their own bavanakutayima
+    if (req.user?.role === 'kudumbakutayima_admin') {
+      if (!req.user.bavanakutayimaId || String(member.bavanakutayimaId) !== String(req.user.bavanakutayimaId)) {
+        res.status(403).json({ success: false, error: 'Kudumbakutayima admins can only view members from their own bavanakutayima' });
+        return;
+      }
+    }
+
+    // Unit admin restriction: can only view members from their own unit
+    if (req.user?.role === 'unit_admin') {
+      if (!req.user.unitId || String(member.unitId) !== String(req.user.unitId)) {
+        res.status(403).json({ success: false, error: 'Unit admins can only view members from their own unit' });
+        return;
+      }
+    }
+
+    // Church admin restriction: can only view members from their own church
+    if (req.user?.role === 'church_admin') {
+      if (!req.user.churchId || String(member.churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Church admins can only view members from their own church' });
+        return;
+      }
+    }
+
+    await member.populate([
+      {
         path: 'houseId',
         select: 'familyName uniqueId houseNumber',
         populate: {
@@ -662,14 +776,12 @@ export const getMemberById = async (req: AuthRequest, res: Response, next: NextF
             }
           }
         }
-      })
-      .populate('churchId', 'name uniqueId churchNumber')
-      .populate('unitId', 'name uniqueId unitNumber')
-      .populate('bavanakutayimaId', 'name uniqueId bavanakutayimaNumber');
-    if (!member) {
-      res.status(404).json({ success: false, error: 'Member not found' });
-      return;
-    }
+      },
+      { path: 'churchId', select: 'name uniqueId churchNumber' },
+      { path: 'unitId', select: 'name uniqueId unitNumber' },
+      { path: 'bavanakutayimaId', select: 'name uniqueId bavanakutayimaNumber' },
+    ]);
+
     res.json({ success: true, data: member });
   } catch (error) {
     next(error);
@@ -781,6 +893,39 @@ export const createMember = async (req: AuthRequest, res: Response, next: NextFu
             : 'Failed to create login credentials'
         });
         return;
+      }
+    }
+
+    // Generate verification token and send welcome email if email is provided
+    if (email) {
+      try {
+        const verificationToken = generateVerificationToken();
+
+        // Save verification token to member
+        member.emailVerificationToken = verificationToken;
+        await member.save();
+
+        // Fetch hierarchy information for the welcome email
+        const church = await (await import('../models/Church')).default.findById(churchId);
+        const unit = await Unit.findById(unitId);
+        const bavanakutayima = await Bavanakutayima.findById(bavanakutayimaId);
+        const populatedHouse = await House.findById(houseId);
+
+        const hierarchyInfo: MemberHierarchyInfo = {
+          churchName: church?.name || 'Unknown Church',
+          unitName: unit?.name || 'Unknown Unit',
+          bavanakutayimaName: bavanakutayima?.name || 'Unknown Bavanakutayima',
+          houseName: populatedHouse?.familyName || 'Unknown House',
+          hierarchicalNumber: member.uniqueId,
+        };
+
+        // Send welcome email asynchronously (don't block response)
+        sendWelcomeEmail(member, hierarchyInfo, verificationToken).catch(error => {
+          console.error('Failed to send welcome email:', error);
+        });
+      } catch (emailError) {
+        console.error('Error setting up welcome email:', emailError);
+        // Don't fail the member creation if email fails
       }
     }
 
@@ -931,7 +1076,21 @@ export const getAllTransactions = async (req: AuthRequest, res: Response, next: 
 
     // Unit admin restriction: only show transactions from their unit
     if (req.user?.role === 'unit_admin' && req.user.unitId) {
-      filter.unitId = req.user.unitId;
+      // Get all bavanakutayimas in their unit
+      const bavanakutayimas = await Bavanakutayima.find({ unitId: req.user.unitId }).select('_id');
+      const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+      // Get all houses in their unit's bavanakutayimas
+      const houses = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } }).select('_id');
+      const houseIds = houses.map(h => h._id);
+      // Get all members in their unit's bavanakutayimas
+      const members = await Member.find({ bavanakutayimaId: { $in: bavanakutayimaIds } }).select('_id');
+      const memberIds = members.map(m => m._id);
+      // Filter by unitId directly, or by house/member from their unit
+      filter.$or = [
+        { unitId: req.user.unitId },
+        { houseId: { $in: houseIds } },
+        { memberId: { $in: memberIds } }
+      ];
     }
 
     // Kudumbakutayima admin restriction: only show transactions from their bavanakutayima
@@ -1082,9 +1241,50 @@ export const getAllTransactions = async (req: AuthRequest, res: Response, next: 
   }
 };
 
+// Builds a Transaction filter scoping results to req.user's tenant, mirroring getAllTransactions
+const buildTransactionAccessFilter = async (req: AuthRequest): Promise<any> => {
+  const filter: any = {};
+
+  if (req.user?.role === 'church_admin' && req.user.churchId) {
+    filter.churchId = req.user.churchId;
+  }
+
+  if (req.user?.role === 'unit_admin' && req.user.unitId) {
+    const bavanakutayimas = await Bavanakutayima.find({ unitId: req.user.unitId }).select('_id');
+    const bavanakutayimaIds = bavanakutayimas.map(b => b._id);
+    const houses = await House.find({ bavanakutayimaId: { $in: bavanakutayimaIds } }).select('_id');
+    const houseIds = houses.map(h => h._id);
+    const members = await Member.find({ bavanakutayimaId: { $in: bavanakutayimaIds } }).select('_id');
+    const memberIds = members.map(m => m._id);
+    filter.$or = [
+      { unitId: req.user.unitId },
+      { houseId: { $in: houseIds } },
+      { memberId: { $in: memberIds } }
+    ];
+  }
+
+  if (req.user?.role === 'kudumbakutayima_admin' && req.user.bavanakutayimaId) {
+    const houses = await House.find({ bavanakutayimaId: req.user.bavanakutayimaId }).select('_id');
+    const houseIds = houses.map(h => h._id);
+    const members = await Member.find({ bavanakutayimaId: req.user.bavanakutayimaId }).select('_id');
+    const memberIds = members.map(m => m._id);
+    filter.$or = [
+      { houseId: { $in: houseIds } },
+      { memberId: { $in: memberIds } }
+    ];
+  }
+
+  if (req.user?.role === 'member' && req.user.memberId) {
+    filter.memberId = req.user.memberId;
+  }
+
+  return filter;
+};
+
 export const getTransactionById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const transaction = await Transaction.findById(req.params.id)
+    const accessFilter = await buildTransactionAccessFilter(req);
+    const transaction = await Transaction.findOne({ _id: req.params.id, ...accessFilter })
       .populate('memberId', 'firstName lastName')
       .populate('houseId', 'familyName')
       .populate('unitId', 'name')
@@ -1182,6 +1382,37 @@ export const createTransaction = async (req: AuthRequest, res: Response, next: N
       .populate('unitId', 'name')
       .populate('churchId', 'name')
       .populate('campaignId', 'name');
+
+    // Push into EDV asynchronously (don't block response)
+    if (edvBridgeConfig.enabled) {
+      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+    }
+
+    // Send email notification to member if transaction is for a member
+    if (transaction.memberId) {
+      try {
+        const member = await Member.findById(transaction.memberId);
+        if (member && member.email) {
+          const transactionDetails: TransactionDetails = {
+            receiptNumber: transaction.receiptNumber,
+            transactionType: transaction.transactionType,
+            amount: transaction.totalAmount,
+            paymentMethod: transaction.paymentMethod,
+            paymentDate: transaction.paymentDate,
+            campaignName: transaction.campaignId && populated ? (populated.campaignId as any)?.name : undefined,
+          };
+
+          // Send email notification asynchronously (don't block response)
+          sendTransactionNotification(member, transactionDetails).catch(error => {
+            console.error('Failed to send transaction notification email:', error);
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending transaction notification:', emailError);
+        // Don't fail the transaction if email fails
+      }
+    }
+
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
     next(error);
@@ -1279,6 +1510,15 @@ export const getAllCampaigns = async (req: AuthRequest, res: Response, next: Nex
       filter.churchId = req.user.churchId;
     }
 
+    // Unit/Kudumbakutayima admin: show church campaigns (campaigns are church-wide)
+    if (req.user?.role === 'unit_admin' && req.user.churchId) {
+      filter.churchId = req.user.churchId;
+    }
+
+    if (req.user?.role === 'kudumbakutayima_admin' && req.user.churchId) {
+      filter.churchId = req.user.churchId;
+    }
+
     const campaigns = await Campaign.find(filter)
       .populate('churchId', 'name')
       .sort({ createdAt: -1 });
@@ -1297,6 +1537,15 @@ export const getCampaignById = async (req: AuthRequest, res: Response, next: Nex
     if (!campaign) {
       res.status(404).json({ success: false, error: 'Campaign not found' });
       return;
+    }
+
+    // Church/Unit/Kudumbakutayima admin restriction: campaigns are scoped to their own church
+    if (req.user?.role === 'church_admin' || req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
+      const campaignChurchId = (campaign.churchId as any)?._id ?? campaign.churchId;
+      if (!req.user.churchId || String(campaignChurchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'You can only view campaigns from your own church' });
+        return;
+      }
     }
 
     // Populate contributors with member/house details
@@ -2048,6 +2297,11 @@ export const addCampaignContribution = async (req: AuthRequest, res: Response, n
 
     await campaign.save();
 
+    // Push into EDV asynchronously (don't block response)
+    if (edvBridgeConfig.enabled) {
+      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+    }
+
     res.json({
       success: true,
       message: 'Contribution added successfully',
@@ -2106,11 +2360,42 @@ export const getAllSpiritualActivities = async (req: AuthRequest, res: Response,
 
 export const getSpiritualActivityById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const activity = await SpiritualActivity.findById(req.params.id).populate('memberId', 'firstName lastName');
+    const activity = await SpiritualActivity.findById(req.params.id);
     if (!activity) {
       res.status(404).json({ success: false, error: 'Spiritual activity not found' });
       return;
     }
+
+    // Member restriction: can only view their own spiritual activities
+    if (req.user?.role === 'member') {
+      if (!req.user.memberId || String(activity.memberId) !== String(req.user.memberId)) {
+        res.status(403).json({ success: false, error: 'Members can only view their own spiritual activities' });
+        return;
+      }
+    }
+
+    // Church/Unit/Kudumbakutayima admin restriction: scope via the activity's member
+    if (req.user?.role === 'church_admin' || req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
+      const member = await Member.findById(activity.memberId).select('churchId unitId bavanakutayimaId');
+      if (!member) {
+        res.status(404).json({ success: false, error: 'Member not found' });
+        return;
+      }
+      if (req.user.role === 'church_admin' && (!req.user.churchId || String(member.churchId) !== String(req.user.churchId))) {
+        res.status(403).json({ success: false, error: 'Church admins can only view activities from their own church' });
+        return;
+      }
+      if (req.user.role === 'unit_admin' && (!req.user.unitId || String(member.unitId) !== String(req.user.unitId))) {
+        res.status(403).json({ success: false, error: 'Unit admins can only view activities from their own unit' });
+        return;
+      }
+      if (req.user.role === 'kudumbakutayima_admin' && (!req.user.bavanakutayimaId || String(member.bavanakutayimaId) !== String(req.user.bavanakutayimaId))) {
+        res.status(403).json({ success: false, error: 'Kudumbakutayima admins can only view activities from their own bavanakutayima' });
+        return;
+      }
+    }
+
+    await activity.populate('memberId', 'firstName lastName');
     res.json({ success: true, data: activity });
   } catch (error) {
     next(error);
@@ -2446,13 +2731,24 @@ export const getAllNews = async (req: AuthRequest, res: Response, next: NextFunc
 
 export const getNewsById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const news = await News.findById(req.params.id)
-      .populate('churchId', 'name')
-      .populate('createdBy', 'username email');
+    const news = await News.findById(req.params.id);
     if (!news) {
       res.status(404).json({ success: false, error: 'News not found' });
       return;
     }
+
+    // Church admin restriction: can only view news from their own church
+    if (req.user?.role === 'church_admin') {
+      if (!req.user.churchId || String(news.churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Church admins can only view news from their own church' });
+        return;
+      }
+    }
+
+    await news.populate([
+      { path: 'churchId', select: 'name' },
+      { path: 'createdBy', select: 'username email' },
+    ]);
     res.json({ success: true, data: news });
   } catch (error) {
     next(error);
@@ -2584,13 +2880,24 @@ export const getAllEvents = async (req: AuthRequest, res: Response, next: NextFu
 
 export const getEventById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const event = await Event.findById(req.params.id)
-      .populate('churchId', 'name')
-      .populate('createdBy', 'username email');
+    const event = await Event.findById(req.params.id);
     if (!event) {
       res.status(404).json({ success: false, error: 'Event not found' });
       return;
     }
+
+    // Church admin restriction: can only view events from their own church
+    if (req.user?.role === 'church_admin') {
+      if (!req.user.churchId || String(event.churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Church admins can only view events from their own church' });
+        return;
+      }
+    }
+
+    await event.populate([
+      { path: 'churchId', select: 'name' },
+      { path: 'createdBy', select: 'username email' },
+    ]);
     res.json({ success: true, data: event });
   } catch (error) {
     next(error);
@@ -2940,12 +3247,14 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
     }
 
     let due: any;
-    let contributorType: "member" | "house";
+    let contributorType: "member" | "house" | "donor";
 
     if (dueType === "campaign") {
       due = await CampaignDue.findById(dueId);
     } else if (dueType === "stothrakazhcha") {
       due = await StothrakazhchaDue.findById(dueId);
+    } else if (dueType === "monthly_support") {
+      due = await MonthlySupportDue.findById(dueId);
     }
 
     if (!due) {
@@ -2972,12 +3281,13 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
     const transaction = await Transaction.create({
       receiptNumber,
       churchId: due.churchId,
-      transactionType: dueType === "campaign" ? "campaign_contribution" : "stothrakazhcha",
+      transactionType: dueType === "campaign" ? "campaign_contribution" : dueType === "monthly_support" ? "monthly_support" : "stothrakazhcha",
       totalAmount: paymentAmount,
       memberAmount: contributorType === "member" ? paymentAmount : 0,
       houseAmount: contributorType === "house" ? paymentAmount : 0,
       memberId: contributorType === "member" ? due.dueForId : undefined,
       houseId: contributorType === "house" ? due.dueForId : undefined,
+      donorId: contributorType === "donor" ? due.dueForId : undefined,
       paymentMethod: paymentMethod,
       paymentDate: new Date(),
       notes: `Due payment for ${due.dueForName}`,
@@ -3009,7 +3319,7 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
         campaign.participantCount = campaign.contributors.length;
         await campaign.save();
       }
-    } else {
+    } else if (dueType === "stothrakazhcha") {
       const stoth = await Stothrakazhcha.findById(due.stothrakazhchaId);
       if (stoth) {
         stoth.contributors = stoth.contributors || [];
@@ -3030,10 +3340,18 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
       }
     }
 
-    await Wallet.findOneAndUpdate(
-      { ownerId: due.dueForId, walletType: contributorType },
-      { $inc: { balance: -paymentAmount } }
-    );
+    // Donors don't have a Wallet (no membership-debt concept for outside supporters)
+    if (contributorType !== "donor") {
+      await Wallet.findOneAndUpdate(
+        { ownerId: due.dueForId, walletType: contributorType },
+        { $inc: { balance: -paymentAmount } }
+      );
+    }
+
+    // Push into EDV asynchronously (don't block response)
+    if (edvBridgeConfig.enabled) {
+      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+    }
 
     res.json({
       success: true,

@@ -145,7 +145,7 @@ export interface WalletTransaction {
 }
 
 // Transaction Types
-export type TransactionType = 'lelam' | 'thirunnaal_panam' | 'dashamansham' | 'spl_contribution' | 'stothrakazhcha';
+export type TransactionType = 'lelam' | 'thirunnaal_panam' | 'dashamansham' | 'spl_contribution' | 'stothrakazhcha' | 'monthly_support';
 export type ContributionMode = 'fixed' | 'variable';
 export type Distribution = 'member_only' | 'house_only' | 'both';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'upi' | 'cheque';
@@ -209,6 +209,63 @@ export interface Campaign {
   createdBy?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Donor Types (outside supporters — not part of the church membership hierarchy)
+export interface Donor {
+  _id: string;
+  churchId: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Monthly Support Types
+export interface MonthlySupportMember {
+  memberId?: string | { _id: string; firstName: string; lastName: string; email?: string };
+  donorId?: string | { _id: string; name: string; phone?: string; email?: string };
+  amount?: number;
+}
+
+export interface MonthlySupportPlan {
+  _id: string;
+  churchId: string;
+  name: string;
+  description?: string;
+  defaultAmount: number;
+  dayOfMonth: number;
+  members: MonthlySupportMember[];
+  startDate: Date;
+  endDate?: Date;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MonthlySupportDue {
+  _id: string;
+  churchId: string;
+  planId: string | { _id: string; name: string };
+  planName: string;
+  periodMonth: string;
+  dueForId: string | { _id: string; firstName?: string; lastName?: string; name?: string };
+  dueForModel: 'Member' | 'Donor';
+  dueForName: string;
+  amount: number;
+  isPaid: boolean;
+  paidAmount: number;
+  balance: number;
+  transactionId?: string;
+  paidAt?: Date;
+  dueDate: Date;
+  createdAt: Date;
+  notes?: string;
 }
 
 // Spiritual Activity Types
