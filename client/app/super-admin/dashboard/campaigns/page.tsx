@@ -404,6 +404,7 @@ export default function CampaignsPage() {
       isCompulsory: campaign.isCompulsory ?? true,
       targetType: campaign.targetType || 'all',
       specificTargets: targetsWithNames,
+      churchId: campaign.churchId,
     });
     setShowModal(true);
     setExpandedRowId(null);
