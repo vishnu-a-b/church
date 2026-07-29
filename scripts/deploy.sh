@@ -19,8 +19,15 @@ API_URL="https://api.offerings.stmaryselthuruth.org"
 # checks below. If a future fix changes what's required/how it's validated,
 # this ordering means a bad/outdated guard on disk can never block the pull
 # that would fix it — it always gets a chance to update itself before failing.
+#
+# git reset --hard discards any uncommitted changes to tracked files before
+# pulling — defensive, in case a build step or manual edit ever leaves the
+# working tree dirty again. Safe: everything deploy.sh writes (.env,
+# client/.env.production) is gitignored, and build output (dist/, out/) is
+# rebuilt from scratch a few steps later regardless.
 echo "▶ [1/6] Pulling latest code..."
 cd "$PROJECT_DIR"
+git reset --hard HEAD
 git pull --rebase origin main
 
 : "${MONGODB_URI:?MONGODB_URI is not set}"

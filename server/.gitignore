@@ -4,6 +4,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Build output (deploy.sh rebuilds this fresh on every deploy — committing it
+# just leaves the server's working tree dirty after every build, which blocks
+# the next `git pull --rebase`)
+dist/
+
 # Environment variables
 .env
 .env.local
