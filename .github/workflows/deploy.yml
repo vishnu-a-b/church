@@ -18,26 +18,13 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
-          MONGODB_URI:             ${{ secrets.MONGODB_URI }}
-          SMS_ENABLED:              ${{ secrets.SMS_ENABLED }}
-          SMS_PROVIDER:             ${{ secrets.SMS_PROVIDER }}
-          FAST2SMS_API_KEY:         ${{ secrets.FAST2SMS_API_KEY }}
-          SMS_SENDER_ID:            ${{ secrets.SMS_SENDER_ID }}
-          EMAIL_ENABLED:            ${{ secrets.EMAIL_ENABLED }}
-          EMAIL_HOST:               ${{ secrets.EMAIL_HOST }}
-          EMAIL_PORT:               ${{ secrets.EMAIL_PORT }}
-          EMAIL_SECURE:             ${{ secrets.EMAIL_SECURE }}
-          EMAIL_USERNAME:           ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD:           ${{ secrets.EMAIL_PASSWORD }}
-          EMAIL_FROM:               ${{ secrets.EMAIL_FROM }}
-          EDV_BRIDGE_ENABLED:       ${{ secrets.EDV_BRIDGE_ENABLED }}
-          EDV_BRIDGE_API_URL:       ${{ secrets.EDV_BRIDGE_API_URL }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
         with:
           host:     ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key:      ${{ secrets.SSH_KEY }}
           port:     ${{ secrets.SSH_PORT || 22 }}
-          envs: "MONGODB_URI,SMS_ENABLED,SMS_PROVIDER,FAST2SMS_API_KEY,SMS_SENDER_ID,EMAIL_ENABLED,EMAIL_HOST,EMAIL_PORT,EMAIL_SECURE,EMAIL_USERNAME,EMAIL_PASSWORD,EMAIL_FROM,EDV_BRIDGE_ENABLED,EDV_BRIDGE_API_URL"
+          envs: "MONGODB_URI"
           script_stop: true
           script: |
             cd /home/projects/church && bash scripts/deploy.sh

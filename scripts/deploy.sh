@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
 # deploy.sh — runs on the server to deploy the Church app
 # Usage: bash scripts/deploy.sh
-# Expects most app secrets (MONGODB_URI, SMS_*, EMAIL_*, EDV_BRIDGE_*, ...) to
-# already be exported in the environment — the GitHub Actions workflow exports
-# them over SSH before calling this script, and those keys get upserted into
-# server/.env on every deploy so GitHub secrets stay the source of truth for them.
 #
-# JWT_SECRET, JWT_ACCESS_TOKEN_EXPIRE, JWT_REFRESH_TOKEN_EXPIRE,
-# REFRESH_TOKEN_SECRET, CORS_ORIGIN, and CLIENT_URL are deliberately NOT
-# managed here — they must already be set once, by hand, in server/.env on
-# the server, and this script leaves them untouched on every subsequent
-# deploy. (CORS_ORIGIN/CLIENT_URL depend on whatever domain you point at the
-# client, which is nginx/DNS config this script has no business owning.)
+# The ONLY secret this script gets from GitHub Actions is MONGODB_URI —
+# everything else (JWT_SECRET, JWT_ACCESS_TOKEN_EXPIRE, JWT_REFRESH_TOKEN_EXPIRE,
+# REFRESH_TOKEN_SECRET, CORS_ORIGIN, CLIENT_URL, SMS_*, EMAIL_*, EDV_BRIDGE_*)
+# must already be set once, by hand, in server/.env on the server. This script
+# never writes or touches any of those — it only upserts MONGODB_URI/PORT/NODE_ENV.
 set -euo pipefail
 
 PROJECT_DIR="/home/projects/church"
@@ -57,19 +52,6 @@ done
 set_env_var PORT 5010 "$SERVER_DIR/.env"
 set_env_var NODE_ENV production "$SERVER_DIR/.env"
 set_env_var MONGODB_URI "${MONGODB_URI}" "$SERVER_DIR/.env"
-set_env_var SMS_ENABLED "${SMS_ENABLED:-false}" "$SERVER_DIR/.env"
-set_env_var SMS_PROVIDER "${SMS_PROVIDER:-fast2sms}" "$SERVER_DIR/.env"
-set_env_var FAST2SMS_API_KEY "${FAST2SMS_API_KEY:-}" "$SERVER_DIR/.env"
-set_env_var SMS_SENDER_ID "${SMS_SENDER_ID:-CHURCH}" "$SERVER_DIR/.env"
-set_env_var EMAIL_ENABLED "${EMAIL_ENABLED:-false}" "$SERVER_DIR/.env"
-set_env_var EMAIL_HOST "${EMAIL_HOST:-smtp.gmail.com}" "$SERVER_DIR/.env"
-set_env_var EMAIL_PORT "${EMAIL_PORT:-587}" "$SERVER_DIR/.env"
-set_env_var EMAIL_SECURE "${EMAIL_SECURE:-false}" "$SERVER_DIR/.env"
-set_env_var EMAIL_USERNAME "${EMAIL_USERNAME:-}" "$SERVER_DIR/.env"
-set_env_var EMAIL_PASSWORD "${EMAIL_PASSWORD:-}" "$SERVER_DIR/.env"
-set_env_var EMAIL_FROM "${EMAIL_FROM:-}" "$SERVER_DIR/.env"
-set_env_var EDV_BRIDGE_ENABLED "${EDV_BRIDGE_ENABLED:-false}" "$SERVER_DIR/.env"
-set_env_var EDV_BRIDGE_API_URL "${EDV_BRIDGE_API_URL:-}" "$SERVER_DIR/.env"
 
 echo "▶ [3/6] Building server..."
 cd "$SERVER_DIR"
