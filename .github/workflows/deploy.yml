@@ -32,13 +32,12 @@ jobs:
           EMAIL_FROM:               ${{ secrets.EMAIL_FROM }}
           EDV_BRIDGE_ENABLED:       ${{ secrets.EDV_BRIDGE_ENABLED }}
           EDV_BRIDGE_API_URL:       ${{ secrets.EDV_BRIDGE_API_URL }}
-          CLIENT_DOMAIN:            ${{ secrets.CLIENT_DOMAIN }}
         with:
           host:     ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key:      ${{ secrets.SSH_KEY }}
           port:     ${{ secrets.SSH_PORT || 22 }}
-          envs: "MONGODB_URI,SMS_ENABLED,SMS_PROVIDER,FAST2SMS_API_KEY,SMS_SENDER_ID,EMAIL_ENABLED,EMAIL_HOST,EMAIL_PORT,EMAIL_SECURE,EMAIL_USERNAME,EMAIL_PASSWORD,EMAIL_FROM,EDV_BRIDGE_ENABLED,EDV_BRIDGE_API_URL,CLIENT_DOMAIN"
+          envs: "MONGODB_URI,SMS_ENABLED,SMS_PROVIDER,FAST2SMS_API_KEY,SMS_SENDER_ID,EMAIL_ENABLED,EMAIL_HOST,EMAIL_PORT,EMAIL_SECURE,EMAIL_USERNAME,EMAIL_PASSWORD,EMAIL_FROM,EDV_BRIDGE_ENABLED,EDV_BRIDGE_API_URL"
           script_stop: true
           script: |
             cd /home/projects/church && bash scripts/deploy.sh
