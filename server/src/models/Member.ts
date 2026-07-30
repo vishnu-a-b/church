@@ -123,6 +123,20 @@ const memberSchema = new Schema<IMember>(
         default: true,
       },
     },
+
+    // Email verification and preferences
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      select: false,
+    },
+    emailNotificationsEnabled: {
+      type: Boolean,
+      default: false, // Disabled by default until verified
+    },
   },
   {
     timestamps: true,

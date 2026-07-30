@@ -71,6 +71,15 @@ export const getStothrakazhchaDueById = async (req: AuthRequest, res: Response, 
       return;
     }
 
+    // Church admin restriction: can only view dues from their own church
+    if (req.user?.role === 'church_admin') {
+      const churchId = (due.churchId as any)?._id ?? due.churchId;
+      if (!req.user.churchId || String(churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Church admins can only view dues from their own church' });
+        return;
+      }
+    }
+
     res.json({ success: true, data: due });
   } catch (error) {
     next(error);

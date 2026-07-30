@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import { createRoleApi } from '@/lib/roleApi';
 import { Transaction } from '@/types';
 import { TrendingUp, FileDown } from 'lucide-react';
 import { SearchableSelect } from '@/components/SearchableSelect';
@@ -9,42 +9,23 @@ import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 
 export default function TransactionsPage() {
+  const api = createRoleApi('unit_admin');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [churches, setChurches] = useState<any[]>([]);
-  const [units, setUnits] = useState<any[]>([]);
   const [bavanakutayimas, setBavanakutayimas] = useState<any[]>([]);
   const [houses, setHouses] = useState<any[]>([]);
   const [allHouses, setAllHouses] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    church: '',
-    unit: '',
     bavanakutayima: '',
     house: '',
   });
 
   useEffect(() => {
     fetchTransactions();
-    fetchChurches();
+    fetchBavanakutayimas();
     fetchAllHouses();
   }, []);
-
-  useEffect(() => {
-    if (filters.church) {
-      fetchUnits(filters.church);
-    } else {
-      setUnits([]);
-    }
-  }, [filters.church]);
-
-  useEffect(() => {
-    if (filters.unit) {
-      fetchBavanakutayimas(filters.unit);
-    } else {
-      setBavanakutayimas([]);
-    }
-  }, [filters.unit]);
 
   useEffect(() => {
     if (filters.bavanakutayima) {
@@ -69,27 +50,10 @@ export default function TransactionsPage() {
     }
   };
 
-  const fetchChurches = async () => {
+  const fetchBavanakutayimas = async () => {
     try {
-      const response = await api.get('/churches');
-      setChurches(response.data?.data || []);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const fetchUnits = async (churchId: string) => {
-    try {
-      const response = await api.get(`/units?churchId=${churchId}`);
-      setUnits(response.data?.data || []);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const fetchBavanakutayimas = async (unitId: string) => {
-    try {
-      const response = await api.get(`/bavanakutayimas?unitId=${unitId}`);
+      // Unit admin will only see their own unit's bavanakutayimas (filtered by backend)
+      const response = await api.get('/bavanakutayimas');
       setBavanakutayimas(response.data?.data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -213,62 +177,66 @@ export default function TransactionsPage() {
   };
 
   const filteredTransactions = transactions.filter((txn: any) => {
-    // Extract IDs from transaction (might be objects or strings)
-    const txnChurchId = typeof txn.churchId === 'object' && txn.churchId?._id
-      ? txn.churchId._id
-      : txn.churchId;
-    const txnUnitId = typeof txn.unitId === 'object' && txn.unitId?._id
-      ? txn.unitId._id
-      : txn.unitId;
+    // Extract house ID from transaction (might be object or string)
     const txnHouseId = typeof txn.houseId === 'object' && txn.houseId?._id
       ? txn.houseId._id
       : txn.houseId;
 
-    // Try direct properties first
-    if (filters.church && txnChurchId && txnChurchId !== filters.church) return false;
-    if (filters.unit && txnUnitId && txnUnitId !== filters.unit) return false;
-    if (filters.house && txnHouseId && txnHouseId !== filters.house) return false;
-
-    // If transaction has memberId, filter through member's hierarchy
-    if (txn.memberId) {
-      const member = getMemberData(txn.memberId);
-      if (!member) return !filters.church && !filters.unit && !filters.bavanakutayima && !filters.house;
-
-      // Extract houseId as string (might be object or string)
-      const memberHouseId = typeof member.houseId === 'object' && member.houseId?._id
-        ? member.houseId._id
-        : member.houseId;
-
-      if (!memberHouseId) return !filters.church && !filters.unit && !filters.bavanakutayima && !filters.house;
-
-      // Filter by house first (direct comparison)
-      if (filters.house && memberHouseId !== filters.house) return false;
-
-      // Check if member has direct hierarchy properties
-      if (filters.church && member.churchId && member.churchId !== filters.church) return false;
-      if (filters.unit && member.unitId && member.unitId !== filters.unit) return false;
-      if (filters.bavanakutayima && member.bavanakutayimaId && member.bavanakutayimaId !== filters.bavanakutayima) return false;
-
-      // If member doesn't have direct hierarchy properties, check through house
-      if (!member.churchId || !member.unitId || !member.bavanakutayimaId) {
-        const house = getHouseData(memberHouseId);
-        if (!house) return !filters.church && !filters.unit && !filters.bavanakutayima;
-
-        // Filter by bavanakutayima
-        if (filters.bavanakutayima && (house as any).bavanakutayimaId !== filters.bavanakutayima) return false;
-
-        // Filter by unit
-        if (filters.unit && (house as any).unitId !== filters.unit) return false;
-
-        // Filter by church
-        if (filters.church && (house as any).churchId !== filters.church) return false;
+    // Filter by house if selected (direct match)
+    if (filters.house) {
+      if (txn.memberId) {
+        // For member transactions, check the member's house
+        const member = getMemberData(txn.memberId);
+        if (!member) return false;
+        const memberHouseId = typeof member.houseId === 'object' && member.houseId?._id
+          ? member.houseId._id
+          : member.houseId;
+        if (memberHouseId !== filters.house) return false;
+      } else if (txnHouseId) {
+        // For house transactions, check directly
+        if (txnHouseId !== filters.house) return false;
+      } else {
+        // Transaction has no house reference
+        return false;
       }
     }
 
-    // If we need to filter by bavanakutayima and transaction doesn't have it directly
-    if (filters.bavanakutayima && txnHouseId) {
-      const house = getHouseData(txnHouseId);
-      if (!house || (house as any).bavanakutayimaId !== filters.bavanakutayima) {
+    // Filter by bavanakutayima if selected
+    if (filters.bavanakutayima) {
+      if (txn.memberId) {
+        // For member transactions, check through member
+        const member = getMemberData(txn.memberId);
+        if (!member) return false;
+
+        // Check if member has direct bavanakutayimaId
+        if (member.bavanakutayimaId) {
+          const memberBavId = typeof member.bavanakutayimaId === 'object' && member.bavanakutayimaId?._id
+            ? member.bavanakutayimaId._id
+            : member.bavanakutayimaId;
+          if (memberBavId !== filters.bavanakutayima) return false;
+        } else {
+          // Check through member's house
+          const memberHouseId = typeof member.houseId === 'object' && member.houseId?._id
+            ? member.houseId._id
+            : member.houseId;
+          if (!memberHouseId) return false;
+          const house = getHouseData(memberHouseId);
+          if (!house) return false;
+          const houseBavId = typeof (house as any).bavanakutayimaId === 'object' && (house as any).bavanakutayimaId?._id
+            ? (house as any).bavanakutayimaId._id
+            : (house as any).bavanakutayimaId;
+          if (houseBavId !== filters.bavanakutayima) return false;
+        }
+      } else if (txnHouseId) {
+        // For house transactions, check through house
+        const house = getHouseData(txnHouseId);
+        if (!house) return false;
+        const houseBavId = typeof (house as any).bavanakutayimaId === 'object' && (house as any).bavanakutayimaId?._id
+          ? (house as any).bavanakutayimaId._id
+          : (house as any).bavanakutayimaId;
+        if (houseBavId !== filters.bavanakutayima) return false;
+      } else {
+        // Transaction has no member or house reference
         return false;
       }
     }
@@ -279,6 +247,12 @@ export default function TransactionsPage() {
   const getTotalAmount = () => {
     return filteredTransactions.reduce((sum, t) => sum + t.totalAmount, 0);
   };
+
+  const getUnitTotalAmount = () => {
+    return transactions.reduce((sum, t) => sum + t.totalAmount, 0);
+  };
+
+  const hasActiveFilters = filters.bavanakutayima || filters.house;
 
   return (
     <div className="space-y-6">
@@ -298,32 +272,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SearchableSelect
-          label="Church"
-          options={churches.map((church) => ({
-            value: church._id,
-            label: church.name,
-          }))}
-          value={filters.church}
-          onChange={(value) =>
-            setFilters({ ...filters, church: value, unit: '', bavanakutayima: '', house: '' })
-          }
-          placeholder="All Churches"
-        />
-        <SearchableSelect
-          label="Unit"
-          options={units.map((unit) => ({
-            value: unit._id,
-            label: unit.name,
-          }))}
-          value={filters.unit}
-          onChange={(value) =>
-            setFilters({ ...filters, unit: value, bavanakutayima: '', house: '' })
-          }
-          placeholder="All Units"
-          disabled={!filters.church}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <SearchableSelect
           label="Bavanakutayima"
           options={bavanakutayimas.map((bk) => ({
@@ -333,7 +282,6 @@ export default function TransactionsPage() {
           value={filters.bavanakutayima}
           onChange={(value) => setFilters({ ...filters, bavanakutayima: value, house: '' })}
           placeholder="All Bavanakutayimas"
-          disabled={!filters.unit}
         />
         <SearchableSelect
           label="House"
@@ -362,8 +310,11 @@ export default function TransactionsPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Amount</p>
+              <p className="text-sm text-gray-600">{hasActiveFilters ? 'Filtered Amount' : 'Total Amount (Unit)'}</p>
               <p className="text-2xl font-bold text-gray-800">₹{getTotalAmount().toLocaleString()}</p>
+              {hasActiveFilters && (
+                <p className="text-xs text-gray-500 mt-1">Unit Total: ₹{getUnitTotalAmount().toLocaleString()}</p>
+              )}
             </div>
             <TrendingUp className="w-8 h-8 text-green-600" />
           </div>

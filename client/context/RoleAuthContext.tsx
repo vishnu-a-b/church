@@ -146,9 +146,15 @@ export function RoleAuthProvider({ children, role, expectedRole }: RoleAuthProvi
 
   const login = async (email: string, password: string) => {
     try {
-      // Use member-login endpoint which searches Member model
-      const response = await api.post<AuthResponse>('/auth/member-login', {
+      // Determine which endpoint to use based on role
+      const isAdminRole = ['super_admin', 'church_admin', 'unit_admin', 'kudumbakutayima_admin'].includes(role);
+      const loginEndpoint = isAdminRole ? '/auth/login' : '/auth/member-login';
+
+      console.log(`[${role}] Using endpoint:`, loginEndpoint);
+
+      const response = await api.post<AuthResponse>(loginEndpoint, {
         username: email, // Send as username (backend accepts email or username)
+        email: email,    // Also send as email for admin login
         password
       });
 

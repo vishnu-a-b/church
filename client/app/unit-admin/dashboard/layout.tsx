@@ -4,8 +4,11 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
-import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck } from 'react-icons/fi';
-import { BsPeople, BsHouseDoor } from 'react-icons/bs';
+import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck, FiAlertCircle } from 'react-icons/fi';
+import { BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
+import { MdPayment } from 'react-icons/md';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -29,8 +32,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'Members', href: '/unit-admin/dashboard/members', icon: FiUsers },
     { name: 'Users', href: '/unit-admin/dashboard/users', icon: FiUserCheck },
     { name: 'Transactions', href: '/unit-admin/dashboard/transactions', icon: FiDollarSign },
-    { name: 'Campaigns', href: '/unit-admin/dashboard/campaigns', icon: FiActivity },
+    { name: 'Dues', href: '/unit-admin/dashboard/dues', icon: FiAlertCircle },
+    { name: 'Campaigns', href: '/unit-admin/dashboard/campaigns', icon: MdPayment },
+    { name: 'Stothrakazhcha', href: '/unit-admin/dashboard/stothrakazhcha', icon: FiDollarSign },
     { name: 'Spiritual Activities', href: '/unit-admin/dashboard/activities', icon: FiActivity },
+    { name: 'News', href: '/unit-admin/dashboard/news', icon: BsNewspaper },
+    { name: 'Events', href: '/unit-admin/dashboard/events', icon: BsCalendarEvent },
   ];
 
   if (loading) {
@@ -45,6 +52,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ToastContainer />
       <Sidebar
         menuItems={menuItems}
         title="Unit Admin"

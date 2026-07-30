@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import { createRoleApi } from '@/lib/roleApi';
 import { Campaign } from '@/types';
 import { Wallet, TrendingUp } from 'lucide-react';
 
 export default function CampaignsPage() {
+  const api = createRoleApi('unit_admin');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 
