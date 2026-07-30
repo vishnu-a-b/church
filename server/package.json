@@ -16,6 +16,7 @@
     "db:reset": "ts-node-dev --transpile-only src/seedComplete.ts",
     "migrate:hierarchical": "ts-node-dev --transpile-only src/scripts/migrate-hierarchical-numbers.ts",
     "create:superadmin": "ts-node-dev --transpile-only src/scripts/create-super-admin.ts",
+    "set:edv-key": "ts-node-dev --transpile-only src/scripts/set-edv-api-key.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

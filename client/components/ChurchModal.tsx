@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiX } from 'react-icons/fi';
+import { FiX, FiUserPlus } from 'react-icons/fi';
+import { createRoleApi } from '@/lib/roleApi';
 
 interface Church {
   _id?: string;
@@ -11,6 +12,12 @@ interface Church {
   contactPerson?: string;
   phone?: string;
   email?: string;
+  createAdmin?: boolean;
+  adminUsername?: string;
+  adminEmail?: string;
+  adminPassword?: string;
+  adminFirstName?: string;
+  adminLastName?: string;
 }
 
 interface ChurchModalProps {
@@ -28,6 +35,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
     contactPerson: '',
     phone: '',
     email: '',
+    createAdmin: false,
+    adminUsername: '',
+    adminEmail: '',
+    adminPassword: '',
+    adminFirstName: '',
+    adminLastName: '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,6 +56,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
         contactPerson: '',
         phone: '',
         email: '',
+        createAdmin: false,
+        adminUsername: '',
+        adminEmail: '',
+        adminPassword: '',
+        adminFirstName: '',
+        adminLastName: '',
       });
     }
   }, [church]);
@@ -175,6 +194,105 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                 />
               </div>
 
+              {/* Church Admin Creation Option */}
+              {!church && (
+                <div className="border-t pt-4 mt-4">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="createAdmin"
+                      checked={formData.createAdmin || false}
+                      onChange={(e) => setFormData({ ...formData, createAdmin: e.target.checked })}
+                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <label htmlFor="createAdmin" className="ml-2 text-sm font-medium text-gray-700 flex items-center">
+                      <FiUserPlus className="w-4 h-4 mr-1" />
+                      Create Church Admin Account
+                    </label>
+                  </div>
+
+                  {formData.createAdmin && (
+                    <div className="space-y-4 bg-purple-50 p-4 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-3">Admin login credentials</p>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            First Name <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required={formData.createAdmin}
+                            value={formData.adminFirstName || ''}
+                            onChange={(e) => setFormData({ ...formData, adminFirstName: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                            placeholder="John"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Last Name <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required={formData.createAdmin}
+                            value={formData.adminLastName || ''}
+                            onChange={(e) => setFormData({ ...formData, adminLastName: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                            placeholder="Doe"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Username <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required={formData.createAdmin}
+                          value={formData.adminUsername || ''}
+                          onChange={(e) => setFormData({ ...formData, adminUsername: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          placeholder="churchadmin"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          required={formData.createAdmin}
+                          value={formData.adminEmail || ''}
+                          onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          placeholder="admin@church.com"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          required={formData.createAdmin}
+                          value={formData.adminPassword || ''}
+                          onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          placeholder="Min. 6 characters"
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {church?._id && <EdvBridgeSection churchId={church._id} />}
+
               <div className="flex gap-3 mt-6">
                 <button
                   type="button"
@@ -195,6 +313,154 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── EDV Bridge ──────────────────────────────────────────────────────────────
+// Lets a Super Admin connect this church to its EDV accounting system —
+// paste the API key issued by EDV's Settings > Church Bridge screen, and
+// see whether recent transactions are syncing across.
+
+interface EdvBridgeStatus {
+  connected: boolean;
+  syncedCount: number;
+  failedCount: number;
+  lastSyncedAt: string | null;
+  recentFailures: Array<{
+    _id: string;
+    receiptNumber: string;
+    transactionType: string;
+    totalAmount: number;
+    paymentDate: string;
+    edvSyncError: string;
+  }>;
+}
+
+function EdvBridgeSection({ churchId }: { churchId: string }) {
+  const api = createRoleApi('super_admin');
+  const [status, setStatus] = useState<EdvBridgeStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const fetchStatus = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/churches/${churchId}/edv-bridge`);
+      setStatus(res.data.data);
+    } catch (err) {
+      // Non-fatal — bridge status is a nice-to-have, not blocking church edits
+      setStatus(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [churchId]);
+
+  const handleSaveKey = async () => {
+    if (!apiKeyInput.trim()) return;
+    setSaving(true);
+    setMessage('');
+    try {
+      await api.put(`/churches/${churchId}/edv-bridge`, { apiKey: apiKeyInput.trim() });
+      setApiKeyInput('');
+      setMessage('Key saved.');
+      await fetchStatus();
+    } catch (err: any) {
+      setMessage(err.response?.data?.error || 'Failed to save key');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!confirm('Disconnect this church from EDV? New transactions will stop syncing until a key is set again.')) return;
+    setSaving(true);
+    try {
+      await api.delete(`/churches/${churchId}/edv-bridge`);
+      await fetchStatus();
+    } catch (err: any) {
+      setMessage(err.response?.data?.error || 'Failed to disconnect');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="border-t pt-4 mt-4">
+      <h4 className="text-sm font-semibold text-gray-700 mb-2">EDV Bridge</h4>
+
+      {loading ? (
+        <p className="text-xs text-gray-500">Checking connection…</p>
+      ) : (
+        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                status?.connected ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
+              }`}
+            >
+              {status?.connected ? 'Connected' : 'Not connected'}
+            </span>
+            {status?.connected && (
+              <span className="text-xs text-gray-500">
+                {status.syncedCount} synced
+                {status.failedCount > 0 && `, ${status.failedCount} failed`}
+                {status.lastSyncedAt && ` · last ${new Date(status.lastSyncedAt).toLocaleString('en-IN')}`}
+              </span>
+            )}
+          </div>
+
+          {!!status?.recentFailures?.length && (
+            <div className="text-xs text-red-600 space-y-1">
+              {status.recentFailures.slice(0, 3).map((f) => (
+                <div key={f._id} className="truncate" title={f.edvSyncError}>
+                  {f.receiptNumber} (₹{f.totalAmount}) — {f.edvSyncError}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              placeholder={status?.connected ? 'Paste a new key to replace it…' : 'Paste API key from EDV…'}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleSaveKey}
+              disabled={saving || !apiKeyInput.trim()}
+              className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50"
+            >
+              Save
+            </button>
+            {status?.connected && (
+              <button
+                type="button"
+                onClick={handleDisconnect}
+                disabled={saving}
+                className="px-3 py-2 border border-red-300 text-red-600 rounded-lg text-sm hover:bg-red-50 disabled:opacity-50"
+              >
+                Disconnect
+              </button>
+            )}
+          </div>
+
+          {message && <p className="text-xs text-gray-600">{message}</p>}
+          <p className="text-xs text-gray-400">
+            Get the key from EDV → Settings → Church Bridge → Connect a Church App.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

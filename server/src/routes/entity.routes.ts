@@ -99,6 +99,9 @@ import {
   createChurch,
   updateChurch,
   deleteChurch,
+  setEdvBridgeKey,
+  removeEdvBridgeKey,
+  getEdvBridgeStatus,
 } from '../controllers/churchController';
 import {
   createPlan as createMonthlySupportPlan,
@@ -217,6 +220,9 @@ router.get('/search', globalSearch);
  */
 router.route('/churches').get(getAllChurches).post(createChurch);
 router.route('/churches/:id').get(getChurchById).put(updateChurch).delete(deleteChurch);
+router.get('/churches/:id/edv-bridge', getEdvBridgeStatus);
+router.put('/churches/:id/edv-bridge', setEdvBridgeKey);
+router.delete('/churches/:id/edv-bridge', removeEdvBridgeKey);
 
 /**
  * @swagger

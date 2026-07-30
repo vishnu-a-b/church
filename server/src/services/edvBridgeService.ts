@@ -56,10 +56,12 @@ export async function pushTransactionToEdv(transaction: ITransaction): Promise<v
     );
 
     await Transaction.findByIdAndUpdate(transaction._id, {
-      edvSynced: true,
-      edvVoucherId: response.data?.data?.voucherId,
-      edvSyncError: undefined,
-      edvSyncedAt: new Date(),
+      $set: {
+        edvSynced: true,
+        edvVoucherId: response.data?.data?.voucherId,
+        edvSyncedAt: new Date(),
+      },
+      $unset: { edvSyncError: 1 },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
