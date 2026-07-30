@@ -27,6 +27,8 @@ export const getAllUnits = async (req: AuthRequest, res: Response, next: NextFun
     const filter: any = {};
     if (req.user?.role === 'church_admin' && req.user.churchId) {
       filter.churchId = req.user.churchId;
+    } else if (req.query.churchId && req.user?.role === 'super_admin') {
+      filter.churchId = req.query.churchId;
     }
 
     const units = await Unit.find(filter).populate('churchId', 'name uniqueId churchNumber').sort({ uniqueId: 1 });
@@ -206,6 +208,14 @@ export const getAllBavanakutayimas = async (req: AuthRequest, res: Response, nex
     // Unit admin restriction: only show bavanakutayimas from their unit
     if (req.user?.role === 'unit_admin' && req.user.unitId) {
       filter.unitId = req.user.unitId;
+    }
+
+    // Explicit filters (e.g. super_admin scoping to a selected church/unit in the UI)
+    if (req.query.unitId) {
+      filter.unitId = req.query.unitId;
+    } else if (req.query.churchId && req.user?.role === 'super_admin') {
+      const churchUnits = await Unit.find({ churchId: req.query.churchId }).select('_id');
+      filter.unitId = { $in: churchUnits.map((u) => u._id) };
     }
 
     const bavanakutayimas = await Bavanakutayima.find(filter)
@@ -427,6 +437,18 @@ export const getAllHouses = async (req: AuthRequest, res: Response, next: NextFu
     // Kudumbakutayima admin restriction: only show houses from their bavanakutayima
     if (req.user?.role === 'kudumbakutayima_admin' && req.user.bavanakutayimaId) {
       filter.bavanakutayimaId = req.user.bavanakutayimaId;
+    }
+
+    // Explicit filters (e.g. super_admin scoping to a selected church/unit in the UI)
+    if (req.query.bavanakutayimaId) {
+      filter.bavanakutayimaId = req.query.bavanakutayimaId;
+    } else if (req.query.unitId && req.user?.role === 'super_admin') {
+      const bavanakutayimas = await Bavanakutayima.find({ unitId: req.query.unitId }).select('_id');
+      filter.bavanakutayimaId = { $in: bavanakutayimas.map((b) => b._id) };
+    } else if (req.query.churchId && req.user?.role === 'super_admin') {
+      const churchUnits = await Unit.find({ churchId: req.query.churchId }).select('_id');
+      const bavanakutayimas = await Bavanakutayima.find({ unitId: { $in: churchUnits.map((u) => u._id) } }).select('_id');
+      filter.bavanakutayimaId = { $in: bavanakutayimas.map((b) => b._id) };
     }
 
     const houses = await House.find(filter)
@@ -691,7 +713,8 @@ export const getAllMembers = async (req: AuthRequest, res: Response, next: NextF
     }
 
     // Apply additional query filters (for hierarchical filtering)
-    const { unitId, bavanakutayimaId, houseId } = req.query;
+    const { unitId, bavanakutayimaId, houseId, churchId } = req.query;
+    if (churchId && req.user?.role === 'super_admin') filter.churchId = churchId;
     if (unitId) filter.unitId = unitId;
     if (bavanakutayimaId) filter.bavanakutayimaId = bavanakutayimaId;
     if (houseId) filter.houseId = houseId;
