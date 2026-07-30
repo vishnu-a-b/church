@@ -60,7 +60,8 @@ const getRoleLoginPath = (role: string): string => {
     'church_admin': '/church-admin',
     'unit_admin': '/unit-admin',
     'kudumbakutayima_admin': '/kutayima-admin',
-    'member': '/member-login'
+    'member': '/member-login',
+    'donor': '/donor-login'
   };
   return rolePathMap[role] || `/${role}`;
 };

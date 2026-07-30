@@ -66,6 +66,7 @@ import {
   register,
   login,
   memberLogin,
+  donorLogin,
   refreshToken,
   getMe,
   logout,
@@ -196,6 +197,35 @@ router.post('/login', loginValidation, validate, login);
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/member-login', memberLoginValidation, validate, memberLogin);
+
+/**
+ * @swagger
+ * /api/auth/donor-login:
+ *   post:
+ *     summary: Donor login (outside supporters, separate from admin/member login)
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
+router.post('/donor-login', memberLoginValidation, validate, donorLogin);
 
 /**
  * @swagger

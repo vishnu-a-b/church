@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../config/jwt';
 import User from '../models/User';
 import Member from '../models/Member';
+import Donor from '../models/Donor';
 import { AuthRequest } from '../types';
 
 export const protect = async (
@@ -68,7 +69,26 @@ export const protect = async (
         return;
       }
 
-      console.log('[AUTH] ❌ Not found in User or Member collection:', decoded.id);
+      // If not found as Member either, try Donor collection
+      console.log('[AUTH] Not found in Member collection, checking Donor collection...');
+      const donor = await Donor.findById(decoded.id).select('-password');
+
+      if (donor) {
+        console.log('[AUTH] ✓ Found as Donor:', donor.username);
+        req.user = {
+          _id: donor._id,
+          email: donor.email,
+          username: donor.username,
+          role: donor.role,
+          isActive: donor.isActive,
+          churchId: donor.churchId,
+          donorId: donor._id,
+        } as any;
+        next();
+        return;
+      }
+
+      console.log('[AUTH] ❌ Not found in User, Member, or Donor collection:', decoded.id);
       res.status(401).json({
         success: false,
         error: 'User not found',

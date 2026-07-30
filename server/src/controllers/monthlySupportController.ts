@@ -213,17 +213,17 @@ export const getDuesForPlan = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
-// Member self-service: my monthly support dues
+// Member/Donor self-service: my monthly support dues
 export const getMyMonthlySupportDues = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const memberId = req.user?.memberId;
+    const dueForId = req.user?.memberId || req.user?.donorId;
 
-    if (!memberId) {
-      res.status(404).json({ success: false, error: 'Member profile not found for this user' });
+    if (!dueForId) {
+      res.status(404).json({ success: false, error: 'Member or donor profile not found for this user' });
       return;
     }
 
-    const dues = await MonthlySupportDue.find({ dueForId: memberId })
+    const dues = await MonthlySupportDue.find({ dueForId })
       .populate('planId', 'name')
       .sort({ periodMonth: -1 });
 

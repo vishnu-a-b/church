@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import User from '../models/User';
 import Member from '../models/Member';
+import Donor from '../models/Donor';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../config/jwt';
 import { AuthRequest } from '../types';
 
@@ -239,6 +240,90 @@ export const memberLogin = async (
   }
 };
 
+export const donorLogin = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      res.status(400).json({
+        success: false,
+        error: 'Please provide username/email and password',
+      });
+      return;
+    }
+
+    const donor = await Donor.findOne({
+      $or: [{ username: username }, { email: username }],
+    })
+      .select('+password')
+      .populate('churchId', 'name uniqueId');
+
+    if (!donor) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
+      return;
+    }
+
+    if (!donor.password) {
+      res.status(401).json({
+        success: false,
+        error: 'This donor account does not have login access',
+      });
+      return;
+    }
+
+    if (!donor.isActive) {
+      res.status(401).json({
+        success: false,
+        error: 'Account is deactivated',
+      });
+      return;
+    }
+
+    const isMatch = await donor.comparePassword(password);
+
+    if (!isMatch) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
+      return;
+    }
+
+    donor.lastLogin = new Date();
+
+    const accessToken = generateAccessToken(donor._id.toString());
+    const refreshTokenValue = generateRefreshToken(donor._id.toString());
+
+    donor.refreshToken = refreshTokenValue;
+    await donor.save();
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      accessToken,
+      refreshToken: refreshTokenValue,
+      user: {
+        id: donor._id,
+        username: donor.username,
+        email: donor.email,
+        name: donor.name,
+        role: donor.role,
+        churchId: typeof donor.churchId === 'object' && donor.churchId ? (donor.churchId as any)._id : donor.churchId,
+        isActive: donor.isActive,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const refreshToken = async (
   req: AuthRequest,
   res: Response,
@@ -269,11 +354,19 @@ export const refreshToken = async (
     // Try to find in User model first
     let user = await User.findById(decoded.id).select('+refreshToken');
     let isMember = false;
+    let isDonor = false;
 
     // If not found in User, try Member model
     if (!user) {
       user = await Member.findById(decoded.id).select('+refreshToken') as any;
       isMember = true;
+    }
+
+    // If not found in Member either, try Donor model
+    if (!user) {
+      user = await Donor.findById(decoded.id).select('+refreshToken') as any;
+      isMember = false;
+      isDonor = true;
     }
 
     if (!user || user.refreshToken !== refreshToken) {
@@ -305,7 +398,7 @@ export const refreshToken = async (
       message: 'Tokens refreshed successfully',
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
-      userType: isMember ? 'member' : 'user', // For debugging
+      userType: isDonor ? 'donor' : isMember ? 'member' : 'user', // For debugging
     });
   } catch (error) {
     next(error);

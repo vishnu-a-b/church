@@ -98,3 +98,26 @@ export const updateDonor = async (req: AuthRequest, res: Response, next: NextFun
     next(error);
   }
 };
+
+// Donor self-service: view own profile
+export const getMyDonorProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const donorId = req.user?.donorId;
+
+    if (!donorId) {
+      res.status(404).json({ success: false, error: 'Donor profile not found for this user' });
+      return;
+    }
+
+    const donor = await Donor.findById(donorId).populate('churchId', 'name uniqueId');
+
+    if (!donor) {
+      res.status(404).json({ success: false, error: 'Donor not found' });
+      return;
+    }
+
+    res.json({ success: true, data: donor });
+  } catch (error) {
+    next(error);
+  }
+};

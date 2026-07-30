@@ -11,11 +11,12 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  role: 'super_admin' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin' | 'member';
+  role: 'super_admin' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin' | 'member' | 'donor';
   churchId?: Types.ObjectId;
   unitId?: Types.ObjectId;
   bavanakutayimaId?: Types.ObjectId;
   memberId?: Types.ObjectId;
+  donorId?: Types.ObjectId;
   isActive: boolean;
   lastLogin?: Date;
   refreshToken?: string;
@@ -280,6 +281,14 @@ export interface IDonor extends Document {
   notes?: string;
   isActive: boolean;
   createdBy?: Types.ObjectId;
+  // Login credentials (mirrors Member — a donor is not part of the House/Unit
+  // hierarchy, so this can't reuse the shared User model's church-scoped auth)
+  username?: string;
+  password?: string;
+  role: 'donor';
+  lastLogin?: Date;
+  refreshToken?: string;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 // Monthly Support Types

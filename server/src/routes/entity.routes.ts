@@ -94,6 +94,15 @@ import {
   exportCredentialsList,
 } from '../controllers/memberCredentialController';
 import {
+  generateDonorCredentials,
+  resetDonorPassword,
+  getDonorsWithCredentials,
+  getDonorsWithoutCredentials,
+  bulkGenerateDonorCredentials,
+  removeDonorCredentials,
+  exportDonorCredentialsList,
+} from '../controllers/donorCredentialController';
+import {
   getAllChurches,
   getChurchById,
   createChurch,
@@ -117,6 +126,7 @@ import {
   getAllDonors,
   getDonorById,
   updateDonor,
+  getMyDonorProfile,
 } from '../controllers/donorController';
 
 const router = Router();
@@ -499,6 +509,15 @@ router.post('/members-credentials/:id/generate', generateMemberCredentials);
 router.post('/members-credentials/:id/reset-password', resetMemberPassword);
 router.delete('/members-credentials/:id/remove', removeMemberCredentials);
 
+// Donor Credentials Management Routes
+router.get('/donors-credentials/with-login', getDonorsWithCredentials);
+router.get('/donors-credentials/without-login', getDonorsWithoutCredentials);
+router.get('/donors-credentials/export', exportDonorCredentialsList);
+router.post('/donors-credentials/bulk-generate', bulkGenerateDonorCredentials);
+router.post('/donors-credentials/:id/generate', generateDonorCredentials);
+router.post('/donors-credentials/:id/reset-password', resetDonorPassword);
+router.delete('/donors-credentials/:id/remove', removeDonorCredentials);
+
 /**
  * @swagger
  * /api/users:
@@ -826,6 +845,7 @@ router.get('/monthly-support-dues/mine', getMyMonthlySupportDues);
 
 // Donor Routes (outside supporters)
 router.route('/donors').get(getAllDonors).post(createDonor);
+router.get('/donors/me', getMyDonorProfile);
 router.route('/donors/:id').get(getDonorById).put(updateDonor);
 
 export default router;
