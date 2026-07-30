@@ -7,11 +7,11 @@ import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
 import { ArrowLeft, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-export default function MonthlySupportDuesPage() {
+export default function SuperAdminMonthlySupportDuesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planId = searchParams.get('planId');
-  const api = createRoleApi('church_admin');
+  const api = createRoleApi('super_admin');
 
   const [plan, setPlan] = useState<MonthlySupportPlan | null>(null);
   const [dues, setDues] = useState<MonthlySupportDue[]>([]);
@@ -89,7 +89,7 @@ export default function MonthlySupportDuesPage() {
     }
   };
 
-  const memberName = (due: MonthlySupportDue) => due.dueForName;
+  const contributorName = (due: MonthlySupportDue) => due.dueForName;
   const isDonorDue = (due: MonthlySupportDue) => due.dueForModel === 'Donor';
 
   const totalOutstanding = dues.reduce((sum, d) => sum + (d.isPaid ? 0 : d.balance), 0);
@@ -99,7 +99,7 @@ export default function MonthlySupportDuesPage() {
     return (
       <div className="p-6">
         <p className="text-gray-600">No plan selected.</p>
-        <button onClick={() => router.push('/church-admin/dashboard/monthly-support')} className="text-purple-600 hover:underline mt-2">
+        <button onClick={() => router.push('/super-admin/dashboard/monthly-support')} className="text-purple-600 hover:underline mt-2">
           Back to Monthly Support
         </button>
       </div>
@@ -110,7 +110,7 @@ export default function MonthlySupportDuesPage() {
     <div className="space-y-6">
       <div>
         <button
-          onClick={() => router.push('/church-admin/dashboard/monthly-support')}
+          onClick={() => router.push('/super-admin/dashboard/monthly-support')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -158,7 +158,7 @@ export default function MonthlySupportDuesPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contributor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
@@ -182,7 +182,7 @@ export default function MonthlySupportDuesPage() {
                   <tr key={due._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{due.periodMonth}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {memberName(due)}
+                      {contributorName(due)}
                       {isDonorDue(due) && (
                         <span className="ml-2 text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Outside Donor</span>
                       )}
@@ -222,7 +222,7 @@ export default function MonthlySupportDuesPage() {
       {showPaymentModal && selectedDue && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Collect Payment — {memberName(selectedDue)}</h3>
+            <h3 className="text-xl font-bold mb-4">Collect Payment — {contributorName(selectedDue)}</h3>
             <p className="text-sm text-gray-500 mb-4">{selectedDue.periodMonth} · Balance ₹{selectedDue.balance.toLocaleString('en-IN')}</p>
 
             <div className="space-y-4">

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
-import { FiHome, FiUsers, FiActivity, FiDollarSign, FiSettings, FiUserCheck, FiAlertCircle } from 'react-icons/fi';
+import { FiHome, FiUsers, FiActivity, FiDollarSign, FiSettings, FiUserCheck, FiAlertCircle, FiRepeat } from 'react-icons/fi';
 import { BsBuilding, BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
 import { MdOutlineAccountTree, MdPayment } from 'react-icons/md';
 
@@ -34,6 +34,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'Transactions', href: '/super-admin/dashboard/transactions', icon: FiDollarSign },
     { name: 'Dues', href: '/super-admin/dashboard/dues', icon: FiAlertCircle },
     { name: 'Campaigns', href: '/super-admin/dashboard/campaigns', icon: FiActivity },
+    { name: 'Monthly Support', href: '/super-admin/dashboard/monthly-support', icon: FiRepeat },
     { name: 'Stothrakazhcha', href: '/super-admin/dashboard/stothrakazhcha', icon: MdPayment },
     { name: 'Spiritual Activities', href: '/super-admin/dashboard/activities', icon: FiActivity },
     { name: 'News', href: '/super-admin/dashboard/news', icon: BsNewspaper },
