@@ -99,6 +99,8 @@ const createAllAdmins = async () => {
     console.log('\n🔹 Preparing Unit Admins...');
     const units = await Unit.find({});
     console.log(`   Found ${units.length} unit(s)`);
+    // Bavanakutayima has no churchId of its own — it's derived via its parent Unit.
+    const unitChurchMap = new Map(units.map((u) => [u._id.toString(), u.churchId as mongoose.Types.ObjectId]));
 
     for (const unit of units) {
       const unitAdminUsername = `unit_${unit.uniqueId || unit.unitCode}`.toLowerCase().replace(/[^a-z0-9_]/g, '_');
@@ -139,8 +141,8 @@ const createAllAdmins = async () => {
     console.log(`   Found ${bavanakutayimas.length} bavanakutayima(s)`);
 
     for (const bavana of bavanakutayimas) {
-      const kutayimaAdminUsername = `kutayima_${bavana.uniqueId || bavana.bavanakutayimaCode}`.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-      const kutayimaAdminEmail = `kutayima@${bavana.uniqueId || bavana.bavanakutayimaCode}.church.com`.toLowerCase().replace(/[^a-z0-9@._]/g, '');
+      const kutayimaAdminUsername = `kutayima_${bavana.uniqueId}`.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const kutayimaAdminEmail = `kutayima@${bavana.uniqueId}.church.com`.toLowerCase().replace(/[^a-z0-9@._]/g, '');
 
       // Check if kutayima admin exists
       const existingKutayimaAdmin = await User.findOne({
@@ -160,7 +162,7 @@ const createAllAdmins = async () => {
         email: kutayimaAdminEmail,
         password: 'KutayimaAdmin@123',
         role: 'kudumbakutayima_admin',
-        churchId: bavana.churchId as mongoose.Types.ObjectId,
+        churchId: unitChurchMap.get(bavana.unitId.toString()),
         unitId: bavana.unitId as mongoose.Types.ObjectId,
         bavanakutayimaId: bavana._id as mongoose.Types.ObjectId,
         isActive: true,
