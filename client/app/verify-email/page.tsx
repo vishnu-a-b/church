@@ -1,11 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Mail, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
+// useSearchParams() opts a page out of static generation unless the component
+// using it is wrapped in Suspense — required for `next build` with static export.
 export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
+  );
+}
+
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
