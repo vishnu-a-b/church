@@ -1,25 +1,37 @@
 import * as nodemailer from 'nodemailer';
 import { IMember } from '../types';
 
-// Email transporter configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: process.env.EMAIL_SECURE === 'true',
-  auth: {
-    user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+// Created lazily (on first send) rather than at module load — TypeScript's
+// CommonJS output hoists every `import`-derived require() above other
+// top-level code, so a transporter built here at module scope would read
+// process.env.EMAIL_* before server.ts's dotenv.config() has actually run,
+// silently getting undefined credentials no matter where dotenv.config() is
+// textually placed relative to the imports.
+let transporter: nodemailer.Transporter | null = null;
 
-// Verify transporter configuration
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Email service configuration error:', error);
-  } else {
-    console.log('✅ Email service is ready');
+function getTransporter(): nodemailer.Transporter {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      secure: process.env.EMAIL_SECURE === 'true',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    transporter.verify((error) => {
+      if (error) {
+        console.error('❌ Email service configuration error:', error);
+      } else {
+        console.log('✅ Email service is ready');
+      }
+    });
   }
-});
+
+  return transporter;
+}
 
 export interface MemberHierarchyInfo {
   churchName: string;
@@ -200,7 +212,7 @@ Please do not reply to this email.
   `;
 
   try {
-    await transporter.sendMail({
+    await getTransporter().sendMail({
       from: process.env.EMAIL_FROM || 'Church Wallet System <noreply@church.com>',
       to: member.email,
       subject: 'Welcome to Church Wallet System - Please Verify Your Email',
@@ -347,7 +359,7 @@ Please do not reply to this email.
   `;
 
   try {
-    await transporter.sendMail({
+    await getTransporter().sendMail({
       from: process.env.EMAIL_FROM || 'Church Wallet System <noreply@church.com>',
       to: donor.email,
       subject: 'Your Church Wallet System Login Details',
@@ -505,7 +517,7 @@ Please do not reply to this email.
   `;
 
   try {
-    await transporter.sendMail({
+    await getTransporter().sendMail({
       from: process.env.EMAIL_FROM || 'Church Wallet System <noreply@church.com>',
       to: member.email,
       subject: `Transaction Receipt - ${transactionDetails.receiptNumber}`,
