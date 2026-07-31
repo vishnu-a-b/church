@@ -512,7 +512,7 @@ export default function CampaignsPage() {
   };
 
   const handleViewPayments = (campaign: Campaign) => {
-    router.push(`/church-admin/dashboard/campaigns/payments?id=${campaign._id}`);
+    router.push(`/super-admin/dashboard/campaigns/payments?id=${campaign._id}`);
   };
 
   const formatDate = (date: Date) => {
