@@ -72,6 +72,8 @@ export default function MonthlySupportPage() {
   const [paymentEntryId, setPaymentEntryId] = useState('');
   const [paymentAmountInput, setPaymentAmountInput] = useState('');
   const [paymentMethodInput, setPaymentMethodInput] = useState('cash');
+  const [paymentReferenceNo, setPaymentReferenceNo] = useState('');
+  const [paymentDateInput, setPaymentDateInput] = useState('');
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
   useEffect(() => {
@@ -317,6 +319,8 @@ export default function MonthlySupportPage() {
     setPaymentEntryId('');
     setPaymentAmountInput('');
     setPaymentMethodInput('cash');
+    setPaymentReferenceNo('');
+    setPaymentDateInput(new Date().toISOString().split('T')[0]);
     setShowAddPaymentModal(true);
   };
 
@@ -346,6 +350,8 @@ export default function MonthlySupportPage() {
         donorId: entry.donorId ? paymentEntryId : undefined,
         amount,
         paymentMethod: paymentMethodInput,
+        referenceNo: paymentMethodInput !== 'cash' ? (paymentReferenceNo.trim() || undefined) : undefined,
+        paymentDate: paymentDateInput || undefined,
       });
       toast.success('Payment recorded successfully');
       setShowAddPaymentModal(false);
@@ -992,6 +998,30 @@ export default function MonthlySupportPage() {
                   <option value="upi">UPI</option>
                   <option value="cheque">Cheque</option>
                 </select>
+              </div>
+
+              {paymentMethodInput !== 'cash' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reference No (optional)</label>
+                  <input
+                    type="text"
+                    value={paymentReferenceNo}
+                    onChange={(e) => setPaymentReferenceNo(e.target.value)}
+                    placeholder="Bank ref / UPI txn ID / cheque no."
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
+                <input
+                  type="date"
+                  value={paymentDateInput}
+                  onChange={(e) => setPaymentDateInput(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  required
+                />
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">

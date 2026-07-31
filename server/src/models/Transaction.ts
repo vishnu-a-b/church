@@ -75,6 +75,12 @@ const transactionSchema = new Schema<ITransaction>(
       enum: ['cash', 'bank_transfer', 'upi', 'cheque'],
       default: 'cash',
     },
+    // Bank ref number / UPI transaction ID / cheque number — only meaningful
+    // for non-cash payment methods.
+    referenceNo: {
+      type: String,
+      trim: true,
+    },
     notes: {
       type: String,
       trim: true,

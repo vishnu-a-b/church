@@ -166,6 +166,7 @@ export interface Transaction {
   churchId: string;
   paymentDate: Date;
   paymentMethod: PaymentMethod;
+  referenceNo?: string;
   notes?: string;
   smsNotificationSent: boolean;
   smsLogId?: string;

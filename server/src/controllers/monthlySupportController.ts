@@ -298,7 +298,7 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
       return;
     }
 
-    const { memberId, donorId, amount, paymentMethod } = req.body;
+    const { memberId, donorId, amount, paymentMethod, referenceNo, paymentDate } = req.body;
 
     if ((!memberId && !donorId) || (memberId && donorId)) {
       res.status(400).json({ success: false, error: 'Specify exactly one of memberId or donorId' });
@@ -309,6 +309,16 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
     if (!paymentAmount || paymentAmount <= 0 || !paymentMethod) {
       res.status(400).json({ success: false, error: 'Missing or invalid amount/paymentMethod' });
       return;
+    }
+
+    let effectivePaymentDate = new Date();
+    if (paymentDate) {
+      const parsed = new Date(paymentDate);
+      if (isNaN(parsed.getTime())) {
+        res.status(400).json({ success: false, error: 'Invalid payment date' });
+        return;
+      }
+      effectivePaymentDate = parsed;
     }
 
     const entry = plan.members.find((m) =>
@@ -353,7 +363,8 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
       donorId: contributorType === 'donor' ? dueForId : undefined,
       monthlySupportPlanId: plan._id,
       paymentMethod,
-      paymentDate: now,
+      referenceNo: paymentMethod !== 'cash' ? (referenceNo || undefined) : undefined,
+      paymentDate: effectivePaymentDate,
       notes: `Monthly support payment for ${due.dueForName}`,
       createdBy: req.user?._id,
     });
@@ -385,7 +396,7 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
           transactionType: 'monthly_support',
           amount: paymentAmount,
           paymentMethod,
-          paymentDate: now,
+          paymentDate: effectivePaymentDate,
           campaignName: plan.name,
         };
 

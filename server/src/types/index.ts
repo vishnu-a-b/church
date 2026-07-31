@@ -162,6 +162,7 @@ export interface ITransaction extends Document {
   churchId: Types.ObjectId;
   paymentDate: Date;
   paymentMethod: PaymentMethod;
+  referenceNo?: string;
   notes?: string;
   smsNotificationSent: boolean;
   smsLogId?: Types.ObjectId;
