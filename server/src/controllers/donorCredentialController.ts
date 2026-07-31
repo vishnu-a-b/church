@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import Donor from '../models/Donor';
 import { AuthRequest } from '../types';
+import { sendDonorCredentialsEmail } from '../services/emailService';
 
 // Donors have no uniqueId (unlike Member) — build one from the name + a
 // disambiguator so two donors with the same name don't collide on username.
@@ -53,6 +54,17 @@ export const generateDonorCredentials = async (req: AuthRequest, res: Response, 
     donor.password = defaultPassword; // hashed by pre-save hook
 
     await donor.save();
+
+    if (donor.email) {
+      sendDonorCredentialsEmail({
+        name: donor.name,
+        email: donor.email,
+        phone: donor.phone,
+        address: donor.address,
+        username,
+        tempPassword: defaultPassword,
+      }).catch((error) => console.error('Failed to send donor credentials email:', error));
+    }
 
     res.json({
       success: true,
@@ -200,6 +212,17 @@ export const bulkGenerateDonorCredentials = async (req: AuthRequest, res: Respon
         donor.password = defaultPassword;
 
         await donor.save();
+
+        if (donor.email) {
+          sendDonorCredentialsEmail({
+            name: donor.name,
+            email: donor.email,
+            phone: donor.phone,
+            address: donor.address,
+            username,
+            tempPassword: defaultPassword,
+          }).catch((error) => console.error('Failed to send donor credentials email:', error));
+        }
 
         generatedCredentials.push({
           donorId: donor._id,

@@ -277,8 +277,9 @@ export interface ICampaignDue extends Document {
 export interface IDonor extends Document {
   churchId: Types.ObjectId;
   name: string;
-  phone?: string;
+  phone: string;
   email?: string;
+  address?: string;
   notes?: string;
   isActive: boolean;
   createdBy?: Types.ObjectId;

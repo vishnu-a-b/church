@@ -16,11 +16,16 @@ const donorSchema = new Schema<IDonor>(
     },
     phone: {
       type: String,
+      required: [true, 'Phone number is required'],
       trim: true,
     },
     email: {
       type: String,
       lowercase: true,
+      trim: true,
+    },
+    address: {
+      type: String,
       trim: true,
     },
     notes: {

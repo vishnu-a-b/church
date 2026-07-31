@@ -71,6 +71,8 @@ export default function SuperAdminMonthlySupportPage() {
   const [showNewDonorForm, setShowNewDonorForm] = useState(false);
   const [newDonorName, setNewDonorName] = useState('');
   const [newDonorPhone, setNewDonorPhone] = useState('');
+  const [newDonorEmail, setNewDonorEmail] = useState('');
+  const [newDonorAddress, setNewDonorAddress] = useState('');
   const [creatingDonor, setCreatingDonor] = useState(false);
 
   useEffect(() => {
@@ -218,12 +220,18 @@ export default function SuperAdminMonthlySupportPage() {
       toast.error('Enter a name for the donor');
       return;
     }
+    if (!newDonorPhone.trim()) {
+      toast.error('Phone number is required');
+      return;
+    }
     setCreatingDonor(true);
     try {
       const response = await api.post('/donors', {
         churchId: selectedChurch,
         name: newDonorName.trim(),
-        phone: newDonorPhone.trim() || undefined,
+        phone: newDonorPhone.trim(),
+        email: newDonorEmail.trim() || undefined,
+        address: newDonorAddress.trim() || undefined,
       });
       const donor: Donor = response.data?.data;
       setAllDonors([donor, ...allDonors]);
@@ -231,6 +239,8 @@ export default function SuperAdminMonthlySupportPage() {
       setShowNewDonorForm(false);
       setNewDonorName('');
       setNewDonorPhone('');
+      setNewDonorEmail('');
+      setNewDonorAddress('');
       toast.success('Donor registered and added to plan');
     } catch (error: any) {
       console.error('Error creating donor:', error);
@@ -794,9 +804,24 @@ export default function SuperAdminMonthlySupportPage() {
                         />
                         <input
                           type="text"
-                          placeholder="Phone (optional)"
+                          placeholder="Phone *"
+                          required
                           value={newDonorPhone}
                           onChange={(e) => setNewDonorPhone(e.target.value)}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
+                        />
+                        <input
+                          type="email"
+                          placeholder="Email (optional)"
+                          value={newDonorEmail}
+                          onChange={(e) => setNewDonorEmail(e.target.value)}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Address (optional)"
+                          value={newDonorAddress}
+                          onChange={(e) => setNewDonorAddress(e.target.value)}
                           className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
                         />
                         <div className="flex gap-2">
@@ -810,7 +835,7 @@ export default function SuperAdminMonthlySupportPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setShowNewDonorForm(false); setNewDonorName(''); setNewDonorPhone(''); }}
+                            onClick={() => { setShowNewDonorForm(false); setNewDonorName(''); setNewDonorPhone(''); setNewDonorEmail(''); setNewDonorAddress(''); }}
                             className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800"
                           >
                             Cancel

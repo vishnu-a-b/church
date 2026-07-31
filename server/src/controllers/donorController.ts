@@ -18,6 +18,11 @@ export const createDonor = async (req: AuthRequest, res: Response, next: NextFun
       req.body.churchId = req.user.churchId;
     }
 
+    if (!req.body.phone || !String(req.body.phone).trim()) {
+      res.status(400).json({ success: false, error: 'Phone number is required' });
+      return;
+    }
+
     const donor = await Donor.create({
       ...req.body,
       createdBy: req.user?._id,
@@ -85,7 +90,12 @@ export const updateDonor = async (req: AuthRequest, res: Response, next: NextFun
       return;
     }
 
-    const allowedFields = ['name', 'phone', 'email', 'notes', 'isActive'];
+    if ('phone' in req.body && !String(req.body.phone).trim()) {
+      res.status(400).json({ success: false, error: 'Phone number is required' });
+      return;
+    }
+
+    const allowedFields = ['name', 'phone', 'email', 'address', 'notes', 'isActive'];
     for (const field of allowedFields) {
       if (field in req.body) {
         (donor as any)[field] = req.body[field];

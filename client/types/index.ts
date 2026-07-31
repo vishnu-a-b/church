@@ -216,8 +216,9 @@ export interface Donor {
   _id: string;
   churchId: string;
   name: string;
-  phone?: string;
+  phone: string;
   email?: string;
+  address?: string;
   notes?: string;
   isActive: boolean;
   createdBy?: string;
