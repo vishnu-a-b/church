@@ -7,9 +7,16 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 import { House, Bavanakutayima } from '@/types';
 import { Plus, Edit2, Trash2, Search, X, Building2 } from 'lucide-react';
 
+interface Church {
+  _id: string;
+  name: string;
+}
+
 export default function HousesPage() {
   const { user, loading: authLoading } = useRoleAuth();
   const api = createRoleApi('super_admin');
+  const [churches, setChurches] = useState<Church[]>([]);
+  const [selectedChurch, setSelectedChurch] = useState('');
   const [houses, setHouses] = useState<House[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [bavanakutayimas, setBavanakutayimas] = useState<Bavanakutayima[]>([]);
@@ -35,17 +42,38 @@ export default function HousesPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      fetchData();
+      fetchChurches();
     }
   }, [authLoading, user]);
 
+  useEffect(() => {
+    if (selectedChurch) {
+      fetchData();
+    } else {
+      setHouses([]);
+      setUnits([]);
+      setBavanakutayimas([]);
+      setAllBavanakutayimas([]);
+    }
+  }, [selectedChurch]);
+
+  const fetchChurches = async () => {
+    try {
+      const response = await api.get('/churches');
+      setChurches(response.data?.data || []);
+    } catch (error) {
+      console.error('Error fetching churches:', error);
+    }
+  };
+
   const fetchData = async () => {
+    if (!selectedChurch) return;
     setLoading(true);
     try {
       const [housesRes, unitsRes, bavanakutayimasRes] = await Promise.all([
-        api.get('/houses'),
-        api.get('/units'),
-        api.get('/bavanakutayimas'),
+        api.get(`/houses?churchId=${selectedChurch}`),
+        api.get(`/units?churchId=${selectedChurch}`),
+        api.get(`/bavanakutayimas?churchId=${selectedChurch}`),
       ]);
       setHouses(housesRes.data?.data || []);
       setUnits(unitsRes.data?.data || []);
@@ -142,6 +170,26 @@ export default function HousesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Church Selector */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Church *</label>
+        <select
+          value={selectedChurch}
+          onChange={(e) => setSelectedChurch(e.target.value)}
+          className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">-- Select a Church --</option>
+          {churches.map((ch) => (
+            <option key={ch._id} value={ch._id}>
+              {ch.name}
+            </option>
+          ))}
+        </select>
+        {!selectedChurch && (
+          <p className="text-sm text-orange-600 mt-2">Please select a church to view and manage houses</p>
+        )}
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Houses</h2>
@@ -153,7 +201,8 @@ export default function HousesPage() {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          disabled={!selectedChurch}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="w-5 h-5 mr-2" />
           Add House
