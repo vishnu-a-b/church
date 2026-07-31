@@ -34,6 +34,7 @@ const emptyForm = {
   name: '',
   description: '',
   defaultAmount: 0,
+  treatment: 'income' as 'income' | 'liability',
   dayOfMonth: 5,
   startDate: '',
   endDate: '',
@@ -163,6 +164,7 @@ export default function SuperAdminMonthlySupportPage() {
       name: plan.name,
       description: plan.description || '',
       defaultAmount: plan.defaultAmount,
+      treatment: plan.treatment ?? 'income',
       dayOfMonth: plan.dayOfMonth,
       startDate: new Date(plan.startDate).toISOString().split('T')[0],
       endDate: plan.endDate ? new Date(plan.endDate).toISOString().split('T')[0] : '',
@@ -458,7 +460,12 @@ export default function SuperAdminMonthlySupportPage() {
                             <Repeat className="h-5 w-5 text-purple-600" />
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{plan.name}</div>
+                            <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                              {plan.name}
+                              {plan.treatment === 'liability' && (
+                                <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Liability</span>
+                              )}
+                            </div>
                             <div className="text-sm text-gray-500">Since {formatDate(plan.startDate)}</div>
                           </div>
                         </div>
@@ -595,6 +602,21 @@ export default function SuperAdminMonthlySupportPage() {
                   />
                   <p className="text-xs text-gray-500 mt-1">1-28, to avoid short-month issues</p>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Accounting Treatment *</label>
+                <select
+                  value={formData.treatment}
+                  onChange={(e) => setFormData({ ...formData, treatment: e.target.value as 'income' | 'liability' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="income">Donation (Income)</option>
+                  <option value="liability">Hall Booking / Refundable (Liability)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Liability plans post to EDV under Current Liabilities, one ledger per person — use this when the church owes something back (a booking, a refund), not for regular donations.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

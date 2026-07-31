@@ -150,6 +150,7 @@ export interface ITransaction extends Document {
   transactionType: TransactionType;
   contributionMode?: ContributionMode;
   campaignId?: Types.ObjectId;
+  monthlySupportPlanId?: Types.ObjectId;
   distribution?: Distribution;
   memberAmount: number;
   houseAmount: number;
@@ -297,6 +298,7 @@ export interface IMonthlySupportPlan extends Document {
   name: string;
   description?: string;
   defaultAmount: number;
+  treatment: 'income' | 'liability';
   dayOfMonth: number;
   members: Array<{
     memberId?: Types.ObjectId;

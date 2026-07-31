@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
-import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck, FiAlertCircle, FiMenu, FiSearch, FiRepeat } from 'react-icons/fi';
+import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck, FiAlertCircle, FiMenu, FiSearch, FiRepeat, FiRefreshCw } from 'react-icons/fi';
 import { BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
 import { MdOutlineAccountTree, MdPayment } from 'react-icons/md';
 import { ToastContainer } from 'react-toastify';
@@ -122,6 +122,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'Dues', href: '/church-admin/dashboard/dues', icon: FiAlertCircle },
     { name: 'Campaigns', href: '/church-admin/dashboard/campaigns', icon: FiActivity },
     { name: 'Monthly Support', href: '/church-admin/dashboard/monthly-support', icon: FiRepeat },
+    { name: 'EDV Sync', href: '/church-admin/dashboard/edv-sync', icon: FiRefreshCw },
     { name: 'Stothrakazhcha', href: '/church-admin/dashboard/stothrakazhcha', icon: MdPayment },
     { name: 'Spiritual Activities', href: '/church-admin/dashboard/activities', icon: FiActivity },
     { name: 'News', href: '/church-admin/dashboard/news', icon: BsNewspaper },

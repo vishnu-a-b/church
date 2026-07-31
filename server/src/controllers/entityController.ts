@@ -3311,6 +3311,7 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
       memberId: contributorType === "member" ? due.dueForId : undefined,
       houseId: contributorType === "house" ? due.dueForId : undefined,
       donorId: contributorType === "donor" ? due.dueForId : undefined,
+      monthlySupportPlanId: dueType === "monthly_support" ? due.planId : undefined,
       paymentMethod: paymentMethod,
       paymentDate: new Date(),
       notes: notes || `Due payment for ${due.dueForName}`,

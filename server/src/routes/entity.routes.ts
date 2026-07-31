@@ -128,6 +128,11 @@ import {
   updateDonor,
   getMyDonorProfile,
 } from '../controllers/donorController';
+import {
+  listUnsyncedTransactions,
+  retrySync,
+  retrySyncAll,
+} from '../controllers/edvSyncController';
 
 const router = Router();
 
@@ -744,6 +749,12 @@ router.post('/campaigns/:id/contribute', addCampaignContribution);
 // Unified Dues endpoint (Campaign + Stothrakazhcha)
 router.get('/dues', getAllDues);
 router.post('/dues/pay', payDue);
+
+// Manual EDV sync — lists what's pending and lets an admin retry on demand,
+// instead of only relying on the invisible fire-and-forget + 10-min cron retry.
+router.get('/edv-sync/pending', listUnsyncedTransactions);
+router.post('/edv-sync/:id/retry', retrySync);
+router.post('/edv-sync/retry-all', retrySyncAll);
 
 /**
  * @swagger

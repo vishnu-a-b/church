@@ -238,6 +238,7 @@ export interface MonthlySupportPlan {
   name: string;
   description?: string;
   defaultAmount: number;
+  treatment: 'income' | 'liability';
   dayOfMonth: number;
   members: MonthlySupportMember[];
   startDate: Date;

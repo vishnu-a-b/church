@@ -22,6 +22,15 @@ const monthlySupportPlanSchema = new Schema<IMonthlySupportPlan>(
       required: [true, 'Default amount is required'],
       min: 0,
     },
+    // 'income' = a donation/pledge, posted to EDV as ordinary income.
+    // 'liability' = something owed back to the payer (e.g. a refundable hall
+    // booking deposit) — posted to EDV under Current Liabilities, one personal
+    // ledger per payer, instead of a single pooled income ledger.
+    treatment: {
+      type: String,
+      enum: ['income', 'liability'],
+      default: 'income',
+    },
     dayOfMonth: {
       type: Number,
       required: [true, 'Day of month is required'],

@@ -22,6 +22,10 @@ const transactionSchema = new Schema<ITransaction>(
       type: Schema.Types.ObjectId,
       ref: 'Campaign',
     },
+    monthlySupportPlanId: {
+      type: Schema.Types.ObjectId,
+      ref: 'MonthlySupportPlan',
+    },
     distribution: {
       type: String,
       enum: ['member_only', 'house_only', 'both'],

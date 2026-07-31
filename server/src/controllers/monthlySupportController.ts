@@ -143,7 +143,7 @@ export const updatePlan = async (req: AuthRequest, res: Response, next: NextFunc
       }
     }
 
-    const allowedFields = ['name', 'description', 'defaultAmount', 'dayOfMonth', 'members', 'startDate', 'endDate', 'isActive'];
+    const allowedFields = ['name', 'description', 'defaultAmount', 'treatment', 'dayOfMonth', 'members', 'startDate', 'endDate', 'isActive'];
     for (const field of allowedFields) {
       if (field in req.body) {
         (plan as any)[field] = req.body[field];

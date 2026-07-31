@@ -5,6 +5,7 @@ import Member from '../models/Member';
 import House from '../models/House';
 import Donor from '../models/Donor';
 import Transaction from '../models/Transaction';
+import MonthlySupportPlan from '../models/MonthlySupportPlan';
 import { ITransaction } from '../types';
 
 // Pushes a Church transaction into the EDV accounting system as a posted voucher.
@@ -35,6 +36,15 @@ export async function pushTransactionToEdv(transaction: ITransaction): Promise<v
     if (donor) memberName = donor.name;
   }
 
+  // 'liability' pushes get their own personal ledger in EDV per payer (e.g. a
+  // refundable hall-booking deposit) instead of the shared income ledger —
+  // only monthly-support transactions carry a plan to look this up from.
+  let ledgerTreatment: 'income' | 'liability' = 'income';
+  if (transaction.monthlySupportPlanId) {
+    const plan = await MonthlySupportPlan.findById(transaction.monthlySupportPlanId).select('treatment');
+    if (plan?.treatment === 'liability') ledgerTreatment = 'liability';
+  }
+
   const payload = {
     churchId: String(transaction.churchId),
     transactionId: String(transaction._id),
@@ -45,7 +55,10 @@ export async function pushTransactionToEdv(transaction: ITransaction): Promise<v
     paymentDate: new Date(transaction.paymentDate).toISOString(),
     memberName,
     houseName,
+    memberId: transaction.memberId ? String(transaction.memberId) : undefined,
+    donorId: transaction.donorId ? String(transaction.donorId) : undefined,
     notes: transaction.notes,
+    ledgerTreatment,
   };
 
   try {
