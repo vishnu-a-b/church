@@ -126,7 +126,7 @@ export const getDuesForEntity = async (req: AuthRequest, res: Response, next: Ne
 // Process dues for overdue Stothrakazhcha (creates StothrakazhchaDue records)
 export const processStothrakazhchaDues = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { stothrakazhchaId } = req.body;
+    const { stothrakazhchaId, churchId } = req.body;
 
     console.log('🕐 Processing stothrakazhcha dues...');
 
@@ -136,6 +136,21 @@ export const processStothrakazhchaDues = async (req: AuthRequest, res: Response,
       duesProcessed: false,
       defaultAmount: { $gt: 0 }
     };
+
+    // Church admin restriction: only their own church's dues
+    if (req.user?.role === 'church_admin' && req.user.churchId) {
+      filter.churchId = req.user.churchId;
+    }
+
+    // Super admin must scope bulk processing to a specific church — otherwise
+    // this would silently process every church's overdue dues at once.
+    if (req.user?.role === 'super_admin') {
+      if (!stothrakazhchaId && !churchId) {
+        res.status(400).json({ success: false, error: 'churchId is required' });
+        return;
+      }
+      if (churchId) filter.churchId = churchId;
+    }
 
     // If specific stothrakazhcha ID provided, add it to filter; otherwise filter by due date
     if (stothrakazhchaId) {

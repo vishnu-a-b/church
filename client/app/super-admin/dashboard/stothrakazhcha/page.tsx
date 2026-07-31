@@ -55,10 +55,17 @@ interface House {
   bavanakutayimaId: string;
 }
 
+interface Church {
+  _id: string;
+  name: string;
+}
+
 export default function ChurchAdminStothrakazhchaPage() {
   const router = useRouter();
+  const [churches, setChurches] = useState<Church[]>([]);
+  const [selectedChurch, setSelectedChurch] = useState('');
   const [stothrakazhchas, setStothrakazhchas] = useState<Stothrakazhcha[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [processingDues, setProcessingDues] = useState(false);
@@ -134,16 +141,37 @@ export default function ChurchAdminStothrakazhchaPage() {
     }));
   };
 
-  const api = createRoleApi('church_admin');
+  const api = createRoleApi('super_admin');
 
   useEffect(() => {
-    fetchStothrakazhchas();
-    fetchUnits();
+    fetchChurches();
   }, []);
 
-  const fetchStothrakazhchas = async () => {
+  useEffect(() => {
+    if (selectedChurch) {
+      fetchStothrakazhchas();
+      fetchUnits();
+    } else {
+      setStothrakazhchas([]);
+      setUnits([]);
+    }
+  }, [selectedChurch]);
+
+  const fetchChurches = async () => {
     try {
-      const response = await api.get('/stothrakazhcha');
+      const response = await api.get('/churches');
+      setChurches(response.data?.data || []);
+    } catch (error) {
+      console.error('Error fetching churches:', error);
+      toast.error('Failed to load churches');
+    }
+  };
+
+  const fetchStothrakazhchas = async () => {
+    if (!selectedChurch) return;
+    setLoading(true);
+    try {
+      const response = await api.get(`/stothrakazhcha?churchId=${selectedChurch}`);
       setStothrakazhchas(response.data?.data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -154,8 +182,9 @@ export default function ChurchAdminStothrakazhchaPage() {
   };
 
   const fetchUnits = async () => {
+    if (!selectedChurch) return;
     try {
-      const response = await api.get('/units');
+      const response = await api.get(`/units?churchId=${selectedChurch}`);
       setUnits(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching units:', error);
@@ -239,13 +268,17 @@ export default function ChurchAdminStothrakazhchaPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedChurch) {
+      toast.error('Please select a church first');
+      return;
+    }
     setSubmitting(true);
     try {
       if (editingId) {
         await api.put(`/stothrakazhcha/${editingId}`, formData);
         toast.success('Stothrakazhcha updated successfully!');
       } else {
-        await api.post('/stothrakazhcha', formData);
+        await api.post('/stothrakazhcha', { ...formData, churchId: selectedChurch });
         toast.success('Stothrakazhcha created successfully!');
       }
       setShowModal(false);
@@ -306,7 +339,8 @@ export default function ChurchAdminStothrakazhchaPage() {
 
     try {
       const response = await api.post('/stothrakazhcha-dues/process', {
-        stothrakazhchaId: duesStothrakazhchaId || undefined
+        stothrakazhchaId: duesStothrakazhchaId || undefined,
+        churchId: selectedChurch,
       });
       toast.success(
         `Dues processed successfully! ${response.data?.data?.totalMembersProcessed || 0} members, ${response.data?.data?.totalHousesProcessed || 0} houses`
@@ -361,7 +395,7 @@ export default function ChurchAdminStothrakazhchaPage() {
   };
 
   const handleViewPayments = (stothrakazhcha: Stothrakazhcha) => {
-    router.push(`/church-admin/dashboard/stothrakazhcha/payments?id=${stothrakazhcha._id}`);
+    router.push(`/super-admin/dashboard/stothrakazhcha/payments?id=${stothrakazhcha._id}`);
   };
 
   const resetForm = () => {
@@ -410,6 +444,26 @@ export default function ChurchAdminStothrakazhchaPage() {
 
   return (
     <div className="space-y-6">
+      {/* Church Selector */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Church *</label>
+        <select
+          value={selectedChurch}
+          onChange={(e) => setSelectedChurch(e.target.value)}
+          className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        >
+          <option value="">-- Select a Church --</option>
+          {churches.map((ch) => (
+            <option key={ch._id} value={ch._id}>
+              {ch.name}
+            </option>
+          ))}
+        </select>
+        {!selectedChurch && (
+          <p className="text-sm text-orange-600 mt-2">Please select a church to view and manage Stothrakazhcha</p>
+        )}
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Stothrakazhcha Management</h2>
@@ -418,8 +472,8 @@ export default function ChurchAdminStothrakazhchaPage() {
         <div className="flex gap-3">
           <button
             onClick={() => handleOpenDuesConfirm()}
-            disabled={processingDues}
-            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+            disabled={processingDues || !selectedChurch}
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {processingDues ? (
               <>
@@ -438,7 +492,8 @@ export default function ChurchAdminStothrakazhchaPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+            disabled={!selectedChurch}
+            className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
             Create Stothrakazhcha

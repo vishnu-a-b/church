@@ -55,7 +55,7 @@ export default function StothrakazhchaPaymentsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const stothrakazhchaId = searchParams.get('id');
-  const api = createRoleApi('church_admin');
+  const api = createRoleApi('super_admin');
 
   const [stothrakazhcha, setStothrakazhcha] = useState<Stothrakazhcha | null>(null);
   const [payments, setPayments] = useState<any[]>([]);
@@ -86,7 +86,6 @@ export default function StothrakazhchaPaymentsPage() {
   useEffect(() => {
     if (stothrakazhchaId) {
       fetchStothrakazhchaData();
-      fetchUnits();
     }
   }, [stothrakazhchaId]);
 
@@ -113,6 +112,9 @@ export default function StothrakazhchaPaymentsPage() {
         amount: c.amount,
         contributedAt: c.contributedAt
       })));
+
+      const churchId = stothData.churchId?._id || stothData.churchId;
+      if (churchId) fetchUnits(churchId);
     } catch (error: any) {
       console.error('Error:', error);
       toast.error('Failed to load stothrakazhcha data');
@@ -121,9 +123,9 @@ export default function StothrakazhchaPaymentsPage() {
     }
   };
 
-  const fetchUnits = async () => {
+  const fetchUnits = async (churchId: string) => {
     try {
-      const response = await api.get('/units');
+      const response = await api.get(`/units?churchId=${churchId}`);
       setUnits(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching units:', error);
@@ -321,7 +323,7 @@ export default function StothrakazhchaPaymentsPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">No stothrakazhcha selected</h2>
           <button
-            onClick={() => router.push('/church-admin/dashboard/stothrakazhcha')}
+            onClick={() => router.push('/super-admin/dashboard/stothrakazhcha')}
             className="text-teal-600 hover:text-teal-700"
           >
             ← Back to Stothrakazhcha
@@ -345,7 +347,7 @@ export default function StothrakazhchaPaymentsPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Stothrakazhcha not found</h2>
           <button
-            onClick={() => router.push('/church-admin/dashboard/stothrakazhcha')}
+            onClick={() => router.push('/super-admin/dashboard/stothrakazhcha')}
             className="text-teal-600 hover:text-teal-700"
           >
             ← Back to Stothrakazhcha
@@ -385,7 +387,7 @@ export default function StothrakazhchaPaymentsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/church-admin/dashboard/stothrakazhcha')}
+            onClick={() => router.push('/super-admin/dashboard/stothrakazhcha')}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-6 h-6 text-gray-600" />

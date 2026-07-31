@@ -19,6 +19,11 @@ export const getAllStothrakazhcha = async (req: AuthRequest, res: Response, next
       filter.churchId = req.user.churchId;
     }
 
+    // Explicit filter (super_admin scoping to a selected church in the UI)
+    if (req.query.churchId && req.user?.role === 'super_admin') {
+      filter.churchId = req.query.churchId;
+    }
+
     const stothrakazhchas = await Stothrakazhcha.find(filter)
       .populate('churchId', 'name')
       .sort({ year: -1, weekNumber: -1 });
@@ -159,6 +164,12 @@ export const createStothrakazhcha = async (req: AuthRequest, res: Response, next
         return;
       }
       req.body.churchId = req.user.churchId;
+    }
+
+    // Super admin must specify which church this is for (no churchId of their own)
+    if (req.user?.role === 'super_admin' && !req.body.churchId) {
+      res.status(400).json({ success: false, error: 'churchId is required' });
+      return;
     }
 
     req.body.createdBy = req.user?._id;
