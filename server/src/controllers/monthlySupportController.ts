@@ -270,11 +270,72 @@ export const generateDuesNow = async (req: AuthRequest, res: Response, next: Nex
   }
 };
 
+// Ensures the due for one member/donor for one specific period exists,
+// creating it if missing (scoped to just this one entry — NOT the whole
+// plan, which is what generateDuesForPlan does and is too slow to call
+// per-payment on a large plan like JGCC's 283 members).
+async function ensureDueForPeriod(
+  plan: InstanceType<typeof MonthlySupportPlan>,
+  dueForId: any,
+  contributorType: 'member' | 'donor',
+  entry: { amount?: number },
+  periodMonth: string,
+  periodDate: Date
+): Promise<{ due: InstanceType<typeof MonthlySupportDue> | null; error?: string }> {
+  let due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
+  if (due) return { due };
+
+  let dueForName: string;
+  if (contributorType === 'member') {
+    const member = await Member.findById(dueForId);
+    if (!member || !member.isActive) return { due: null, error: 'Member not found or inactive' };
+    dueForName = `${member.firstName} ${member.lastName || ''}`.trim();
+  } else {
+    const donor = await Donor.findById(dueForId);
+    if (!donor || !donor.isActive) return { due: null, error: 'Donor not found or inactive' };
+    dueForName = donor.name;
+  }
+
+  const dueAmount = entry.amount ?? plan.defaultAmount;
+  const dueDate = new Date(periodDate.getFullYear(), periodDate.getMonth(), plan.dayOfMonth);
+
+  try {
+    due = await MonthlySupportDue.create({
+      churchId: plan.churchId,
+      planId: plan._id,
+      planName: plan.name,
+      periodMonth,
+      dueForId,
+      dueForModel: contributorType === 'member' ? 'Member' : 'Donor',
+      dueForName,
+      amount: dueAmount,
+      balance: dueAmount,
+      dueDate,
+    });
+  } catch (err: any) {
+    if (err?.code === 11000) {
+      // Created concurrently by another request (or the daily cron) — reuse it.
+      due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
+    } else {
+      throw err;
+    }
+  }
+
+  return { due };
+}
+
 // Record a payment directly for one of a plan's members/donors, without
 // requiring the admin to first go find that specific due — used by the
 // "Add Payment" action on the Monthly Support list page. Mirrors payDue's
 // monthly_support handling (wallet update, email receipt, EDV push), scoped
 // to just this one plan/dueType since that's the only case relevant here.
+//
+// Supports paying several upcoming periods at once (months > 1) for donors
+// who pay in advance — each period gets its own due/Transaction/EDV voucher
+// (one real transaction per month owed), rather than one lump-sum
+// transaction split across periods. Already-fully-paid periods are skipped
+// rather than treated as an error, since prepaying 3 months when this
+// month's due was already collected elsewhere is a normal case.
 export const addPaymentForMember = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     if (req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
@@ -298,7 +359,7 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
       return;
     }
 
-    const { memberId, donorId, amount, paymentMethod, referenceNo, paymentDate } = req.body;
+    const { memberId, donorId, amount, paymentMethod, referenceNo, paymentDate, months } = req.body;
 
     if ((!memberId && !donorId) || (memberId && donorId)) {
       res.status(400).json({ success: false, error: 'Specify exactly one of memberId or donorId' });
@@ -310,6 +371,8 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
       res.status(400).json({ success: false, error: 'Missing or invalid amount/paymentMethod' });
       return;
     }
+
+    const monthsCount = Math.min(Math.max(parseInt(months) || 1, 1), 36);
 
     let effectivePaymentDate = new Date();
     if (paymentDate) {
@@ -331,107 +394,68 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
     }
 
     const now = new Date();
-    const periodMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const dueForId = memberId || donorId;
     const contributorType: 'member' | 'donor' = memberId ? 'member' : 'donor';
 
-    // Ensure just this one member's current-period due exists — NOT the whole
-    // plan's (generateDuesForPlan would sequentially create/skip a due for
-    // every member, which times out on a plan the size of JGCC's 283).
-    let due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
-    if (!due) {
-      let dueForName: string;
+    const recipient = contributorType === 'member'
+      ? await Member.findById(dueForId)
+      : await Donor.findById(dueForId);
+
+    const results: Array<{ periodMonth: string; status: 'paid' | 'skipped' | 'error'; reason?: string; receiptNumber?: string }> = [];
+
+    for (let i = 0; i < monthsCount; i++) {
+      const periodDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const periodMonth = `${periodDate.getFullYear()}-${String(periodDate.getMonth() + 1).padStart(2, '0')}`;
+
+      const { due, error: dueError } = await ensureDueForPeriod(plan, dueForId, contributorType, entry, periodMonth, periodDate);
+      if (dueError || !due) {
+        results.push({ periodMonth, status: 'error', reason: dueError || 'Could not find/create due' });
+        break;
+      }
+
+      if (due.isPaid) {
+        results.push({ periodMonth, status: 'skipped', reason: 'Already fully paid' });
+        continue;
+      }
+
+      if (paymentAmount > due.balance) {
+        results.push({ periodMonth, status: 'error', reason: `Amount exceeds remaining balance (₹${due.balance}) for this period` });
+        break;
+      }
+
+      const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}-${i}`;
+
+      const transaction = await Transaction.create({
+        receiptNumber,
+        churchId: plan.churchId,
+        transactionType: 'monthly_support',
+        totalAmount: paymentAmount,
+        memberAmount: contributorType === 'member' ? paymentAmount : 0,
+        houseAmount: 0,
+        memberId: contributorType === 'member' ? dueForId : undefined,
+        donorId: contributorType === 'donor' ? dueForId : undefined,
+        monthlySupportPlanId: plan._id,
+        paymentMethod,
+        referenceNo: paymentMethod !== 'cash' ? (referenceNo || undefined) : undefined,
+        paymentDate: effectivePaymentDate,
+        notes: `Monthly support payment for ${due.dueForName} (${periodMonth})`,
+        createdBy: req.user?._id,
+      });
+
+      due.paidAmount += paymentAmount;
+      due.balance -= paymentAmount;
+      due.isPaid = due.balance === 0;
+      if (due.isPaid) due.paidAt = new Date();
+      due.transactionId = transaction._id;
+      await due.save();
+
+      // Donors don't have a Wallet (no membership-debt concept for outside supporters)
       if (contributorType === 'member') {
-        const member = await Member.findById(dueForId);
-        if (!member || !member.isActive) {
-          res.status(404).json({ success: false, error: 'Member not found or inactive' });
-          return;
-        }
-        dueForName = `${member.firstName} ${member.lastName || ''}`.trim();
-      } else {
-        const donor = await Donor.findById(dueForId);
-        if (!donor || !donor.isActive) {
-          res.status(404).json({ success: false, error: 'Donor not found or inactive' });
-          return;
-        }
-        dueForName = donor.name;
+        await Wallet.findOneAndUpdate(
+          { ownerId: dueForId, walletType: 'member' },
+          { $inc: { balance: -paymentAmount } }
+        );
       }
-
-      const dueAmount = entry.amount ?? plan.defaultAmount;
-      const dueDate = new Date(now.getFullYear(), now.getMonth(), plan.dayOfMonth);
-
-      try {
-        due = await MonthlySupportDue.create({
-          churchId: plan.churchId,
-          planId: plan._id,
-          planName: plan.name,
-          periodMonth,
-          dueForId,
-          dueForModel: contributorType === 'member' ? 'Member' : 'Donor',
-          dueForName,
-          amount: dueAmount,
-          balance: dueAmount,
-          dueDate,
-        });
-      } catch (err: any) {
-        if (err?.code === 11000) {
-          // Created concurrently by another request (or the daily cron) — reuse it.
-          due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    if (!due) {
-      res.status(404).json({ success: false, error: 'Could not find/create a due for this member' });
-      return;
-    }
-
-    if (paymentAmount > due.balance) {
-      res.status(400).json({ success: false, error: 'Amount exceeds remaining balance for this period' });
-      return;
-    }
-
-    const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-    const transaction = await Transaction.create({
-      receiptNumber,
-      churchId: plan.churchId,
-      transactionType: 'monthly_support',
-      totalAmount: paymentAmount,
-      memberAmount: contributorType === 'member' ? paymentAmount : 0,
-      houseAmount: 0,
-      memberId: contributorType === 'member' ? dueForId : undefined,
-      donorId: contributorType === 'donor' ? dueForId : undefined,
-      monthlySupportPlanId: plan._id,
-      paymentMethod,
-      referenceNo: paymentMethod !== 'cash' ? (referenceNo || undefined) : undefined,
-      paymentDate: effectivePaymentDate,
-      notes: `Monthly support payment for ${due.dueForName}`,
-      createdBy: req.user?._id,
-    });
-
-    due.paidAmount += paymentAmount;
-    due.balance -= paymentAmount;
-    due.isPaid = due.balance === 0;
-    if (due.isPaid) due.paidAt = new Date();
-    due.transactionId = transaction._id;
-    await due.save();
-
-    // Donors don't have a Wallet (no membership-debt concept for outside supporters)
-    if (contributorType === 'member') {
-      await Wallet.findOneAndUpdate(
-        { ownerId: dueForId, walletType: 'member' },
-        { $inc: { balance: -paymentAmount } }
-      );
-    }
-
-    // Send an email receipt to the payer
-    try {
-      const recipient = contributorType === 'member'
-        ? await Member.findById(dueForId)
-        : await Donor.findById(dueForId);
 
       if (recipient?.email) {
         const transactionDetails: TransactionDetails = {
@@ -440,26 +464,29 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
           amount: paymentAmount,
           paymentMethod,
           paymentDate: effectivePaymentDate,
-          campaignName: plan.name,
+          campaignName: `${plan.name} (${periodMonth})`,
         };
 
         sendTransactionNotification(recipient, transactionDetails).catch((error) => {
           console.error('Failed to send monthly support payment receipt email:', error);
         });
       }
-    } catch (emailError) {
-      console.error('Error sending monthly support payment receipt email:', emailError);
+
+      if (edvBridgeConfig.enabled) {
+        pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+      }
+
+      results.push({ periodMonth, status: 'paid', receiptNumber });
     }
 
-    // Push into EDV asynchronously (don't block response)
-    if (edvBridgeConfig.enabled) {
-      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
-    }
+    const paidCount = results.filter((r) => r.status === 'paid').length;
+    const skippedCount = results.filter((r) => r.status === 'skipped').length;
+    const errorResult = results.find((r) => r.status === 'error');
 
     res.json({
-      success: true,
-      message: 'Payment recorded successfully',
-      data: { transaction, due },
+      success: paidCount > 0,
+      message: `${paidCount} month(s) paid${skippedCount ? `, ${skippedCount} already paid` : ''}${errorResult ? `, stopped at ${errorResult.periodMonth}: ${errorResult.reason}` : ''}`,
+      data: { results },
     });
   } catch (error) {
     next(error);

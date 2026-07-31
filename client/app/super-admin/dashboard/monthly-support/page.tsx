@@ -82,6 +82,7 @@ export default function SuperAdminMonthlySupportPage() {
   const [paymentMethodInput, setPaymentMethodInput] = useState('cash');
   const [paymentReferenceNo, setPaymentReferenceNo] = useState('');
   const [paymentDateInput, setPaymentDateInput] = useState('');
+  const [paymentMonthsInput, setPaymentMonthsInput] = useState('1');
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
   useEffect(() => {
@@ -357,6 +358,7 @@ export default function SuperAdminMonthlySupportPage() {
     setPaymentMethodInput('cash');
     setPaymentReferenceNo('');
     setPaymentDateInput(new Date().toISOString().split('T')[0]);
+    setPaymentMonthsInput('1');
     setShowAddPaymentModal(true);
   };
 
@@ -379,19 +381,27 @@ export default function SuperAdminMonthlySupportPage() {
     const entry = paymentPlan.members.find((m) => planMemberId(m) === paymentEntryId);
     if (!entry) return;
 
+    const months = Math.max(1, parseInt(paymentMonthsInput) || 1);
+
     setSubmittingPayment(true);
     try {
-      await api.post(`/monthly-support-plans/${paymentPlan._id}/pay`, {
+      const response = await api.post(`/monthly-support-plans/${paymentPlan._id}/pay`, {
         memberId: entry.memberId ? paymentEntryId : undefined,
         donorId: entry.donorId ? paymentEntryId : undefined,
         amount,
         paymentMethod: paymentMethodInput,
         referenceNo: paymentMethodInput !== 'cash' ? (paymentReferenceNo.trim() || undefined) : undefined,
         paymentDate: paymentDateInput || undefined,
+        months,
       });
-      toast.success('Payment recorded successfully');
-      setShowAddPaymentModal(false);
-      setPaymentPlan(null);
+      const message = response.data?.message || 'Payment recorded successfully';
+      if (response.data?.success) {
+        toast.success(message);
+        setShowAddPaymentModal(false);
+        setPaymentPlan(null);
+      } else {
+        toast.error(message);
+      }
     } catch (error: any) {
       console.error('Error recording payment:', error);
       toast.error(error.response?.data?.error || 'Failed to record payment');
@@ -1085,9 +1095,22 @@ export default function SuperAdminMonthlySupportPage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Number of Months</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="36"
+                  value={paymentMonthsInput}
+                  onChange={(e) => setPaymentMonthsInput(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                />
+                <p className="text-xs text-gray-500 mt-1">For paying in advance — settles this many upcoming months at the amount above, one receipt each. Already-paid months are skipped automatically.</p>
+              </div>
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> This creates the current month&apos;s due for this member if it doesn&apos;t exist yet, records the payment against it, and syncs to EDV.
+                  <strong>Note:</strong> This creates each month&apos;s due for this member if it doesn&apos;t exist yet, records the payment against it, and syncs to EDV.
                 </p>
               </div>
 
