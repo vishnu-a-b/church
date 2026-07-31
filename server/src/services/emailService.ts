@@ -38,6 +38,18 @@ export interface TransactionDetails {
   campaignName?: string;
 }
 
+// Common shape covering both Member and Donor recipients. Donors have no
+// email-verification flow (they're set up directly by an admin, not
+// self-registered), so isEmailVerified/emailNotificationsEnabled are only
+// enforced when actually present on the recipient.
+export interface TransactionEmailRecipient {
+  firstName?: string;
+  name?: string;
+  email?: string;
+  isEmailVerified?: boolean;
+  emailNotificationsEnabled?: boolean;
+}
+
 /**
  * Send welcome email to new member with verification link
  */
@@ -207,7 +219,7 @@ Please do not reply to this email.
  * Send transaction notification email to verified member
  */
 export const sendTransactionNotification = async (
-  member: IMember,
+  member: TransactionEmailRecipient,
   transactionDetails: TransactionDetails
 ): Promise<void> => {
   if (!process.env.EMAIL_ENABLED || process.env.EMAIL_ENABLED !== 'true') {
@@ -216,19 +228,23 @@ export const sendTransactionNotification = async (
   }
 
   if (!member.email) {
-    console.log('⚠️ Member has no email address, skipping transaction notification');
+    console.log('⚠️ Recipient has no email address, skipping transaction notification');
     return;
   }
 
-  if (!member.isEmailVerified) {
-    console.log('⚠️ Member email not verified, skipping transaction notification');
+  // Only enforced for recipients that actually have these fields (Members).
+  // Donors are set up directly by an admin and have no verification flow.
+  if (member.isEmailVerified === false) {
+    console.log('⚠️ Recipient email not verified, skipping transaction notification');
     return;
   }
 
-  if (!member.emailNotificationsEnabled) {
-    console.log('⚠️ Member has disabled email notifications, skipping transaction notification');
+  if (member.emailNotificationsEnabled === false) {
+    console.log('⚠️ Recipient has disabled email notifications, skipping transaction notification');
     return;
   }
+
+  const recipientName = member.firstName || member.name || 'there';
 
   const transactionTypeLabel = transactionDetails.transactionType
     .split('_')
@@ -260,7 +276,7 @@ export const sendTransactionNotification = async (
   </div>
 
   <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-    <h2 style="color: #667eea;">Hello ${member.firstName}!</h2>
+    <h2 style="color: #667eea;">Hello ${recipientName}!</h2>
 
     <p>A new transaction has been recorded for you in the Church Wallet System.</p>
 
@@ -320,7 +336,7 @@ export const sendTransactionNotification = async (
   const textContent = `
 Transaction Notification
 
-Hello ${member.firstName}!
+Hello ${recipientName}!
 
 A new transaction has been recorded for you in the Church Wallet System.
 
