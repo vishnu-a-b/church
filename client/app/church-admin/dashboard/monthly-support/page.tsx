@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
-import { MonthlySupportPlan, Donor } from '@/types';
-import { Repeat, Users, TrendingUp, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, ListChecks, Trash, UserPlus } from 'lucide-react';
+import { MonthlySupportPlan, MonthlySupportMember, Donor } from '@/types';
+import { Repeat, Users, TrendingUp, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, ListChecks, Trash, UserPlus, DollarSign } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Member {
@@ -66,6 +66,13 @@ export default function MonthlySupportPage() {
   const [newDonorEmail, setNewDonorEmail] = useState('');
   const [newDonorAddress, setNewDonorAddress] = useState('');
   const [creatingDonor, setCreatingDonor] = useState(false);
+
+  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+  const [paymentPlan, setPaymentPlan] = useState<MonthlySupportPlan | null>(null);
+  const [paymentEntryId, setPaymentEntryId] = useState('');
+  const [paymentAmountInput, setPaymentAmountInput] = useState('');
+  const [paymentMethodInput, setPaymentMethodInput] = useState('cash');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -287,6 +294,70 @@ export default function MonthlySupportPage() {
     router.push(`/church-admin/dashboard/monthly-support/dues?planId=${plan._id}`);
   };
 
+  const planMemberId = (m: MonthlySupportMember): string => {
+    if (m.memberId) return typeof m.memberId === 'string' ? m.memberId : m.memberId._id;
+    return typeof m.donorId === 'string' ? m.donorId! : m.donorId!._id;
+  };
+
+  const planMemberName = (m: MonthlySupportMember): string => {
+    if (m.memberId) {
+      if (typeof m.memberId === 'string') return 'Member';
+      return `${m.memberId.firstName} ${m.memberId.lastName || ''}`.trim();
+    }
+    if (m.donorId) {
+      return typeof m.donorId === 'string' ? 'Donor' : m.donorId.name;
+    }
+    return 'Unknown';
+  };
+
+  const planMemberIsDonor = (m: MonthlySupportMember): boolean => !!m.donorId;
+
+  const openAddPaymentModal = (plan: MonthlySupportPlan) => {
+    setPaymentPlan(plan);
+    setPaymentEntryId('');
+    setPaymentAmountInput('');
+    setPaymentMethodInput('cash');
+    setShowAddPaymentModal(true);
+  };
+
+  const handlePaymentEntryChange = (entryIdValue: string) => {
+    setPaymentEntryId(entryIdValue);
+    const entry = paymentPlan?.members.find((m) => planMemberId(m) === entryIdValue);
+    setPaymentAmountInput(String(entry?.amount ?? paymentPlan?.defaultAmount ?? ''));
+  };
+
+  const handleAddPayment = async () => {
+    if (!paymentPlan || !paymentEntryId) {
+      toast.error('Select a member/donor');
+      return;
+    }
+    const amount = parseFloat(paymentAmountInput);
+    if (!amount || amount <= 0) {
+      toast.error('Enter a valid amount');
+      return;
+    }
+    const entry = paymentPlan.members.find((m) => planMemberId(m) === paymentEntryId);
+    if (!entry) return;
+
+    setSubmittingPayment(true);
+    try {
+      await api.post(`/monthly-support-plans/${paymentPlan._id}/pay`, {
+        memberId: entry.memberId ? paymentEntryId : undefined,
+        donorId: entry.donorId ? paymentEntryId : undefined,
+        amount,
+        paymentMethod: paymentMethodInput,
+      });
+      toast.success('Payment recorded successfully');
+      setShowAddPaymentModal(false);
+      setPaymentPlan(null);
+    } catch (error: any) {
+      console.error('Error recording payment:', error);
+      toast.error(error.response?.data?.error || 'Failed to record payment');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
   };
@@ -459,6 +530,14 @@ export default function MonthlySupportPage() {
                             >
                               <ListChecks className="w-4 h-4" />
                               View Dues
+                            </button>
+                            <button
+                              onClick={() => openAddPaymentModal(plan)}
+                              disabled={plan.members.length === 0}
+                              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <DollarSign className="w-4 h-4" />
+                              Add Payment
                             </button>
                             <button
                               onClick={() => handleEdit(plan)}
@@ -860,6 +939,85 @@ export default function MonthlySupportPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Payment Modal */}
+      {showAddPaymentModal && paymentPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-1">Add Payment</h3>
+            <p className="text-sm text-gray-500 mb-4">{paymentPlan.name}</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Member / Donor *</label>
+                <select
+                  value={paymentEntryId}
+                  onChange={(e) => handlePaymentEntryChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                >
+                  <option value="">Choose...</option>
+                  {paymentPlan.members.map((m) => (
+                    <option key={planMemberId(m)} value={planMemberId(m)}>
+                      {planMemberName(m)}{planMemberIsDonor(m) ? ' (Outside Donor)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={paymentAmountInput}
+                  onChange={(e) => setPaymentAmountInput(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method *</label>
+                <select
+                  value={paymentMethodInput}
+                  onChange={(e) => setPaymentMethodInput(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="upi">UPI</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> This creates the current month&apos;s due for this member if it doesn&apos;t exist yet, records the payment against it, and syncs to EDV.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAddPaymentModal(false)}
+                  disabled={submittingPayment}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddPayment}
+                  disabled={submittingPayment}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingPayment ? 'Recording...' : 'Record Payment'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

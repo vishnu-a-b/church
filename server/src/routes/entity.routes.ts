@@ -120,6 +120,7 @@ import {
   deletePlan as deleteMonthlySupportPlan,
   getDuesForPlan as getMonthlySupportDuesForPlan,
   generateDuesNow as generateMonthlySupportDuesNow,
+  addPaymentForMember as addMonthlySupportPaymentForMember,
   getMyMonthlySupportDues,
 } from '../controllers/monthlySupportController';
 import {
@@ -854,6 +855,7 @@ router.route('/monthly-support-plans').get(getAllMonthlySupportPlans).post(creat
 router.route('/monthly-support-plans/:id').get(getMonthlySupportPlanById).put(updateMonthlySupportPlan).delete(deleteMonthlySupportPlan);
 router.get('/monthly-support-plans/:id/dues', getMonthlySupportDuesForPlan);
 router.post('/monthly-support-plans/:id/generate-dues', generateMonthlySupportDuesNow);
+router.post('/monthly-support-plans/:id/pay', addMonthlySupportPaymentForMember);
 router.get('/monthly-support-dues/mine', getMyMonthlySupportDues);
 
 // Donor Routes (outside supporters)
