@@ -330,18 +330,61 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
       return;
     }
 
-    // Ensure the current period's due exists (idempotent — safe to call even
-    // if it was already generated).
-    await generateDuesForPlan(plan, new Date());
-
     const now = new Date();
     const periodMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const dueForId = memberId || donorId;
     const contributorType: 'member' | 'donor' = memberId ? 'member' : 'donor';
 
-    const due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
+    // Ensure just this one member's current-period due exists — NOT the whole
+    // plan's (generateDuesForPlan would sequentially create/skip a due for
+    // every member, which times out on a plan the size of JGCC's 283).
+    let due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
     if (!due) {
-      res.status(404).json({ success: false, error: 'Could not find/create a due for this member — are they active?' });
+      let dueForName: string;
+      if (contributorType === 'member') {
+        const member = await Member.findById(dueForId);
+        if (!member || !member.isActive) {
+          res.status(404).json({ success: false, error: 'Member not found or inactive' });
+          return;
+        }
+        dueForName = `${member.firstName} ${member.lastName || ''}`.trim();
+      } else {
+        const donor = await Donor.findById(dueForId);
+        if (!donor || !donor.isActive) {
+          res.status(404).json({ success: false, error: 'Donor not found or inactive' });
+          return;
+        }
+        dueForName = donor.name;
+      }
+
+      const dueAmount = entry.amount ?? plan.defaultAmount;
+      const dueDate = new Date(now.getFullYear(), now.getMonth(), plan.dayOfMonth);
+
+      try {
+        due = await MonthlySupportDue.create({
+          churchId: plan.churchId,
+          planId: plan._id,
+          planName: plan.name,
+          periodMonth,
+          dueForId,
+          dueForModel: contributorType === 'member' ? 'Member' : 'Donor',
+          dueForName,
+          amount: dueAmount,
+          balance: dueAmount,
+          dueDate,
+        });
+      } catch (err: any) {
+        if (err?.code === 11000) {
+          // Created concurrently by another request (or the daily cron) — reuse it.
+          due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (!due) {
+      res.status(404).json({ success: false, error: 'Could not find/create a due for this member' });
       return;
     }
 
