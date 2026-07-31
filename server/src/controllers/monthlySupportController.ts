@@ -4,6 +4,7 @@ import MonthlySupportDue from '../models/MonthlySupportDue';
 import Member from '../models/Member';
 import Donor from '../models/Donor';
 import { AuthRequest } from '../types';
+import { generateDuesForPlan } from '../jobs/monthlySupportProcessor';
 
 // Validates a plan's members[] array: each entry must have exactly one of
 // memberId/donorId, and every referenced Member/Donor must belong to churchId.
@@ -70,6 +71,12 @@ export const createPlan = async (req: AuthRequest, res: Response, next: NextFunc
       ...req.body,
       createdBy: req.user?._id,
     });
+
+    // Generate the current period's dues immediately so there's something to
+    // collect against right away, rather than waiting on tomorrow's 7am cron.
+    if (plan.isActive) {
+      await generateDuesForPlan(plan, new Date());
+    }
 
     res.status(201).json({ success: true, data: plan });
   } catch (error) {
@@ -151,6 +158,13 @@ export const updatePlan = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     await plan.save();
+
+    // If members were added/changed, generate the current period's dues for
+    // them right away rather than waiting on tomorrow's 7am cron.
+    if ('members' in req.body && plan.isActive) {
+      await generateDuesForPlan(plan, new Date());
+    }
+
     res.json({ success: true, data: plan });
   } catch (error) {
     next(error);
@@ -207,6 +221,44 @@ export const getDuesForPlan = async (req: AuthRequest, res: Response, next: Next
         totalDueAmount: totalDue,
         totalPaidAmount: totalPaid,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Manually generate this period's dues for one plan — dues are otherwise only
+// created by a daily 7am cron, so a plan created (or edited) after that job
+// already ran today would have nothing to collect against until tomorrow.
+export const generateDuesNow = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
+      res.status(403).json({ success: false, error: 'Unit admins have read-only access' });
+      return;
+    }
+
+    const plan = await MonthlySupportPlan.findById(req.params.id);
+    if (!plan) {
+      res.status(404).json({ success: false, error: 'Plan not found' });
+      return;
+    }
+
+    if (req.user?.role === 'church_admin' && String(plan.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Church admins can only manage their own church plans' });
+      return;
+    }
+
+    if (!plan.isActive) {
+      res.status(400).json({ success: false, error: 'Plan is not active' });
+      return;
+    }
+
+    const result = await generateDuesForPlan(plan, new Date());
+
+    res.json({
+      success: true,
+      message: `Generated ${result.created} due(s)${result.skipped ? `, ${result.skipped} already existed` : ''}`,
+      data: result,
     });
   } catch (error) {
     next(error);

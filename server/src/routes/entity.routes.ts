@@ -119,6 +119,7 @@ import {
   updatePlan as updateMonthlySupportPlan,
   deletePlan as deleteMonthlySupportPlan,
   getDuesForPlan as getMonthlySupportDuesForPlan,
+  generateDuesNow as generateMonthlySupportDuesNow,
   getMyMonthlySupportDues,
 } from '../controllers/monthlySupportController';
 import {
@@ -852,6 +853,7 @@ router.get('/stothrakazhcha-dues/entity/:entityType/:entityId', getDuesForEntity
 router.route('/monthly-support-plans').get(getAllMonthlySupportPlans).post(createMonthlySupportPlan);
 router.route('/monthly-support-plans/:id').get(getMonthlySupportPlanById).put(updateMonthlySupportPlan).delete(deleteMonthlySupportPlan);
 router.get('/monthly-support-plans/:id/dues', getMonthlySupportDuesForPlan);
+router.post('/monthly-support-plans/:id/generate-dues', generateMonthlySupportDuesNow);
 router.get('/monthly-support-dues/mine', getMyMonthlySupportDues);
 
 // Donor Routes (outside supporters)

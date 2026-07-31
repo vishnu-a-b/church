@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
-import { ArrowLeft, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 export default function SuperAdminMonthlySupportDuesPage() {
@@ -23,6 +23,7 @@ export default function SuperAdminMonthlySupportDuesPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [generatingDues, setGeneratingDues] = useState(false);
 
   useEffect(() => {
     if (planId) {
@@ -45,6 +46,21 @@ export default function SuperAdminMonthlySupportDuesPage() {
       toast.error('Failed to load dues');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateDues = async () => {
+    if (!planId) return;
+    setGeneratingDues(true);
+    try {
+      const response = await api.post(`/monthly-support-plans/${planId}/generate-dues`);
+      toast.success(response.data?.message || 'Dues generated');
+      fetchData();
+    } catch (error: any) {
+      console.error('Error generating dues:', error);
+      toast.error(error.response?.data?.error || 'Failed to generate dues');
+    } finally {
+      setGeneratingDues(false);
     }
   };
 
@@ -108,16 +124,27 @@ export default function SuperAdminMonthlySupportDuesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <button
+            onClick={() => router.push('/super-admin/dashboard/monthly-support')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Monthly Support
+          </button>
+          <h2 className="text-2xl font-bold text-gray-800">{plan ? plan.name : 'Monthly Support Dues'}</h2>
+          {plan?.description && <p className="text-gray-600">{plan.description}</p>}
+        </div>
         <button
-          onClick={() => router.push('/super-admin/dashboard/monthly-support')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2 text-sm"
+          onClick={handleGenerateDues}
+          disabled={generatingDues}
+          title="Dues are otherwise only created by a daily 7am job — use this if a plan or its members changed today"
+          className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex-shrink-0"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Monthly Support
+          <RefreshCw className={`w-4 h-4 ${generatingDues ? 'animate-spin' : ''}`} />
+          {generatingDues ? 'Generating...' : 'Generate This Month\'s Dues'}
         </button>
-        <h2 className="text-2xl font-bold text-gray-800">{plan ? plan.name : 'Monthly Support Dues'}</h2>
-        {plan?.description && <p className="text-gray-600">{plan.description}</p>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
