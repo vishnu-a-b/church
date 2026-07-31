@@ -3253,7 +3253,7 @@ export const getAllDues = async (req: AuthRequest, res: Response, next: NextFunc
 // Pay a Due (Campaign or Stothrakazhcha)
 export const payDue = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { dueId, dueType, amount, paymentMethod } = req.body;
+    const { dueId, dueType, amount, paymentMethod, notes } = req.body;
 
     if (!dueId || !dueType || !amount || !paymentMethod) {
       res.status(400).json({
@@ -3313,7 +3313,7 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
       donorId: contributorType === "donor" ? due.dueForId : undefined,
       paymentMethod: paymentMethod,
       paymentDate: new Date(),
-      notes: `Due payment for ${due.dueForName}`,
+      notes: notes || `Due payment for ${due.dueForName}`,
       createdBy: req.user._id
     });
 
