@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
-import { FiTrash, FiUserCheck, FiShield } from 'react-icons/fi';
+import { FiTrash, FiUserCheck, FiShield, FiPlus, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
 
@@ -22,6 +22,15 @@ interface User {
   phone?: string;
 }
 
+const emptyAddUserForm = {
+  church: '',
+  memberId: '',
+  username: '',
+  password: '',
+  role: 'member',
+  isActive: true,
+};
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [churches, setChurches] = useState<any[]>([]);
@@ -30,6 +39,11 @@ export default function UsersPage() {
     church: '',
     role: '',
   });
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [addUserForm, setAddUserForm] = useState(emptyAddUserForm);
+  const [membersWithoutLogin, setMembersWithoutLogin] = useState<any[]>([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [submittingUser, setSubmittingUser] = useState(false);
   const api = createRoleApi('super_admin');
 
   useEffect(() => {
@@ -48,6 +62,7 @@ export default function UsersPage() {
       setUsers(usersOnly);
     } catch (error) {
       console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -59,6 +74,55 @@ export default function UsersPage() {
       setChurches(response.data.data || []);
     } catch (error) {
       console.error('Error:', error);
+    }
+  };
+
+  const fetchCandidateMembers = async (churchId: string) => {
+    setLoadingCandidates(true);
+    try {
+      const response = await api.get(`/members?churchId=${churchId}`);
+      const allMembers = response.data.data || [];
+      setMembersWithoutLogin(allMembers.filter((m: any) => !m.username));
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  const openAddUserModal = () => {
+    setAddUserForm(emptyAddUserForm);
+    setMembersWithoutLogin([]);
+    setShowAddUserModal(true);
+  };
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addUserForm.memberId) {
+      toast.error('Select a member to grant login access to');
+      return;
+    }
+    if (!addUserForm.username.trim() || !addUserForm.password.trim()) {
+      toast.error('Username and password are required');
+      return;
+    }
+
+    setSubmittingUser(true);
+    try {
+      await api.put(`/members/${addUserForm.memberId}`, {
+        username: addUserForm.username.trim(),
+        password: addUserForm.password,
+        role: addUserForm.role,
+        isActive: addUserForm.isActive,
+      });
+      toast.success('Login access granted!');
+      setShowAddUserModal(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error granting user access:', error);
+      toast.error(error.response?.data?.error || 'Failed to grant login access');
+    } finally {
+      setSubmittingUser(false);
     }
   };
 
@@ -213,6 +277,12 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold text-gray-800">User Access Management</h1>
           <p className="text-gray-600 text-sm">Manage members with login credentials and system roles</p>
         </div>
+        <button
+          onClick={openAddUserModal}
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+        >
+          <FiPlus /> Add User
+        </button>
       </div>
 
       {/* Stats */}
@@ -286,6 +356,121 @@ export default function UsersPage() {
         columns={columns}
         searchPlaceholder="Search users by username or name..."
       />
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">Add User</h2>
+              <button onClick={() => setShowAddUserModal(false)} className="text-gray-500 hover:text-gray-700">
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddUser} className="p-6 space-y-4">
+              <SearchableSelect
+                label="Church"
+                required
+                options={churches.map((church) => ({ value: church._id, label: church.name }))}
+                value={addUserForm.church}
+                onChange={(value) => {
+                  setAddUserForm({ ...addUserForm, church: value, memberId: '' });
+                  setMembersWithoutLogin([]);
+                  if (value) fetchCandidateMembers(value);
+                }}
+                placeholder="Search and select church..."
+              />
+
+              <SearchableSelect
+                label="Member"
+                required
+                options={membersWithoutLogin.map((m) => ({
+                  value: m._id,
+                  label: `${m.firstName} ${m.lastName || ''}`.trim(),
+                }))}
+                value={addUserForm.memberId}
+                onChange={(value) => setAddUserForm({ ...addUserForm, memberId: value })}
+                placeholder={
+                  !addUserForm.church
+                    ? 'Select a church first'
+                    : loadingCandidates
+                    ? 'Loading members...'
+                    : membersWithoutLogin.length
+                    ? 'Search and select member...'
+                    : 'No members without login found'
+                }
+                disabled={!addUserForm.church}
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                <input
+                  type="text"
+                  required
+                  value={addUserForm.username}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, username: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={addUserForm.password}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="min 6 characters"
+                />
+              </div>
+
+              <SearchableSelect
+                label="Role"
+                options={[
+                  { value: 'member', label: 'Member' },
+                  { value: 'kudumbakutayima_admin', label: 'Kudumbakutayima Admin' },
+                  { value: 'unit_admin', label: 'Unit Admin' },
+                  { value: 'church_admin', label: 'Church Admin' },
+                ]}
+                value={addUserForm.role}
+                onChange={(value) => setAddUserForm({ ...addUserForm, role: value })}
+                placeholder="Select role..."
+              />
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="addUserIsActive"
+                  checked={addUserForm.isActive}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, isActive: e.target.checked })}
+                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                />
+                <label htmlFor="addUserIsActive" className="ml-2 block text-sm text-gray-700">Active</label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingUser || !addUserForm.memberId}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingUser ? 'Granting...' : 'Grant Access'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

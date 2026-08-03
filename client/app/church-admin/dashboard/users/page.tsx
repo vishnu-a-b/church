@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
-import { FiTrash, FiUserCheck, FiShield } from 'react-icons/fi';
+import { FiTrash, FiUserCheck, FiShield, FiPlus, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
 
@@ -22,14 +22,26 @@ interface User {
   phone?: string;
 }
 
+const emptyAddUserForm = {
+  memberId: '',
+  username: '',
+  password: '',
+  role: 'member',
+  isActive: true,
+};
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [membersWithoutLogin, setMembersWithoutLogin] = useState<any[]>([]);
   const [churches, setChurches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     church: '',
     role: '',
   });
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [addUserForm, setAddUserForm] = useState(emptyAddUserForm);
+  const [submittingUser, setSubmittingUser] = useState(false);
   const api = createRoleApi('church_admin');
 
   useEffect(() => {
@@ -40,16 +52,51 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Fetch all members and filter only those with username (login access)
+      // Fetch all members and split by whether they already have login credentials
       const response = await api.get('/members');
       const allMembers = response.data.data || [];
-      // Filter to show only members with login credentials
-      const usersOnly = allMembers.filter((member: any) => member.username);
-      setUsers(usersOnly);
+      setUsers(allMembers.filter((member: any) => member.username));
+      setMembersWithoutLogin(allMembers.filter((member: any) => !member.username));
     } catch (error) {
       console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openAddUserModal = () => {
+    setAddUserForm(emptyAddUserForm);
+    setShowAddUserModal(true);
+  };
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addUserForm.memberId) {
+      toast.error('Select a member to grant login access to');
+      return;
+    }
+    if (!addUserForm.username.trim() || !addUserForm.password.trim()) {
+      toast.error('Username and password are required');
+      return;
+    }
+
+    setSubmittingUser(true);
+    try {
+      await api.put(`/members/${addUserForm.memberId}`, {
+        username: addUserForm.username.trim(),
+        password: addUserForm.password,
+        role: addUserForm.role,
+        isActive: addUserForm.isActive,
+      });
+      toast.success('Login access granted!');
+      setShowAddUserModal(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error granting user access:', error);
+      toast.error(error.response?.data?.error || 'Failed to grant login access');
+    } finally {
+      setSubmittingUser(false);
     }
   };
 
@@ -213,6 +260,12 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold text-gray-800">User Access Management</h1>
           <p className="text-gray-600 text-sm">Manage members with login credentials and system roles</p>
         </div>
+        <button
+          onClick={openAddUserModal}
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+        >
+          <FiPlus /> Add User
+        </button>
       </div>
 
       {/* Stats */}
@@ -286,6 +339,98 @@ export default function UsersPage() {
         columns={columns}
         searchPlaceholder="Search users by username or name..."
       />
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">Add User</h2>
+              <button onClick={() => setShowAddUserModal(false)} className="text-gray-500 hover:text-gray-700">
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddUser} className="p-6 space-y-4">
+              <SearchableSelect
+                label="Member"
+                required
+                options={membersWithoutLogin.map((m) => ({
+                  value: m._id,
+                  label: `${m.firstName} ${m.lastName || ''}`.trim(),
+                }))}
+                value={addUserForm.memberId}
+                onChange={(value) => setAddUserForm({ ...addUserForm, memberId: value })}
+                placeholder={membersWithoutLogin.length ? 'Search and select member...' : 'No members without login found'}
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                <input
+                  type="text"
+                  required
+                  value={addUserForm.username}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, username: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={addUserForm.password}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="min 6 characters"
+                />
+              </div>
+
+              <SearchableSelect
+                label="Role"
+                options={[
+                  { value: 'member', label: 'Member' },
+                  { value: 'kudumbakutayima_admin', label: 'Kudumbakutayima Admin' },
+                  { value: 'unit_admin', label: 'Unit Admin' },
+                ]}
+                value={addUserForm.role}
+                onChange={(value) => setAddUserForm({ ...addUserForm, role: value })}
+                placeholder="Select role..."
+              />
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="addUserIsActive"
+                  checked={addUserForm.isActive}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, isActive: e.target.checked })}
+                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                />
+                <label htmlFor="addUserIsActive" className="ml-2 block text-sm text-gray-700">Active</label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingUser || membersWithoutLogin.length === 0}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingUser ? 'Granting...' : 'Grant Access'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
