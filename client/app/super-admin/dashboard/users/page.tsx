@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
-import { FiEdit, FiTrash, FiUserCheck, FiShield } from 'react-icons/fi';
+import { FiTrash, FiUserCheck, FiShield } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
+import { toast } from 'react-toastify';
 
 interface User {
   _id: string;
@@ -71,9 +72,10 @@ export default function UsersPage() {
           role: 'member',
         });
         fetchUsers();
+        toast.success('Login access removed');
       } catch (error) {
         console.error('Error removing user access:', error);
-        alert('Failed to remove user access');
+        toast.error('Failed to remove user access');
       }
     }
   };
@@ -171,9 +173,6 @@ export default function UsersPage() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit User">
-            <FiEdit />
-          </button>
           <button
             onClick={() => handleDeleteUser(row.original._id)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"

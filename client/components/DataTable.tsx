@@ -11,16 +11,17 @@ import {
   ColumnDef,
   SortingState,
 } from '@tanstack/react-table';
-import { FiSearch, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
+import { FiSearch, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown, FiInbox } from 'react-icons/fi';
 
 interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
   searchable?: boolean;
   searchPlaceholder?: string;
+  emptyMessage?: string;
 }
 
-export function DataTable<T>({ data, columns, searchable = true, searchPlaceholder = 'Search...' }: DataTableProps<T>) {
+export function DataTable<T>({ data, columns, searchable = true, searchPlaceholder = 'Search...', emptyMessage = 'No records found' }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
@@ -68,32 +69,57 @@ export function DataTable<T>({ data, columns, searchable = true, searchPlacehold
           <thead className="bg-gray-50 border-b border-gray-200">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className="flex items-center gap-2">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() === 'asc' && <span>↑</span>}
-                      {header.column.getIsSorted() === 'desc' && <span>↓</span>}
-                    </div>
-                  </th>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const sortable = header.column.getCanSort();
+                  return (
+                    <th
+                      key={header.id}
+                      className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider select-none ${
+                        sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                      }`}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {sortable && (
+                          header.column.getIsSorted() === 'asc' ? (
+                            <FiChevronUp className="w-3.5 h-3.5 text-gray-700" />
+                          ) : header.column.getIsSorted() === 'desc' ? (
+                            <FiChevronDown className="w-3.5 h-3.5 text-gray-700" />
+                          ) : (
+                            <FiChevronDown className="w-3.5 h-3.5 text-gray-300" />
+                          )
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             ))}
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center gap-2 text-gray-400">
+                    <FiInbox className="w-8 h-8" />
+                    <p className="text-sm text-gray-500">
+                      {globalFilter ? `No results for "${globalFilter}"` : emptyMessage}
+                    </p>
+                  </div>
+                </td>
               </tr>
-            ))}
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -101,9 +127,15 @@ export function DataTable<T>({ data, columns, searchable = true, searchPlacehold
       {/* Pagination */}
       <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-sm text-gray-700">
-          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-          {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length)} of{' '}
-          {table.getFilteredRowModel().rows.length} results
+          {table.getFilteredRowModel().rows.length === 0 ? (
+            '0 results'
+          ) : (
+            <>
+              Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+              {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length)} of{' '}
+              {table.getFilteredRowModel().rows.length} results
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button

@@ -126,7 +126,7 @@ export default function UnitAdminLogin() {
                   Super Admin
                 </Link>
                 {' | '}
-                <Link href="/church-admin-login" className="text-blue-600 hover:text-blue-800 text-xs">
+                <Link href="/church-admin" className="text-blue-600 hover:text-blue-800 text-xs">
                   Church Admin
                 </Link>
               </div>

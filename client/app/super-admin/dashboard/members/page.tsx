@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
-import { FiEdit, FiTrash, FiUsers } from 'react-icons/fi';
+import { FiTrash, FiUsers } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
+import { toast } from 'react-toastify';
 
 interface Member {
   _id: string;
@@ -121,9 +122,10 @@ export default function SuperAdminMembersPage() {
       try {
         await api.delete(`/members/${id}`);
         fetchMembers();
+        toast.success('Member deleted successfully!');
       } catch (error) {
         console.error('Error deleting member:', error);
-        alert('Failed to delete member');
+        toast.error('Failed to delete member');
       }
     }
   };
@@ -224,8 +226,7 @@ export default function SuperAdminMembersPage() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><FiEdit /></button>
-          <button onClick={() => handleDeleteMember(row.original._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><FiTrash /></button>
+          <button onClick={() => handleDeleteMember(row.original._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete member"><FiTrash /></button>
         </div>
       ),
     },

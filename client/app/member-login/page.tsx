@@ -187,7 +187,7 @@ export default function MemberLogin() {
               <p className="text-xs text-gray-500 mb-2">Looking for a different portal?</p>
               <div className="flex justify-center gap-3 flex-wrap">
                 <Link
-                  href="/church-admin-login"
+                  href="/church-admin"
                   className="text-xs text-gray-600 hover:text-teal-600 transition-colors"
                 >
                   Church Admin

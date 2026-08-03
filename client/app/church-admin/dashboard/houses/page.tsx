@@ -6,6 +6,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { House, Bavanakutayima } from '@/types';
 import { Plus, Edit2, Trash2, Search, X, Building2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function HousesPage() {
   const { user, loading: authLoading } = useRoleAuth();
@@ -65,15 +66,17 @@ export default function HousesPage() {
     try {
       if (editingHouse) {
         await api.put(`/houses/${editingHouse._id}`, formData);
+        toast.success('House updated successfully!');
       } else {
         await api.post('/houses', formData);
+        toast.success('House added successfully!');
       }
       setShowModal(false);
       setEditingHouse(null);
       resetForm();
       fetchData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Operation failed');
+      toast.error(error.response?.data?.message || 'Operation failed');
     } finally {
       setSubmitting(false);
     }
@@ -103,8 +106,9 @@ export default function HousesPage() {
     try {
       await api.delete(`/houses/${id}`);
       fetchData();
+      toast.success('House deleted successfully!');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Delete failed');
+      toast.error(error.response?.data?.message || 'Delete failed');
     } finally {
       setDeletingId(null);
     }

@@ -6,6 +6,7 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
 import { createRoleApi } from '@/lib/roleApi';
 import { Activity } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface SpiritualActivity {
   _id: string;
@@ -76,11 +77,10 @@ export default function SpiritualActivitiesPage() {
     setLoading(true);
     try {
       const response = await api.get('/spiritual-activities');
-      console.log('🙏 SPIRITUAL ACTIVITIES API RESPONSE:', response.data);
-      console.log('🙏 SPIRITUAL ACTIVITIES DATA:', response.data.data);
       setActivities(response.data.data || []);
     } catch (error) {
       console.error('Error fetching activities:', error);
+      toast.error('Failed to load spiritual activities');
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,7 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
 import { FiEdit, FiTrash, FiUsers, FiPlus, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
+import { toast } from 'react-toastify';
 
 interface Member {
   _id: string;
@@ -251,13 +252,13 @@ export default function ChurchAdminMembersPage() {
     e.preventDefault();
 
     if (!formData.firstName || !formData.houseId) {
-      alert('Please fill in all required fields (First Name and House)');
+      toast.error('Please fill in all required fields (First Name and House)');
       return;
     }
 
     // If login credentials are provided, email is required
     if ((formData.username || formData.password) && !formData.email) {
-      alert('Email is required when adding login credentials (username/password)');
+      toast.error('Email is required when adding login credentials (username/password)');
       return;
     }
 
@@ -275,11 +276,11 @@ export default function ChurchAdminMembersPage() {
       if (editingId) {
         // Update existing member
         await api.put(`/members/${editingId}`, memberData);
-        alert('Member updated successfully!');
+        toast.success('Member updated successfully!');
       } else {
         // Create new member
         await api.post('/members', memberData);
-        alert('Member added successfully!');
+        toast.success('Member added successfully!');
       }
 
       setShowAddModal(false);
@@ -287,7 +288,7 @@ export default function ChurchAdminMembersPage() {
       fetchMembers();
     } catch (error: any) {
       console.error('Error saving member:', error);
-      alert(error.response?.data?.error || 'Failed to save member');
+      toast.error(error.response?.data?.error || 'Failed to save member');
     } finally {
       setFormLoading(false);
     }
@@ -299,10 +300,10 @@ export default function ChurchAdminMembersPage() {
       try {
         await api.delete(`/members/${id}`);
         fetchMembers();
-        alert('Member deleted successfully!');
+        toast.success('Member deleted successfully!');
       } catch (error) {
         console.error('Error deleting member:', error);
-        alert('Failed to delete member');
+        toast.error('Failed to delete member');
       } finally {
         setDeletingId(null);
       }

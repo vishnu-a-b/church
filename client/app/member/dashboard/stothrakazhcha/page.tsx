@@ -91,6 +91,7 @@ export default function MemberStothrakazhchaPage() {
       }
     } catch (error) {
       console.error('Error fetching dues:', error);
+      toast.error('Failed to load your dues');
     }
 
     setLoading(false);

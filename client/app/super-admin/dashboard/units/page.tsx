@@ -78,13 +78,13 @@ export default function UnitsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
 
     if (!selectedChurch) {
       toastService.error('Please select a church first');
       return;
     }
 
+    setSubmitting(true);
     const toastId = toastService.info(editingUnit ? 'Updating unit...' : 'Creating unit...');
 
     try {
@@ -119,9 +119,7 @@ export default function UnitsPage() {
           } catch (adminError: any) {
             console.error('Error creating admin:', adminError);
             toastService.modify(toastId, 'Unit created but failed to create admin: ' + (adminError.response?.data?.error || 'Unknown error'), { type: 'warning' });
-          } finally {
-      setSubmitting(false);
-    }
+          }
         } else {
           toastService.modify(toastId, 'Unit created successfully!', { type: 'success' });
         }
@@ -134,6 +132,8 @@ export default function UnitsPage() {
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Operation failed';
       toastService.modify(toastId, errorMsg, { type: 'error' });
+    } finally {
+      setSubmitting(false);
     }
   };
 

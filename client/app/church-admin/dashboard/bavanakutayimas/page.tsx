@@ -104,9 +104,7 @@ export default function BavanakutayimasPage() {
           } catch (adminError: any) {
             console.error('Error creating admin:', adminError);
             toastService.modify(toastId, 'Bavanakutayima created but failed to create admin: ' + (adminError.response?.data?.error || 'Unknown error'), { type: 'warning' });
-          } finally {
-      setSubmitting(false);
-    }
+          }
         } else {
           toastService.modify(toastId, 'Bavanakutayima created successfully!', { type: 'success' });
         }
@@ -119,6 +117,8 @@ export default function BavanakutayimasPage() {
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Operation failed';
       toastService.modify(toastId, errorMsg, { type: 'error' });
+    } finally {
+      setSubmitting(false);
     }
   };
 

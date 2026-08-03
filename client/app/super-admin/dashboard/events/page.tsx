@@ -23,6 +23,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     contentType: 'text' as 'text' | 'image' | 'video',
@@ -45,6 +46,7 @@ export default function EventsPage() {
       setEventsList(response.data?.data || []);
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Failed to load events');
     } finally {
       setLoading(false);
     }
@@ -52,6 +54,7 @@ export default function EventsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       if (editingId) {
         await api.put(`/events/${editingId}`, formData);
@@ -66,6 +69,8 @@ export default function EventsPage() {
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(error.response?.data?.error || 'Failed to save event');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -341,9 +346,10 @@ export default function EventsPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                    disabled={submitting}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {editingId ? 'Update' : 'Create'}
+                    {submitting ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update' : 'Create')}
                   </button>
                 </div>
               </form>

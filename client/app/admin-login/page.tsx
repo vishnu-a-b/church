@@ -124,7 +124,7 @@ export default function AdminLogin() {
             <p className="text-xs">Email: admin@church.org / Password: admin123</p>
             <div className="pt-3 border-t border-gray-200 mt-4 space-y-1">
               <div>
-                <Link href="/church-admin-login" className="text-blue-600 hover:text-blue-800 text-xs">
+                <Link href="/church-admin" className="text-blue-600 hover:text-blue-800 text-xs">
                   Church Admin
                 </Link>
                 {' | '}

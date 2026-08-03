@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRoleAuth } from '@/context/RoleAuthContext';
-import { Users, TrendingUp, Activity, DollarSign } from 'lucide-react';
+import { Users, TrendingUp, Activity, DollarSign, AlertCircle, UserCheck } from 'lucide-react';
 import { BsHouseDoor, BsPeople } from 'react-icons/bs';
 import { createRoleApi } from '@/lib/roleApi';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
 
 export default function UnitAdminDashboardPage() {
   const { user } = useRoleAuth();
@@ -56,6 +57,7 @@ export default function UnitAdminDashboardPage() {
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
+      toast.error('Some dashboard stats failed to load');
     } finally {
       setLoading(false);
     }
@@ -120,9 +122,16 @@ export default function UnitAdminDashboardPage() {
     },
   ];
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
-  }
+  const quickActions = [
+    { name: 'Members', href: '/unit-admin/dashboard/members', icon: Users, color: 'text-green-700 bg-green-50 hover:bg-green-100' },
+    { name: 'Bavanakutayimas', href: '/unit-admin/dashboard/bavanakutayimas', icon: BsPeople, color: 'text-indigo-700 bg-indigo-50 hover:bg-indigo-100' },
+    { name: 'Houses', href: '/unit-admin/dashboard/houses', icon: BsHouseDoor, color: 'text-purple-700 bg-purple-50 hover:bg-purple-100' },
+    { name: 'Transactions', href: '/unit-admin/dashboard/transactions', icon: TrendingUp, color: 'text-cyan-700 bg-cyan-50 hover:bg-cyan-100' },
+    { name: 'Dues', href: '/unit-admin/dashboard/dues', icon: AlertCircle, color: 'text-red-700 bg-red-50 hover:bg-red-100' },
+    { name: 'Campaigns', href: '/unit-admin/dashboard/campaigns', icon: Activity, color: 'text-orange-700 bg-orange-50 hover:bg-orange-100' },
+    { name: 'Users', href: '/unit-admin/dashboard/users', icon: UserCheck, color: 'text-teal-700 bg-teal-50 hover:bg-teal-100' },
+    { name: 'Spiritual Activities', href: '/unit-admin/dashboard/activities', icon: Activity, color: 'text-violet-700 bg-violet-50 hover:bg-violet-100' },
+  ];
 
   return (
     <div>
@@ -132,58 +141,44 @@ export default function UnitAdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {statCards.map((stat) => (
-          <Link
-            key={stat.name}
-            href={stat.link}
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.color} p-3 rounded-lg`}>
-                <stat.icon className="w-6 h-6 text-white" />
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+                <div className="w-12 h-12 rounded-lg bg-gray-200 mb-4" />
+                <div className="h-7 w-16 bg-gray-200 rounded mb-2" />
+                <div className="h-4 w-28 bg-gray-100 rounded" />
               </div>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-800 mb-1">{stat.value}</h3>
-            <p className="text-sm text-gray-600">{stat.name}</p>
-          </Link>
-        ))}
+            ))
+          : statCards.map((stat) => (
+              <Link
+                key={stat.name}
+                href={stat.link}
+                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`${stat.color} p-3 rounded-lg`}>
+                    <stat.icon className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-bold text-gray-800 mb-1">{stat.value}</h3>
+                <p className="text-sm text-gray-600">{stat.name}</p>
+              </Link>
+            ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
-          <div className="space-y-2">
-            <Link href="/unit-admin/dashboard/members" className="block px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors font-medium">
-              Manage Members
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {quickActions.map((action) => (
+            <Link
+              key={action.name}
+              href={action.href}
+              className={`flex flex-col items-center gap-2 px-3 py-4 rounded-lg transition-colors font-medium text-sm text-center ${action.color}`}
+            >
+              <action.icon className="w-5 h-5" />
+              {action.name}
             </Link>
-            <Link href="/unit-admin/dashboard/bavanakutayimas" className="block px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium">
-              Manage Bavanakutayimas
-            </Link>
-            <Link href="/unit-admin/dashboard/transactions" className="block px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors font-medium">
-              View Transactions
-            </Link>
-            <Link href="/unit-admin/dashboard/campaigns" className="block px-4 py-3 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors font-medium">
-              Manage Campaigns
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-blue-800 mb-2">✅ Unit Admin Dashboard</h3>
-          <p className="text-blue-700 text-sm mb-4">
-            You're logged in as <strong>Unit Admin</strong>. You can manage all aspects of your unit including bavanakutayimas, houses, members, and financial records.
-          </p>
-          <div className="bg-white rounded-lg p-4 text-xs text-gray-600">
-            <p className="font-semibold mb-2">Available Features:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Hierarchical management (Bavanakutayima → House → Member)</li>
-              <li>Member and user management</li>
-              <li>Financial transaction tracking</li>
-              <li>Campaign management</li>
-              <li>Spiritual activity tracking</li>
-              <li>Full CRUD operations for all entities</li>
-            </ul>
-          </div>
+          ))}
         </div>
       </div>
     </div>

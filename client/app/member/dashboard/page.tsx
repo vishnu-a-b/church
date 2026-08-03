@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DollarSign, Activity, Calendar, MapPin, Users, Home, Bell, CalendarDays, X, ChevronLeft, ChevronRight, Newspaper, Heart } from 'lucide-react';
+import { DollarSign, Activity, Calendar, MapPin, Users, Home, Bell, CalendarDays, X, ChevronLeft, ChevronRight, Newspaper, Heart, Repeat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
+import { toast } from 'react-toastify';
 
 interface NewsItem {
   _id: string;
@@ -80,6 +81,7 @@ export default function MemberDashboardPage() {
           }
         } catch (error) {
           console.error('Error fetching member details:', error);
+          toast.error('Failed to load your profile details');
         }
       }
       setLoading(false);
@@ -121,6 +123,7 @@ export default function MemberDashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
+      toast.error('Failed to load your contributions');
     }
   };
 
@@ -440,7 +443,7 @@ export default function MemberDashboardPage() {
           <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
           Quick Actions
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <button
             onClick={() => router.push('/member/dashboard/transactions')}
             className="group p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl hover:border-green-400 hover:shadow-lg transition-all duration-300 hover:scale-105 text-center"
@@ -450,6 +453,16 @@ export default function MemberDashboardPage() {
             </div>
             <p className="font-semibold text-gray-800 group-hover:text-green-700">Contributions</p>
             <p className="text-xs text-gray-500 mt-1">Track payments</p>
+          </button>
+          <button
+            onClick={() => router.push('/member/dashboard/monthly-support')}
+            className="group p-6 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl hover:border-amber-400 hover:shadow-lg transition-all duration-300 hover:scale-105 text-center"
+          >
+            <div className="bg-amber-500 bg-opacity-20 rounded-full p-3 w-fit mx-auto mb-3 group-hover:bg-opacity-30 transition-all">
+              <Repeat className="w-8 h-8 text-amber-600" />
+            </div>
+            <p className="font-semibold text-gray-800 group-hover:text-amber-700">Monthly Support</p>
+            <p className="text-xs text-gray-500 mt-1">Your pledge status</p>
           </button>
           <button
             onClick={() => router.push('/member/dashboard/news')}
