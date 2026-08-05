@@ -306,6 +306,9 @@ export interface IMonthlySupportPlan extends Document {
     memberId?: Types.ObjectId;
     donorId?: Types.ObjectId;
     amount?: number;
+    drawnAt?: Date;
+    drawId?: Types.ObjectId;
+    skippedPeriods?: string[];
   }>;
   startDate: Date;
   endDate?: Date;
@@ -329,6 +332,27 @@ export interface IMonthlySupportDue extends Document {
   paidAt?: Date;
   dueDate: Date;
   createdAt: Date;
+  notes?: string;
+}
+
+// A single "draw of lots" event for a liability-treatment Monthly Support
+// plan (e.g. hall booking deposits). 'complete' winners have their remaining
+// installments waived from the following month onward (deposit treated as
+// complete); 'skip_next' winners only skip skipPeriodMonth, then resume.
+export interface IMonthlySupportDraw extends Document {
+  churchId: Types.ObjectId;
+  planId: Types.ObjectId;
+  planName: string;
+  drawnAt: Date;
+  drawType: 'complete' | 'skip_next';
+  skipPeriodMonth?: string; // "YYYY-MM", set only when drawType is 'skip_next'
+  poolSize: number;
+  winners: Array<{
+    dueForId: Types.ObjectId;
+    dueForModel: 'Member' | 'Donor';
+    dueForName: string;
+  }>;
+  conductedBy?: Types.ObjectId;
   notes?: string;
 }
 

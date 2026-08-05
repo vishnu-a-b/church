@@ -50,6 +50,24 @@ const monthlySupportPlanSchema = new Schema<IMonthlySupportPlan>(
         type: Number,
         min: 0,
       },
+      // Set when this contributor wins a "complete deposit" draw of lots
+      // (liability plans only, e.g. hall booking deposits). Once set, no
+      // further dues are generated for them from the following month onward —
+      // their deposit is treated as complete.
+      drawnAt: {
+        type: Date,
+      },
+      drawId: {
+        type: Schema.Types.ObjectId,
+        ref: 'MonthlySupportDraw',
+      },
+      // Periods ("YYYY-MM") waived one-off by winning a "skip next payment"
+      // draw — unlike drawnAt, this doesn't end their participation; they
+      // resume normal billing the period after, and can win again later.
+      skippedPeriods: {
+        type: [String],
+        default: [],
+      },
     }],
     startDate: {
       type: Date,

@@ -1,12 +1,13 @@
 import { Response, NextFunction } from 'express';
 import MonthlySupportPlan from '../models/MonthlySupportPlan';
 import MonthlySupportDue from '../models/MonthlySupportDue';
+import MonthlySupportDraw from '../models/MonthlySupportDraw';
 import Member from '../models/Member';
 import Donor from '../models/Donor';
 import Transaction from '../models/Transaction';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../types';
-import { generateDuesForPlan } from '../jobs/monthlySupportProcessor';
+import { generateDuesForPlan, isPeriodSkippedForEntry, nextPeriodMonth } from '../jobs/monthlySupportProcessor';
 import { sendTransactionNotification, TransactionDetails } from '../services/emailService';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
@@ -278,12 +279,16 @@ async function ensureDueForPeriod(
   plan: InstanceType<typeof MonthlySupportPlan>,
   dueForId: any,
   contributorType: 'member' | 'donor',
-  entry: { amount?: number },
+  entry: { amount?: number; drawnAt?: Date; skippedPeriods?: string[] },
   periodMonth: string,
   periodDate: Date
 ): Promise<{ due: InstanceType<typeof MonthlySupportDue> | null; error?: string }> {
   let due = await MonthlySupportDue.findOne({ planId: plan._id, dueForId, periodMonth });
   if (due) return { due };
+
+  if (isPeriodSkippedForEntry(entry, periodMonth)) {
+    return { due: null, error: 'This contributor has this installment waived by a lots draw' };
+  }
 
   let dueForName: string;
   if (contributorType === 'member') {
@@ -488,6 +493,148 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
       message: `${paidCount} month(s) paid${skippedCount ? `, ${skippedCount} already paid` : ''}${errorResult ? `, stopped at ${errorResult.periodMonth}: ${errorResult.reason}` : ''}`,
       data: { results },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Record a "draw of lots" for a liability-treatment plan (e.g. hall booking
+// deposits). The actual draw happens manually/in person (names pulled from a
+// box at a church event) — this just records who won. Two kinds:
+//  - 'complete': the winner's deposit is treated as complete — all
+//    installments from the following month onward are waived permanently.
+//  - 'skip_next': the winner only skips their next installment, then resumes
+//    normal billing — they remain eligible for future draws.
+// Only meaningful for liability plans — income/pledge plans have nothing to
+// "complete" or "skip".
+export const conductDraw = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role === 'unit_admin' || req.user?.role === 'kudumbakutayima_admin') {
+      res.status(403).json({ success: false, error: 'Unit admins have read-only access' });
+      return;
+    }
+
+    const plan = await MonthlySupportPlan.findById(req.params.id);
+    if (!plan) {
+      res.status(404).json({ success: false, error: 'Plan not found' });
+      return;
+    }
+
+    if (req.user?.role === 'church_admin' && String(plan.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Church admins can only manage their own church plans' });
+      return;
+    }
+
+    if (!plan.isActive) {
+      res.status(400).json({ success: false, error: 'Plan is not active' });
+      return;
+    }
+
+    if (plan.treatment !== 'liability') {
+      res.status(400).json({ success: false, error: 'Draw of lots is only available for liability-treatment (deposit) plans' });
+      return;
+    }
+
+    const drawType: 'complete' | 'skip_next' = req.body.drawType === 'skip_next' ? 'skip_next' : 'complete';
+
+    const winnerIds: string[] = Array.isArray(req.body.winnerIds)
+      ? Array.from(new Set(req.body.winnerIds.map(String)))
+      : [];
+    if (winnerIds.length === 0) {
+      res.status(400).json({ success: false, error: 'Select at least one winner to record' });
+      return;
+    }
+
+    // Undrawn ("complete") pool size *before* this recording, kept as historical context.
+    const poolSize = plan.members.filter((m) => !m.drawnAt && (m.memberId || m.donorId)).length;
+
+    const winnerEntries: typeof plan.members = [] as any;
+    for (const id of winnerIds) {
+      const entry = plan.members.find((m) => String(m.memberId || m.donorId) === id);
+      if (!entry) {
+        res.status(400).json({ success: false, error: `Contributor ${id} is not part of this plan` });
+        return;
+      }
+      if (entry.drawnAt) {
+        res.status(400).json({ success: false, error: 'One or more selected contributors have already completed their deposit and have nothing left to draw for' });
+        return;
+      }
+      winnerEntries.push(entry);
+    }
+
+    const now = new Date();
+    const skipPeriodMonth = drawType === 'skip_next' ? nextPeriodMonth(now) : undefined;
+    const winners: Array<{ dueForId: any; dueForModel: 'Member' | 'Donor'; dueForName: string }> = [];
+
+    for (const entry of winnerEntries) {
+      let dueForName: string;
+      if (entry.memberId) {
+        const member = await Member.findById(entry.memberId);
+        dueForName = member ? `${member.firstName} ${member.lastName || ''}`.trim() : 'Unknown Member';
+      } else {
+        const donor = await Donor.findById(entry.donorId);
+        dueForName = donor ? donor.name : 'Unknown Donor';
+      }
+
+      winners.push({
+        dueForId: entry.memberId || entry.donorId,
+        dueForModel: entry.memberId ? 'Member' : 'Donor',
+        dueForName,
+      });
+
+      if (drawType === 'complete') {
+        entry.drawnAt = now;
+      } else if (skipPeriodMonth && !entry.skippedPeriods?.includes(skipPeriodMonth)) {
+        entry.skippedPeriods = [...(entry.skippedPeriods || []), skipPeriodMonth];
+      }
+    }
+
+    const draw = await MonthlySupportDraw.create({
+      churchId: plan.churchId,
+      planId: plan._id,
+      planName: plan.name,
+      drawnAt: now,
+      drawType,
+      skipPeriodMonth,
+      poolSize,
+      winners,
+      conductedBy: req.user?._id,
+      notes: typeof req.body.notes === 'string' ? req.body.notes.trim() || undefined : undefined,
+    });
+
+    if (drawType === 'complete') {
+      for (const entry of winnerEntries) {
+        entry.drawId = draw._id as any;
+      }
+    }
+
+    await plan.save();
+
+    res.status(201).json({ success: true, data: draw });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Admin: draw history for a plan
+export const getDrawsForPlan = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const plan = await MonthlySupportPlan.findById(req.params.id);
+    if (!plan) {
+      res.status(404).json({ success: false, error: 'Plan not found' });
+      return;
+    }
+
+    if (req.user?.role === 'church_admin' && String(plan.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Church admins can only view their own church plans' });
+      return;
+    }
+
+    const draws = await MonthlySupportDraw.find({ planId: req.params.id })
+      .populate('conductedBy', 'name email')
+      .sort({ drawnAt: -1 });
+
+    res.json({ success: true, data: draws });
   } catch (error) {
     next(error);
   }

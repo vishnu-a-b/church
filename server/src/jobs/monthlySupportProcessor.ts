@@ -8,6 +8,27 @@ const currentPeriodMonth = (now: Date): string => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 };
 
+const nextPeriodMonth = (now: Date): string => {
+  return currentPeriodMonth(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+};
+
+/**
+ * Whether a plan member's due for `periodMonth` should be skipped —
+ * either because they won a "complete deposit" draw (waived permanently
+ * from the month *after* the draw, draw month and earlier arrears still
+ * stand), or because `periodMonth` is one they won a "skip next payment"
+ * draw for (a one-off waiver — they resume billing after). String
+ * comparison works since periodMonth is "YYYY-MM".
+ */
+const isPeriodSkippedForEntry = (
+  entry: { drawnAt?: Date; skippedPeriods?: string[] },
+  periodMonth: string
+): boolean => {
+  if (entry.drawnAt && periodMonth > currentPeriodMonth(entry.drawnAt)) return true;
+  if (entry.skippedPeriods?.includes(periodMonth)) return true;
+  return false;
+};
+
 /**
  * Generates this period's MonthlySupportDue records for one plan's active
  * members/donors. Safe to run repeatedly — the {planId, dueForId, periodMonth}
@@ -29,6 +50,8 @@ const generateDuesForPlan = async (plan: InstanceType<typeof MonthlySupportPlan>
   let skipped = 0;
 
   for (const entry of plan.members) {
+    if (isPeriodSkippedForEntry(entry, periodMonth)) continue;
+
     const amount = entry.amount ?? plan.defaultAmount;
     const dueDate = new Date(now.getFullYear(), now.getMonth(), plan.dayOfMonth);
 
@@ -124,4 +147,4 @@ export const scheduleMonthlySupportProcessing = () => {
 };
 
 // Exported for manual/administrative triggering and tests
-export { generateMonthlySupportDues, generateDuesForPlan };
+export { generateMonthlySupportDues, generateDuesForPlan, isPeriodSkippedForEntry, currentPeriodMonth, nextPeriodMonth };

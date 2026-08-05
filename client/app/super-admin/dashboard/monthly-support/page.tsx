@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { MonthlySupportPlan } from '@/types';
-import { Repeat, Users, TrendingUp, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, ListChecks, DollarSign } from 'lucide-react';
+import { Repeat, Users, TrendingUp, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, ListChecks, DollarSign, Trophy } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Church {
@@ -288,6 +288,15 @@ export default function SuperAdminMonthlySupportPage() {
                               <Edit className="w-4 h-4" />
                               Edit
                             </button>
+                            {plan.treatment === 'liability' && (
+                              <button
+                                onClick={() => router.push(`/super-admin/dashboard/monthly-support/draw?planId=${plan._id}`)}
+                                className="flex items-center gap-2 bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+                              >
+                                <Trophy className="w-4 h-4" />
+                                Draw of Lots
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDelete(plan._id)}
                               disabled={deletingId === plan._id}

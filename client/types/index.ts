@@ -232,6 +232,9 @@ export interface MonthlySupportMember {
   memberId?: string | { _id: string; firstName: string; lastName: string; email?: string };
   donorId?: string | { _id: string; name: string; phone?: string; email?: string };
   amount?: number;
+  drawnAt?: Date;
+  drawId?: string;
+  skippedPeriods?: string[];
 }
 
 export interface MonthlySupportPlan {
@@ -269,6 +272,25 @@ export interface MonthlySupportDue {
   dueDate: Date;
   createdAt: Date;
   notes?: string;
+}
+
+export interface MonthlySupportDraw {
+  _id: string;
+  churchId: string;
+  planId: string;
+  planName: string;
+  drawnAt: Date;
+  drawType: 'complete' | 'skip_next';
+  skipPeriodMonth?: string;
+  poolSize: number;
+  winners: Array<{
+    dueForId: string;
+    dueForModel: 'Member' | 'Donor';
+    dueForName: string;
+  }>;
+  conductedBy?: string | { _id: string; name?: string; email?: string };
+  notes?: string;
+  createdAt: Date;
 }
 
 // Spiritual Activity Types
