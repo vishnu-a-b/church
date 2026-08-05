@@ -4,11 +4,13 @@ import * as SecureStore from 'expo-secure-store';
 // Storage keys are role-scoped so a Member and Donor session can coexist on the
 // same device (matches the web client's per-role localStorage key convention).
 
+export type AppRole = 'member' | 'donor' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin';
+
 export interface UserData {
   id: string;
   username: string;
   email?: string;
-  role: 'member' | 'donor';
+  role: AppRole;
   firstName?: string;
   lastName?: string;
   churchId?: string;

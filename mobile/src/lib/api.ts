@@ -5,6 +5,7 @@ import {
   setAccessToken,
   clearAuthData,
   isValidTokenFormat,
+  AppRole,
 } from './authStorage';
 
 // Point this at the same backend the web client's NEXT_PUBLIC_API_URL points to.
@@ -34,7 +35,7 @@ export const registerForcedLogoutHandler = (role: string, handler: () => void) =
   onForcedLogout[role] = handler;
 };
 
-export function createRoleApi(role: 'member' | 'donor'): AxiosInstance {
+export function createRoleApi(role: AppRole): AxiosInstance {
   const api = axios.create({ baseURL: API_URL, headers: { 'Content-Type': 'application/json' }, timeout: 30000 });
 
   api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
