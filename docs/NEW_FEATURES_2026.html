@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New Feature Requests — Church App</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+    color: #1c1c1e;
+    font-size: 10.7pt;
+    line-height: 1.5;
+    margin: 0;
+  }
+  header {
+    border-bottom: 2.5pt solid #5b3a29;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+  header h1 {
+    font-size: 18pt;
+    margin: 0 0 4px 0;
+    color: #5b3a29;
+    letter-spacing: 0.2px;
+  }
+  header .meta {
+    font-size: 9pt;
+    color: #6b6b6b;
+  }
+  h2 {
+    font-size: 12pt;
+    color: #5b3a29;
+    margin: 16px 0 6px 0;
+    padding-bottom: 3px;
+    border-bottom: 0.75pt solid #d8cfc4;
+  }
+  h2 .num {
+    display: inline-block;
+    background: #5b3a29;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 18px;
+    font-size: 9pt;
+    margin-right: 7px;
+  }
+  p { margin: 4px 0 8px 0; }
+  ul { margin: 4px 0 8px 0; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  .overview {
+    background: #faf6f0;
+    border-left: 3pt solid #5b3a29;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-size: 10.3pt;
+  }
+  .tbd {
+    display: inline-block;
+    background: #fff1e0;
+    color: #8a4b00;
+    border: 0.75pt solid #e3b57a;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 1px 6px;
+    margin-left: 5px;
+    letter-spacing: 0.3px;
+  }
+  .section-note {
+    font-size: 9pt;
+    color: #6b6b6b;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6px 0 10px 0;
+    font-size: 9.7pt;
+  }
+  table.rate-table { font-size: 9pt; }
+  th, td {
+    text-align: left;
+    padding: 5px 8px;
+    border: 0.75pt solid #d8cfc4;
+  }
+  table.rate-table th, table.rate-table td {
+    padding: 3.5px 7px;
+  }
+  th {
+    background: #faf6f0;
+    color: #5b3a29;
+    font-weight: 600;
+  }
+  thead { display: table-header-group; }
+  tr.cat td {
+    background: #efe6da;
+    color: #5b3a29;
+    font-weight: 700;
+    font-size: 9.3pt;
+  }
+  td.amt { text-align: right; white-space: nowrap; }
+  .rate-table th.amt { text-align: right; }
+  .next-steps {
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 1pt solid #d8cfc4;
+    font-size: 9.7pt;
+    color: #3a3a3a;
+  }
+  footer {
+    margin-top: 14px;
+    font-size: 8pt;
+    color: #999;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>New Feature Requests — Church Management App</h1>
+  <div class="meta">Prepared for church management review &nbsp;•&nbsp; 4 August 2026</div>
+</header>
+
+<div class="overview">
+  This document summarizes new feature requests gathered from church management for the parish management app,
+  intended for engineering scoping. Items marked <span class="tbd">TBD</span> need confirmation from church
+  management before detailed implementation planning can begin.
+</div>
+
+<h2><span class="num">1</span>Mobile App for All User Levels</h2>
+<p>All existing user roles need mobile access to the app, in addition to the current web access:</p>
+<ul>
+  <li>Church Admin, Unit Admin, Kudumbakutayima (household group) Admin, Member, and Donor.</li>
+  <li>Each role will continue to see only its own sub-level data — a church admin sees their church, a
+    kudumbakutayima admin sees only their group's houses/members, a member sees only their own record — the same
+    scoping already in place on the web app today.</li>
+</ul>
+
+<h2><span class="num">2</span>Approval Flow for Sthothrakazhcha &amp; Spiritual Activities</h2>
+<p>A new two-step validation flow for weekly Sthothrakazhcha offerings and spiritual activity records:</p>
+<ul>
+  <li><strong>Step 1 — Mark:</strong> the Kudumbakutayima Admin marks/logs the entry for their group.</li>
+  <li><strong>Step 2 — Approve:</strong> church management reviews and approves the entry.</li>
+  <li>An entry only becomes valid (counted) once approved — marking alone is not sufficient.</li>
+</ul>
+<p class="section-note">Note: today the Kudumbakutayima Admin role is read-only; this request introduces a new,
+  scoped ability for that role to mark these two entry types as pending approval.</p>
+
+<h2><span class="num">3</span>New Offering / Contribution Types</h2>
+<p>In addition to the existing Campaign feature, new contribution categories are requested:</p>
+<table>
+  <tr><th>Type</th><th>Notes</th></tr>
+  <tr><td>Pathavarm</td><td>Tithe — a standalone contribution type, not part of the rate list below</td></tr>
+  <tr><td>Kurubana, Opice, Vencheripp</td><td>Not separate types on their own — each is a category inside the
+    broader <strong>Thirukkarmangal</strong> (Sacred Rites) master rate list. See Section 4 for the full list.</td></tr>
+</table>
+<p class="section-note">To confirm <span class="tbd">TBD</span> for Pathavarm: whether it is compulsory or
+  optional, whether the amount is per-house or per-member, and whether it is one-time or recurring.</p>
+
+<h2><span class="num">4</span>Thirukkarmangal — Master Rate List</h2>
+<p>The full fee schedule for sacred rites (തിരുക്കർമ്മ ധർമ്മവിവരം), across five categories. Kurubana
+  = category I, Vencheripp = category III, Opice = category IV (ഒപ്പീസ് = Office/prayers for the deceased).</p>
+<table class="rate-table">
+  <tr><th>Rite (തിരുക്കർമ്മം)</th><th class="amt">Amount (₹)</th></tr>
+  <tr class="cat"><td colspan="2">I. കുർബ്ബാനകൾ — Holy Masses (Kurubana)</td></tr>
+  <tr><td>1. സാധാരണ കുർബ്ബാന — Ordinary Mass</td><td class="amt">150.00</td></tr>
+  <tr><td>2. ആഘോഷമായ കുർബ്ബാന — Solemn/Festive Mass</td><td class="amt">300.00</td></tr>
+  <tr><td>3. ആ. കുർബ്ബാന (സമയവ്യത്യാസമനുസരിച്ച്) — Solemn Mass, off-hours</td><td class="amt">700.00</td></tr>
+  <tr><td>4. ആ. കുർബ്ബാന (സഹകാർമ്മികരോട് കൂടി) — Solemn Mass, with concelebrants</td><td class="amt">1,500.00</td></tr>
+  <tr><td>5. റാസ — Raza (Solemn High Mass)</td><td class="amt">2,500.00</td></tr>
+  <tr><td>6. ഗ്രിഗോറിയൻ കുർബ്ബാന — Gregorian Mass</td><td class="amt">9,000.00</td></tr>
+
+  <tr class="cat"><td colspan="2">II. തിരുനാൾ കർമ്മങ്ങൾ — Feast Day Rites</td></tr>
+  <tr><td>1. കൊടിയേറ്റം — Flag Hoisting</td><td class="amt">300.00</td></tr>
+  <tr><td>2. ലദീഞ്ഞ് (പള്ളി / പള്ളിമുറ്റത്തെ കപ്പേള) — Litany, church/churchyard chapel</td><td class="amt">150.00</td></tr>
+  <tr><td>3. ലദീഞ്ഞ് (പള്ളിമുറ്റത്തിന് പുറത്തുള്ള കപ്പേള) — Litany, chapel outside premises</td><td class="amt">300.00</td></tr>
+  <tr><td>4. തിരുനാൾ പ്രസംഗം — Feast Day Sermon</td><td class="amt">500.00</td></tr>
+  <tr><td>5. പ്രദക്ഷിണം (അരമണിക്കൂർ) — Procession (half hour)</td><td class="amt">250.00</td></tr>
+  <tr><td>6. നൊവേന — Novena</td><td class="amt">80.00</td></tr>
+
+  <tr class="cat"><td colspan="2">III. വെഞ്ചിരിപ്പുകൾ — Blessings (Vencheripp)</td></tr>
+  <tr><td>1. വീട് വെഞ്ചിരിപ്പ് — House Blessing</td><td class="amt">200.00</td></tr>
+  <tr><td>2. വ്യവസായശാല + കട — Factory/Business + Shop</td><td class="amt">250.00</td></tr>
+  <tr><td>3. മോട്ടോർ വാഹനങ്ങൾ (Two &amp; Three Wheelers)</td><td class="amt">100.00</td></tr>
+  <tr><td>4. മോട്ടോർവാഹനങ്ങൾ (Four Wheelers)</td><td class="amt">250.00</td></tr>
+
+  <tr class="cat"><td colspan="2">IV. പരേതർക്കുവേണ്ടിയുള്ള തിരുക്കർമ്മങ്ങൾ — Rites for the Deceased</td></tr>
+  <tr><td>1. വലിയ ഒപ്പീസ് (പള്ളിയിൽ / സിമിത്തേരിയിൽ) — Great Office, church/cemetery</td><td class="amt">350.00</td></tr>
+  <tr><td>2. ചെറിയ ഒപ്പീസ് (പള്ളിയിൽ / സിമിത്തേരിയിൽ) — Small Office, church/cemetery</td><td class="amt">50.00</td></tr>
+  <tr><td>3. അന്നീദ — Anniversary Memorial</td><td class="amt">10.00</td></tr>
+  <tr><td>4. വീട്ടന്നീദ — Home Memorial</td><td class="amt">250.00</td></tr>
+
+  <tr class="cat"><td colspan="2">V. മറ്റ് തിരുക്കർമ്മങ്ങൾ — Other Sacred Rites</td></tr>
+  <tr><td>1. സ്തോത്രഗീതം — Thanksgiving Hymn</td><td class="amt">150.00</td></tr>
+  <tr><td>2. തിരി സമ്മാനിക്കൽ — Candle Presentation</td><td class="amt">150.00</td></tr>
+  <tr><td>3. സമർപ്പണം (അടിമയിരുത്തൽ) — Dedication</td><td class="amt">50.00</td></tr>
+</table>
+
+<h2><span class="num">5</span>Rate &amp; Split Configuration</h2>
+<p>Every rite above should be built as: <strong>rite → total amount → recipient split</strong>, so the amount
+  collected is automatically divided among the people/groups who performed it — not hard-coded per rite. The only
+  split confirmed so far is for <strong>ആഘോഷമായ കുർബ്ബാന</strong> (Solemn Mass, ₹300):</p>
+<table>
+  <tr><th>Recipient</th><th>Share</th><th class="amt">Amount (₹)</th></tr>
+  <tr><td>കാർമ്മികൻ (Celebrant)</td><td>55%</td><td class="amt">165.00</td></tr>
+  <tr><td>ദൈവാലയ ശുശ്രൂഷി (Church Minister)</td><td>15%</td><td class="amt">45.00</td></tr>
+  <tr><td>ഗായകസംഘം (Choir)</td><td>10%</td><td class="amt">30.00</td></tr>
+  <tr><td>അൾത്താരസംഘം (Altar Servers)</td><td>10%</td><td class="amt">30.00</td></tr>
+  <tr><td>പള്ളി (Church)</td><td>10%</td><td class="amt">30.00</td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>100%</strong></td><td class="amt"><strong>300.00</strong></td></tr>
+</table>
+<p class="section-note">To confirm <span class="tbd">TBD</span>: the recipient split for each of the remaining
+  22 rites above (e.g. റാസ and ഗ്രിഗോറിയൻ കുർബ്ബാന likely involve additional concelebrants; blessings and
+  memorial rites may have a simpler split) — needed from church management before engineering builds the master.</p>
+
+<h2><span class="num">6</span>Hall Booking — Draw of Lots</h2>
+<p>For the hall booking deposit scheme, add a periodic <strong>draw of lots</strong> among contributors:</p>
+<ul>
+  <li>When a contributor's name is drawn, they no longer need to pay the remaining monthly installments starting
+    from the following month.</li>
+  <li>Their deposit is treated as complete from the point of the draw onward.</li>
+</ul>
+<p class="section-note">To confirm <span class="tbd">TBD</span>: how often draws happen, whether only
+  up-to-date payers are eligible, and whether a contributor can be drawn more than once.</p>
+
+<div class="next-steps">
+  <strong>Next Steps:</strong> Pathavarm's rules, and the recipient split for each of the 22 unconfirmed
+  Thirukkarmangal rites (items marked <span class="tbd">TBD</span> above), need to be confirmed with church
+  management before engineering scopes these into a detailed implementation plan.
+</div>
+
+<footer>Church App — Feature Requirements Summary</footer>
+
+</body>
+</html>
