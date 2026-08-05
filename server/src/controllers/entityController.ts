@@ -15,11 +15,13 @@ import News from '../models/News';
 import Event from '../models/Event';
 import Wallet from '../models/Wallet';
 import MonthlySupportDue from '../models/MonthlySupportDue';
+import ThirukkarmangalRite from '../models/ThirukkarmangalRite';
 import { AuthRequest } from '../types';
 import { generateVerificationToken } from './emailVerificationController';
 import { sendWelcomeEmail, sendTransactionNotification, MemberHierarchyInfo, TransactionDetails } from '../services/emailService';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
+import { computeSplitAmounts } from '../services/thirukkarmangalSplitService';
 
 // Unit Controllers
 export const getAllUnits = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -1344,6 +1346,17 @@ export const createTransaction = async (req: AuthRequest, res: Response, next: N
       }
     }
 
+    // Thirukkarmangal payments snapshot the rite's split breakdown at creation time,
+    // so historical payments keep their split even if the rite's config changes later.
+    if (req.body.transactionType === 'thirukkarmangal' && req.body.riteId) {
+      const rite = await ThirukkarmangalRite.findById(req.body.riteId);
+      if (!rite) {
+        res.status(400).json({ success: false, error: 'Rite not found' });
+        return;
+      }
+      req.body.splitBreakdown = computeSplitAmounts(rite, req.body.totalAmount);
+    }
+
     const transaction = await Transaction.create(req.body);
 
     // If this transaction is for a variable contribution campaign, track the contributor
@@ -2394,6 +2407,14 @@ export const getAllSpiritualActivities = async (req: AuthRequest, res: Response,
       const members = await Member.find({ bavanakutayimaId: req.user.bavanakutayimaId }).select('_id');
       const memberIds = members.map(m => m._id);
       filter.memberId = { $in: memberIds };
+    }
+
+    // An entry only "counts" once approved (docs/NEW_FEATURES_2026.html, item 2), so this
+    // general listing only returns approved entries by default. The kudumbakutayima_admin
+    // "my marked activities" screen and the church_admin approval queue pass
+    // includeAllStatuses=true to see pending/rejected entries too.
+    if (req.query.includeAllStatuses !== 'true') {
+      filter.approvalStatus = 'approved';
     }
 
     const activities = await SpiritualActivity.find(filter)

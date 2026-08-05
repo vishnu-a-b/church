@@ -11,7 +11,7 @@ const transactionSchema = new Schema<ITransaction>(
     },
     transactionType: {
       type: String,
-      enum: ['lelam', 'thirunnaal_panam', 'dashamansham', 'spl_contribution', 'stothrakazhcha', 'monthly_support'],
+      enum: ['lelam', 'thirunnaal_panam', 'dashamansham', 'spl_contribution', 'stothrakazhcha', 'monthly_support', 'thirukkarmangal', 'pathavarm'],
       required: [true, 'Transaction type is required'],
     },
     contributionMode: {
@@ -110,6 +110,22 @@ const transactionSchema = new Schema<ITransaction>(
     },
     edvSyncedAt: {
       type: Date,
+    },
+    // Thirukkarmangal-only fields — populated only when transactionType === 'thirukkarmangal'
+    riteId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ThirukkarmangalRite',
+    },
+    splitBreakdown: {
+      type: [
+        {
+          recipientLabel: { type: String, required: true },
+          percent: { type: Number, required: true, min: 0, max: 100 },
+          amount: { type: Number, required: true, min: 0 },
+          _id: false,
+        },
+      ],
+      default: undefined,
     },
   },
   {

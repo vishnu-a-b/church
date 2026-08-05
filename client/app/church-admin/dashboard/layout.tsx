@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
-import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck, FiAlertCircle, FiMenu, FiSearch, FiRepeat, FiRefreshCw } from 'react-icons/fi';
+import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck, FiAlertCircle, FiMenu, FiSearch, FiRepeat, FiRefreshCw, FiCheckSquare, FiBookOpen, FiGift } from 'react-icons/fi';
 import { BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
 import { MdOutlineAccountTree, MdPayment } from 'react-icons/md';
 import { ToastContainer } from 'react-toastify';
@@ -125,6 +125,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'EDV Sync', href: '/church-admin/dashboard/edv-sync', icon: FiRefreshCw },
     { name: 'Stothrakazhcha', href: '/church-admin/dashboard/stothrakazhcha', icon: MdPayment },
     { name: 'Spiritual Activities', href: '/church-admin/dashboard/activities', icon: FiActivity },
+    { name: 'Approvals', href: '/church-admin/dashboard/approvals', icon: FiCheckSquare },
+    { name: 'Thirukkarmangal', href: '/church-admin/dashboard/thirukkarmangal/rites', icon: FiBookOpen },
+    { name: 'Pathavarm', href: '/church-admin/dashboard/pathavarm', icon: FiGift },
     { name: 'News', href: '/church-admin/dashboard/news', icon: BsNewspaper },
     { name: 'Events', href: '/church-admin/dashboard/events', icon: BsCalendarEvent },
   ];

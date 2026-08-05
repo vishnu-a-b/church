@@ -36,7 +36,12 @@ const processDues = async () => {
       try {
         console.log(`  Processing: Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
 
-        const contributorIds = (stothrakazhcha.contributors || []).map(c => String(c.contributorId));
+        // Pending/rejected marks (docs/NEW_FEATURES_2026.html, item 2) are not
+        // counted as "already contributed" — a due must still be generated for them
+        // until church management approves the entry.
+        const contributorIds = (stothrakazhcha.contributors || [])
+          .filter(c => (c as any).approvalStatus === 'approved')
+          .map(c => String(c.contributorId));
 
         if (stothrakazhcha.amountType === 'per_member') {
           const allMembers = await Member.find({

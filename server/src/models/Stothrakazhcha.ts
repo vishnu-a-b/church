@@ -70,6 +70,30 @@ const stothrakazhchaSchema = new Schema<IStothrakazhcha>(
         type: Date,
         default: Date.now,
       },
+      // Approval flow (docs/NEW_FEATURES_2026.html, item 2). Defaults to 'approved' so
+      // contributors added via the existing addContribution flow keep counting exactly
+      // as before — only entries created via the kudumbakutayima_admin "mark" endpoint
+      // start life as 'pending_approval' (and have no transactionId until approved).
+      approvalStatus: {
+        type: String,
+        enum: ['pending_approval', 'approved', 'rejected'],
+        default: 'approved',
+      },
+      markedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      approvedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      approvedAt: {
+        type: Date,
+      },
+      rejectedReason: {
+        type: String,
+        trim: true,
+      },
     }],
     totalCollected: {
       type: Number,

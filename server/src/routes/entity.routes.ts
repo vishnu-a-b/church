@@ -137,6 +137,28 @@ import {
   retrySync,
   retrySyncAll,
 } from '../controllers/edvSyncController';
+import {
+  getAllRites,
+  getRiteById,
+  createRite,
+  updateRite,
+  updateRiteSplit,
+  deleteRite,
+  seedDefaultRites,
+} from '../controllers/thirukkarmangalController';
+import {
+  createMyPathavarmContribution,
+  getMyPathavarmHistory,
+} from '../controllers/pathavarmController';
+import {
+  markSpiritualActivityPending,
+  markStothrakazhchaContributorPending,
+  getPendingApprovals,
+  approveSpiritualActivity,
+  rejectSpiritualActivity,
+  approveStothrakazhchaContributor,
+  rejectStothrakazhchaContributor,
+} from '../controllers/approvalController';
 
 const router = Router();
 
@@ -861,6 +883,25 @@ router.post('/monthly-support-plans/:id/pay', addMonthlySupportPaymentForMember)
 router.post('/monthly-support-plans/:id/draw', conductMonthlySupportDraw);
 router.get('/monthly-support-plans/:id/draws', getMonthlySupportDraws);
 router.get('/monthly-support-dues/mine', getMyMonthlySupportDues);
+
+// Thirukkarmangal Rite Routes
+router.route('/thirukkarmangal/rites').get(getAllRites).post(createRite);
+router.post('/thirukkarmangal/rites/seed-defaults', seedDefaultRites);
+router.put('/thirukkarmangal/rites/:id/split', updateRiteSplit);
+router.route('/thirukkarmangal/rites/:id').get(getRiteById).put(updateRite).delete(deleteRite);
+
+// Pathavarm Routes (member self-service, matches /members/me/* convention; church_admin uses POST /transactions directly)
+router.post('/members/me/pathavarm', createMyPathavarmContribution);
+router.get('/members/me/pathavarm', getMyPathavarmHistory);
+
+// Approval Flow Routes (Sthothrakazhcha & Spiritual Activities)
+router.post('/approvals/spiritual-activities/mark-pending', markSpiritualActivityPending);
+router.post('/approvals/spiritual-activities/:id/approve', approveSpiritualActivity);
+router.post('/approvals/spiritual-activities/:id/reject', rejectSpiritualActivity);
+router.post('/approvals/stothrakazhcha/:stothrakazhchaId/mark-pending', markStothrakazhchaContributorPending);
+router.post('/approvals/stothrakazhcha/:stothrakazhchaId/contributors/:contributorId/approve', approveStothrakazhchaContributor);
+router.post('/approvals/stothrakazhcha/:stothrakazhchaId/contributors/:contributorId/reject', rejectStothrakazhchaContributor);
+router.get('/approvals/pending', getPendingApprovals);
 
 // Donor Routes (outside supporters)
 router.route('/donors').get(getAllDonors).post(createDonor);

@@ -47,12 +47,38 @@ const spiritualActivitySchema = new Schema<ISpiritualActivity>(
     reportedAt: {
       type: Date,
     },
+    // Deprecated — never wired to any enforcement logic. Superseded by approvalStatus/
+    // markedBy/approvedBy/approvedAt below. Left in place rather than removed in case
+    // anything still populates/reads it via the client.
     verifiedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
     verifiedAt: {
       type: Date,
+    },
+    // Approval flow (docs/NEW_FEATURES_2026.html, item 2). Defaults to 'approved' so
+    // pre-existing rows and entries created outside the kudumbakutayima_admin "mark"
+    // flow keep counting exactly as they did before this field existed.
+    approvalStatus: {
+      type: String,
+      enum: ['pending_approval', 'approved', 'rejected'],
+      default: 'approved',
+    },
+    markedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    approvedAt: {
+      type: Date,
+    },
+    rejectedReason: {
+      type: String,
+      trim: true,
     },
   },
   {
@@ -79,5 +105,9 @@ spiritualActivitySchema.index({ memberId: 1, createdAt: -1 });
 // Verification indexes
 spiritualActivitySchema.index({ verifiedBy: 1 });
 spiritualActivitySchema.index({ selfReported: 1, verifiedAt: 1 });
+
+// Approval flow indexes
+spiritualActivitySchema.index({ approvalStatus: 1 });
+spiritualActivitySchema.index({ markedBy: 1 });
 
 export default mongoose.model<ISpiritualActivity>('SpiritualActivity', spiritualActivitySchema);

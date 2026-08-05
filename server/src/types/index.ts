@@ -140,7 +140,7 @@ export interface IWallet extends Document {
 }
 
 // Transaction Types
-export type TransactionType = 'lelam' | 'thirunnaal_panam' | 'dashamansham' | 'spl_contribution' | 'stothrakazhcha' | 'general_fund' | 'building_fund' | 'charity' | 'other' | 'monthly_support';
+export type TransactionType = 'lelam' | 'thirunnaal_panam' | 'dashamansham' | 'spl_contribution' | 'stothrakazhcha' | 'general_fund' | 'building_fund' | 'charity' | 'other' | 'monthly_support' | 'thirukkarmangal' | 'pathavarm';
 export type ContributionMode = 'fixed' | 'variable';
 export type Distribution = 'member_only' | 'house_only' | 'both';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'upi' | 'cheque';
@@ -171,6 +171,33 @@ export interface ITransaction extends Document {
   edvVoucherId?: string;
   edvSyncError?: string;
   edvSyncedAt?: Date;
+  // Thirukkarmangal-only fields — populated only when transactionType === 'thirukkarmangal'
+  riteId?: Types.ObjectId;
+  splitBreakdown?: Array<{
+    recipientLabel: string;
+    percent: number;
+    amount: number;
+  }>;
+}
+
+// Thirukkarmangal (Sacred Rites) master rate list
+export type ThirukkarmangalCategory = 'holy_masses' | 'feast_day_rites' | 'blessings' | 'deceased_rites' | 'other_rites';
+
+export interface IThirukkarmangalRite extends Document {
+  churchId: Types.ObjectId;
+  category: ThirukkarmangalCategory;
+  code: string;
+  nameMalayalam: string;
+  nameEnglish: string;
+  amount: number;
+  sortOrder: number;
+  isActive: boolean;
+  split: Array<{
+    recipientLabel: string;
+    percent: number;
+  }>;
+  splitConfigured: boolean;
+  createdBy?: Types.ObjectId;
 }
 
 // Campaign Types
@@ -228,6 +255,11 @@ export interface IStothrakazhcha extends Document {
     amount: number;
     transactionId?: Types.ObjectId;
     contributedAt: Date;
+    approvalStatus?: ApprovalStatus;
+    markedBy?: Types.ObjectId;
+    approvedBy?: Types.ObjectId;
+    approvedAt?: Date;
+    rejectedReason?: string;
   }>;
   totalCollected: number;
   totalContributors: number;
@@ -373,9 +405,18 @@ export interface ISpiritualActivity extends Document {
   prayerWeek?: string;
   selfReported: boolean;
   reportedAt?: Date;
+  /** @deprecated superseded by approvalStatus/markedBy/approvedBy/approvedAt */
   verifiedBy?: Types.ObjectId;
+  /** @deprecated superseded by approvalStatus/markedBy/approvedBy/approvedAt */
   verifiedAt?: Date;
+  approvalStatus?: ApprovalStatus;
+  markedBy?: Types.ObjectId;
+  approvedBy?: Types.ObjectId;
+  approvedAt?: Date;
+  rejectedReason?: string;
 }
+
+export type ApprovalStatus = 'pending_approval' | 'approved' | 'rejected';
 
 // SMS Log Types
 export interface ISMSLog extends Document {

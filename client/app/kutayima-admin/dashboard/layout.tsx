@@ -6,6 +6,7 @@ import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
 import { FiHome, FiUsers } from 'react-icons/fi';
 import { BsHouseDoor } from 'react-icons/bs';
+import { Heart, Coins } from 'lucide-react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -28,6 +29,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'Dashboard', href: '/kutayima-admin/dashboard', icon: FiHome },
     { name: 'Members', href: '/kutayima-admin/dashboard/members', icon: FiUsers },
     { name: 'Houses', href: '/kutayima-admin/dashboard/houses', icon: BsHouseDoor },
+    { name: 'Spiritual Activities', href: '/kutayima-admin/dashboard/activities', icon: Heart },
+    { name: 'Sthothrakazhcha', href: '/kutayima-admin/dashboard/stothrakazhcha', icon: Coins },
   ];
 
   if (loading) {
