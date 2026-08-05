@@ -4,23 +4,34 @@ import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import Link from 'next/link';
 import PasswordInput from '@/components/PasswordInput';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors, emailLoginSchema } from '@/lib/validation';
 
 function MemberLoginForm() {
   const router = useRouter();
   const { loading, login, isAuthenticated } = useRoleAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isLogging, setIsLogging] = useState(false);
 
   useEffect(() => { if (!loading && isAuthenticated) router.push('/member/dashboard'); }, [loading, isAuthenticated, router]);
-  
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => { 
-    e.preventDefault(); 
-    setError(''); 
-    setIsLogging(true); 
-    const result = await login(formData.email, formData.password); 
-    if (result.success) router.push('/member/dashboard'); 
-    else { setError(result.error || 'Login failed'); setIsLogging(false); }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+
+    const result = validateForm(emailLoginSchema, formData);
+    if (!result.success) {
+      setFieldErrors(result.errors);
+      return;
+    }
+    setFieldErrors({});
+
+    setIsLogging(true);
+    const loginResult = await login(result.data.email, result.data.password);
+    if (loginResult.success) router.push('/member/dashboard');
+    else { setError(loginResult.error || 'Login failed'); setIsLogging(false); }
   };
   
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-600 to-green-600"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div></div>;
@@ -37,7 +48,8 @@ function MemberLoginForm() {
           {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" placeholder="george.mathew@email.com" />
+            <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none ${fieldErrors.email ? 'border-red-400' : ''}`} placeholder="george.mathew@email.com" />
+            <FieldError message={fieldErrors.email} />
           </div>
           <PasswordInput
             id="password"

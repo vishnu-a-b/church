@@ -1,12 +1,46 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRoleAuth } from '@/context/RoleAuthContext';
 import { createRoleApi } from '@/lib/roleApi';
 import { toastService } from '@/lib/toastService';
 import { Bavanakutayima, Unit, Church } from '@/types';
 import { Plus, Edit2, Trash2, Search, X, UserPlus } from 'lucide-react';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
+
+const bavanakutayimaSchema = z
+  .object({
+    unitId: z.string().min(1, 'Select a unit'),
+    name: z.string().trim().min(1, 'Name is required'),
+    leaderName: z.string().optional(),
+    createAdmin: z.boolean(),
+    adminFirstName: z.string().optional(),
+    adminLastName: z.string().optional(),
+    adminUsername: z.string().optional(),
+    adminEmail: z.string().optional(),
+    adminPassword: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.createAdmin) return;
+    if (!data.adminFirstName?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['adminFirstName'], message: 'First name is required' });
+    }
+    if (!data.adminLastName?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['adminLastName'], message: 'Last name is required' });
+    }
+    if (!data.adminUsername?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['adminUsername'], message: 'Username is required' });
+    }
+    if (!data.adminEmail?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['adminEmail'], message: 'Email is required' });
+    }
+    if (!data.adminPassword || data.adminPassword.length < 6) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['adminPassword'], message: 'Password must be at least 6 characters' });
+    }
+  });
 
 const initialFormState = {
   unitId: '',
@@ -37,6 +71,7 @@ export default function BavanakutayimasPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Bavanakutayima | null>(null);
   const [formData, setFormData] = useState(initialFormState);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -83,32 +118,40 @@ export default function BavanakutayimasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const result = validateForm(bavanakutayimaSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     setSubmitting(true);
 
     const toastId = toastService.info(editing ? 'Updating bavanakutayima...' : 'Creating bavanakutayima...');
 
     try {
       if (editing) {
-        await api.put(`/bavanakutayimas/${editing._id}`, formData);
+        await api.put(`/bavanakutayimas/${editing._id}`, result.data);
         toastService.modify(toastId, 'Bavanakutayima updated successfully!', { type: 'success' });
       } else {
-        const response = await api.post('/bavanakutayimas', formData);
+        const response = await api.post('/bavanakutayimas', result.data);
 
         // If creating admin, create the member with admin role
-        if (formData.createAdmin && response.data.data && selectedChurch) {
+        if (result.data.createAdmin && response.data.data && selectedChurch) {
           try {
             const bavanakutayimaId = response.data.data._id;
 
             await api.post('/members', {
               churchId: selectedChurch,
-              unitId: formData.unitId,
+              unitId: result.data.unitId,
               bavanakutayimaId: bavanakutayimaId,
               houseId: null, // Will be assigned later
-              firstName: formData.adminFirstName,
-              lastName: formData.adminLastName,
-              username: formData.adminUsername,
-              email: formData.adminEmail,
-              password: formData.adminPassword,
+              firstName: result.data.adminFirstName,
+              lastName: result.data.adminLastName,
+              username: result.data.adminUsername,
+              email: result.data.adminEmail,
+              password: result.data.adminPassword,
               role: 'kudumbakutayima_admin',
               gender: 'male', // Default, can be changed later
             });
@@ -137,6 +180,7 @@ export default function BavanakutayimasPage() {
 
   const handleEdit = (item: Bavanakutayima) => {
     setEditing(item);
+    setFormErrors({});
     setFormData({
       unitId: item.unitId,
       name: item.name,
@@ -170,6 +214,7 @@ export default function BavanakutayimasPage() {
   };
 
   const resetForm = () => {
+    setFormErrors({});
     setFormData(initialFormState);
   };
 
@@ -316,24 +361,29 @@ export default function BavanakutayimasPage() {
               <div className="border-b pb-4">
                 <h4 className="text-md font-semibold text-gray-700 mb-3">Bavanakutayima Details</h4>
                 <div className="space-y-4">
-                  <SearchableSelect
-                    label="Unit"
-                    required
-                    options={units.map((u) => ({ value: u._id, label: u.name }))}
-                    value={formData.unitId}
-                    onChange={(value) => setFormData({ ...formData, unitId: value })}
-                    placeholder="Search and select unit..."
-                  />
+                  <div>
+                    <SearchableSelect
+                      label="Unit"
+                      required
+                      options={units.map((u) => ({ value: u._id, label: u.name }))}
+                      value={formData.unitId}
+                      onChange={(value) => setFormData({ ...formData, unitId: value })}
+                      placeholder="Search and select unit..."
+                    />
+                    <FieldError message={formErrors.unitId} />
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                     <input
                       type="text"
-                      required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
+                        formErrors.name ? 'border-red-400' : 'border-gray-300'
+                      }`}
                     />
+                    <FieldError message={formErrors.name} />
                   </div>
 
                   <div>
@@ -374,22 +424,26 @@ export default function BavanakutayimasPage() {
                           <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
                           <input
                             type="text"
-                            required={formData.createAdmin}
                             value={formData.adminFirstName}
                             onChange={(e) => setFormData({ ...formData, adminFirstName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${
+                              formErrors.adminFirstName ? 'border-red-400' : 'border-gray-300'
+                            }`}
                           />
+                          <FieldError message={formErrors.adminFirstName} />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
                           <input
                             type="text"
-                            required={formData.createAdmin}
                             value={formData.adminLastName}
                             onChange={(e) => setFormData({ ...formData, adminLastName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${
+                              formErrors.adminLastName ? 'border-red-400' : 'border-gray-300'
+                            }`}
                           />
+                          <FieldError message={formErrors.adminLastName} />
                         </div>
                       </div>
 
@@ -397,36 +451,41 @@ export default function BavanakutayimasPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
                         <input
                           type="text"
-                          required={formData.createAdmin}
                           value={formData.adminUsername}
                           onChange={(e) => setFormData({ ...formData, adminUsername: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${
+                            formErrors.adminUsername ? 'border-red-400' : 'border-gray-300'
+                          }`}
                           placeholder="username for login"
                         />
+                        <FieldError message={formErrors.adminUsername} />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                         <input
                           type="email"
-                          required={formData.createAdmin}
                           value={formData.adminEmail}
                           onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${
+                            formErrors.adminEmail ? 'border-red-400' : 'border-gray-300'
+                          }`}
                         />
+                        <FieldError message={formErrors.adminEmail} />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
                         <input
                           type="password"
-                          required={formData.createAdmin}
                           value={formData.adminPassword}
                           onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
-                          minLength={6}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${
+                            formErrors.adminPassword ? 'border-red-400' : 'border-gray-300'
+                          }`}
                           placeholder="min 6 characters"
                         />
+                        <FieldError message={formErrors.adminPassword} />
                       </div>
 
                       <div className="bg-purple-100 border border-purple-300 rounded p-2 text-xs text-purple-800">

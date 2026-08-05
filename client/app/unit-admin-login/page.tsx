@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import PasswordInput from '@/components/PasswordInput';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors, emailLoginSchema } from '@/lib/validation';
 
 export default function UnitAdminLogin() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function UnitAdminLogin() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Removed auto-redirect useEffect to prevent unwanted redirects
@@ -22,10 +25,18 @@ export default function UnitAdminLogin() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+
+    const validation = validateForm(emailLoginSchema, formData);
+    if (!validation.success) {
+      setFieldErrors(validation.errors);
+      return;
+    }
+    setFieldErrors({});
+
     setIsLoading(true);
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(validation.data.email, validation.data.password);
       if (result.success) {
         // Check if user is actually a unit_admin
         if (result.user?.role === 'unit_admin') {
@@ -88,13 +99,15 @@ export default function UnitAdminLogin() {
             </label>
             <input
               type="email"
-              required
               autoComplete="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition ${
+                fieldErrors.email ? 'border-red-400' : 'border-gray-300'
+              }`}
               placeholder="unit1@church.org"
             />
+            <FieldError message={fieldErrors.email} />
           </div>
 
           <PasswordInput

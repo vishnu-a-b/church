@@ -1,9 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { Plus, CalendarDays, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const eventSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Title is required'),
+    contentType: z.enum(['text', 'image', 'video']),
+    content: z.string().trim().min(1, 'Description is required'),
+    mediaUrl: z.string().optional(),
+    location: z.string().optional(),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().min(1, 'End date is required'),
+    isActive: z.boolean(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate && data.endDate < data.startDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endDate'], message: 'End date must be on or after start date' });
+    }
+  });
 
 interface Event {
   _id: string;
@@ -24,6 +44,7 @@ export default function EventsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [formData, setFormData] = useState({
     title: '',
     contentType: 'text' as 'text' | 'image' | 'video',
@@ -54,13 +75,21 @@ export default function EventsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const result = validateForm(eventSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     setSubmitting(true);
     try {
       if (editingId) {
-        await api.put(`/events/${editingId}`, formData);
+        await api.put(`/events/${editingId}`, result.data);
         toast.success('Event updated successfully!');
       } else {
-        await api.post('/events', formData);
+        await api.post('/events', result.data);
         toast.success('Event created successfully!');
       }
       setShowModal(false);
@@ -76,6 +105,7 @@ export default function EventsPage() {
 
   const handleEdit = (event: Event) => {
     setEditingId(event._id);
+    setFormErrors({});
     setFormData({
       title: event.title,
       contentType: event.contentType,
@@ -103,6 +133,7 @@ export default function EventsPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setFormErrors({});
     setFormData({
       title: '',
       contentType: 'text',
@@ -243,11 +274,11 @@ export default function EventsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                   <input
                     type="text"
-                    required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    className={`w-full border rounded-lg px-4 py-2 ${formErrors.title ? 'border-red-400' : 'border-gray-300'}`}
                   />
+                  <FieldError message={formErrors.title} />
                 </div>
 
                 <div>
@@ -266,12 +297,12 @@ export default function EventsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                   <textarea
-                    required
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    className={`w-full border rounded-lg px-4 py-2 ${formErrors.content ? 'border-red-400' : 'border-gray-300'}`}
                   />
+                  <FieldError message={formErrors.content} />
                 </div>
 
                 {(formData.contentType === 'image' || formData.contentType === 'video') && (
@@ -305,21 +336,21 @@ export default function EventsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                     <input
                       type="date"
-                      required
                       value={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                      className={`w-full border rounded-lg px-4 py-2 ${formErrors.startDate ? 'border-red-400' : 'border-gray-300'}`}
                     />
+                    <FieldError message={formErrors.startDate} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
                     <input
                       type="date"
-                      required
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                      className={`w-full border rounded-lg px-4 py-2 ${formErrors.endDate ? 'border-red-400' : 'border-gray-300'}`}
                     />
+                    <FieldError message={formErrors.endDate} />
                   </div>
                 </div>
 

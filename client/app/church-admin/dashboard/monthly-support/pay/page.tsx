@@ -1,11 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportMember } from '@/types';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const paySchema = z.object({
+  entryId: z.string().min(1, 'Select a member/donor'),
+  amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Enter a valid amount'),
+  paymentMethod: z.enum(['cash', 'bank_transfer', 'upi', 'cheque']),
+  referenceNo: z.string().optional(),
+  paymentDate: z.string().min(1, 'Payment date is required'),
+  months: z.coerce.number().int().min(1, 'Must be between 1 and 36').max(36, 'Must be between 1 and 36'),
+});
 
 const planMemberId = (m: MonthlySupportMember): string => {
   if (m.memberId) return typeof m.memberId === 'string' ? m.memberId : m.memberId._id;
@@ -34,6 +46,7 @@ export default function MonthlySupportAddPaymentPage() {
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<MonthlySupportPlan | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
 
   const [entryIdInput, setEntryIdInput] = useState('');
   const [amountInput, setAmountInput] = useState('');
@@ -70,30 +83,35 @@ export default function MonthlySupportAddPaymentPage() {
   };
 
   const handleSubmit = async () => {
-    if (!plan || !entryIdInput) {
-      toast.error('Select a member/donor');
-      return;
-    }
-    const amount = parseFloat(amountInput);
-    if (!amount || amount <= 0) {
-      toast.error('Enter a valid amount');
-      return;
-    }
-    const entry = plan.members.find((m) => planMemberId(m) === entryIdInput);
-    if (!entry) return;
+    if (!plan) return;
 
-    const months = Math.max(1, parseInt(monthsInput) || 1);
+    const result = validateForm(paySchema, {
+      entryId: entryIdInput,
+      amount: amountInput,
+      paymentMethod: methodInput,
+      referenceNo,
+      paymentDate: dateInput,
+      months: monthsInput,
+    });
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
+    const entry = plan.members.find((m) => planMemberId(m) === result.data.entryId);
+    if (!entry) return;
 
     setSubmitting(true);
     try {
       const response = await api.post(`/monthly-support-plans/${plan._id}/pay`, {
-        memberId: entry.memberId ? entryIdInput : undefined,
-        donorId: entry.donorId ? entryIdInput : undefined,
-        amount,
-        paymentMethod: methodInput,
-        referenceNo: methodInput !== 'cash' ? (referenceNo.trim() || undefined) : undefined,
-        paymentDate: dateInput || undefined,
-        months,
+        memberId: entry.memberId ? result.data.entryId : undefined,
+        donorId: entry.donorId ? result.data.entryId : undefined,
+        amount: result.data.amount,
+        paymentMethod: result.data.paymentMethod,
+        referenceNo: result.data.paymentMethod !== 'cash' ? (result.data.referenceNo?.trim() || undefined) : undefined,
+        paymentDate: result.data.paymentDate,
+        months: result.data.months,
       });
       const message = response.data?.message || 'Payment recorded successfully';
       if (response.data?.success) {
@@ -170,6 +188,7 @@ export default function MonthlySupportAddPaymentPage() {
                 </option>
               ))}
             </select>
+            <FieldError message={formErrors.entryId} />
           </div>
 
           <div>
@@ -180,9 +199,9 @@ export default function MonthlySupportAddPaymentPage() {
               step="0.01"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              required
+              className={`w-full border rounded-lg px-4 py-2 ${formErrors.amount ? 'border-red-400' : 'border-gray-300'}`}
             />
+            <FieldError message={formErrors.amount} />
           </div>
 
           <div>
@@ -218,9 +237,9 @@ export default function MonthlySupportAddPaymentPage() {
               type="date"
               value={dateInput}
               onChange={(e) => setDateInput(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              required
+              className={`w-full border rounded-lg px-4 py-2 ${formErrors.paymentDate ? 'border-red-400' : 'border-gray-300'}`}
             />
+            <FieldError message={formErrors.paymentDate} />
           </div>
 
           <div>
@@ -231,9 +250,10 @@ export default function MonthlySupportAddPaymentPage() {
               max="36"
               value={monthsInput}
               onChange={(e) => setMonthsInput(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              className={`w-full border rounded-lg px-4 py-2 ${formErrors.months ? 'border-red-400' : 'border-gray-300'}`}
             />
             <p className="text-xs text-gray-500 mt-1">For paying in advance — settles this many upcoming months at the amount above, one receipt each. Already-paid months are skipped automatically.</p>
+            <FieldError message={formErrors.months} />
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">

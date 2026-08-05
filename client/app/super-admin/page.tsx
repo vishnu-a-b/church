@@ -3,6 +3,8 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors, emailLoginSchema } from '@/lib/validation';
 
 function SuperAdminLoginForm() {
   const router = useRouter();
@@ -12,6 +14,7 @@ function SuperAdminLoginForm() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isLogging, setIsLogging] = useState(false);
 
   // Auto-redirect if already logged in
@@ -25,10 +28,18 @@ function SuperAdminLoginForm() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+
+    const validation = validateForm(emailLoginSchema, formData);
+    if (!validation.success) {
+      setFieldErrors(validation.errors);
+      return;
+    }
+    setFieldErrors({});
+
     setIsLogging(true);
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(validation.data.email, validation.data.password);
       if (result.success) {
         router.push('/super-admin/dashboard');
       } else {
@@ -83,13 +94,15 @@ function SuperAdminLoginForm() {
             </label>
             <input
               type="email"
-              required
               autoComplete="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition ${
+                fieldErrors.email ? 'border-red-400' : 'border-gray-300'
+              }`}
               placeholder="admin@church.org"
             />
+            <FieldError message={fieldErrors.email} />
           </div>
 
           <div>
@@ -98,13 +111,15 @@ function SuperAdminLoginForm() {
             </label>
             <input
               type="password"
-              required
               autoComplete="current-password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition ${
+                fieldErrors.password ? 'border-red-400' : 'border-gray-300'
+              }`}
               placeholder="••••••••"
             />
+            <FieldError message={fieldErrors.password} />
           </div>
 
           <button

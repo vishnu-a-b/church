@@ -1,11 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { Heart, Calendar, Plus, CheckCircle, Clock, Activity } from 'lucide-react';
 import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
+
+const activitySchema = z.object({
+  activityType: z.enum(
+    ['prayer', 'mass', 'confession', 'rosary', 'adoration', 'bible_reading', 'fasting', 'charity', 'retreat', 'other'],
+    { errorMap: () => ({ message: 'Select an activity type' }) }
+  ),
+  activityDate: z.string().min(1, 'Activity date is required'),
+  notes: z.string().optional(),
+});
 
 interface SpiritualActivity {
   _id: string;
@@ -26,6 +38,7 @@ export default function MemberSpiritualActivitiesPage() {
     notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     fetchActivities();
@@ -50,14 +63,16 @@ export default function MemberSpiritualActivitiesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.activityType || !formData.activityDate) {
-      toast.error('Please fill in all required fields');
+    const result = validateForm(activitySchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
       return;
     }
+    setFormErrors({});
 
     setSubmitting(true);
     try {
-      const response = await api.post('/members/me/spiritual-activities', formData);
+      const response = await api.post('/members/me/spiritual-activities', result.data);
 
       if (response.data.success) {
         toast.success('Spiritual activity added successfully!');
@@ -219,7 +234,7 @@ export default function MemberSpiritualActivitiesPage() {
       {/* Add Activity Button */}
       <div className="flex justify-end">
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => { setFormErrors({}); setShowAddModal(true); }}
           className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
         >
           <Plus className="w-5 h-5" />
@@ -265,8 +280,9 @@ export default function MemberSpiritualActivitiesPage() {
                 <select
                   value={formData.activityType}
                   onChange={(e) => setFormData({ ...formData, activityType: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    formErrors.activityType ? 'border-red-400' : 'border-gray-300'
+                  }`}
                 >
                   <option value="">Select activity type</option>
                   <option value="prayer">Prayer</option>
@@ -280,6 +296,7 @@ export default function MemberSpiritualActivitiesPage() {
                   <option value="retreat">Retreat</option>
                   <option value="other">Other</option>
                 </select>
+                <FieldError message={formErrors.activityType} />
               </div>
 
               <div>
@@ -290,9 +307,11 @@ export default function MemberSpiritualActivitiesPage() {
                   type="date"
                   value={formData.activityDate}
                   onChange={(e) => setFormData({ ...formData, activityDate: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    formErrors.activityDate ? 'border-red-400' : 'border-gray-300'
+                  }`}
                 />
+                <FieldError message={formErrors.activityDate} />
               </div>
 
               <div>

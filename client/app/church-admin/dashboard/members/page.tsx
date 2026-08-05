@@ -1,12 +1,47 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { ColumnDef } from '@tanstack/react-table';
 import { FiEdit, FiTrash, FiUsers, FiPlus, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
+
+const memberSchema = z
+  .object({
+    firstName: z.string().trim().min(1, 'First name is required'),
+    lastName: z.string().optional(),
+    gender: z.enum(['male', 'female']),
+    dateOfBirth: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().optional(),
+    baptismName: z.string().optional(),
+    relationToHead: z.enum(['head', 'spouse', 'child', 'parent', 'other']),
+    unitId: z.string().min(1, 'Select a unit'),
+    bavanakutayimaId: z.string().min(1, 'Select a bavanakutayima'),
+    houseId: z.string().min(1, 'Select a house'),
+    username: z.string().optional(),
+    password: z.string().optional(),
+    role: z.string(),
+    isActive: z.boolean(),
+    smsPreferences: z.object({
+      enabled: z.boolean(),
+      paymentNotifications: z.boolean(),
+      receiptNotifications: z.boolean(),
+    }),
+  })
+  .superRefine((data, ctx) => {
+    if ((data.username || data.password) && !data.email) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['email'], message: 'Email is required when adding login credentials' });
+    }
+    if (data.password && data.password.length > 0 && data.password.length < 6) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['password'], message: 'Password must be at least 6 characters' });
+    }
+  });
 
 interface Member {
   _id: string;
@@ -37,6 +72,7 @@ export default function ChurchAdminMembersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
   const [allBavanakutayimas, setAllBavanakutayimas] = useState<any[]>([]);
@@ -176,6 +212,7 @@ export default function ChurchAdminMembersPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setFormErrors({});
     setFormData({
       firstName: '',
       lastName: '',
@@ -206,6 +243,7 @@ export default function ChurchAdminMembersPage() {
     setEditingLoadingId(member._id);
     try {
       setEditingId(member._id);
+      setFormErrors({});
 
       // Extract IDs from populated fields
       const unitId = typeof member.unitId === 'object' ? member.unitId._id : member.unitId || '';
@@ -251,25 +289,21 @@ export default function ChurchAdminMembersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.firstName || !formData.houseId) {
-      toast.error('Please fill in all required fields (First Name and House)');
+    const result = validateForm(memberSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
       return;
     }
-
-    // If login credentials are provided, email is required
-    if ((formData.username || formData.password) && !formData.email) {
-      toast.error('Email is required when adding login credentials (username/password)');
-      return;
-    }
+    setFormErrors({});
 
     setFormLoading(true);
     try {
       // Get churchId from the first unit (church admin has access to only their church)
-      const unit = units.find(u => u._id === formData.unitId);
+      const unit = units.find(u => u._id === result.data.unitId);
       const churchId = unit?.churchId?._id || unit?.churchId;
 
       const memberData = {
-        ...formData,
+        ...result.data,
         churchId,
       };
 
@@ -590,9 +624,11 @@ export default function ChurchAdminMembersPage() {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleFormChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                        formErrors.firstName ? 'border-red-400' : 'border-gray-300'
+                      }`}
                     />
+                    <FieldError message={formErrors.firstName} />
                   </div>
 
                   <div>
@@ -606,17 +642,20 @@ export default function ChurchAdminMembersPage() {
                     />
                   </div>
 
-                  <SearchableSelect
-                    label="Gender"
-                    required
-                    options={[
-                      { value: 'male', label: 'Male' },
-                      { value: 'female', label: 'Female' },
-                    ]}
-                    value={formData.gender}
-                    onChange={(value) => setFormData({ ...formData, gender: value as 'male' | 'female' })}
-                    placeholder="Select gender..."
-                  />
+                  <div>
+                    <SearchableSelect
+                      label="Gender"
+                      required
+                      options={[
+                        { value: 'male', label: 'Male' },
+                        { value: 'female', label: 'Female' },
+                      ]}
+                      value={formData.gender}
+                      onChange={(value) => setFormData({ ...formData, gender: value as 'male' | 'female' })}
+                      placeholder="Select gender..."
+                    />
+                    <FieldError message={formErrors.gender} />
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
@@ -647,8 +686,11 @@ export default function ChurchAdminMembersPage() {
                       name="email"
                       value={formData.email}
                       onChange={handleFormChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                        formErrors.email ? 'border-red-400' : 'border-gray-300'
+                      }`}
                     />
+                    <FieldError message={formErrors.email} />
                   </div>
 
                   <div>
@@ -662,20 +704,23 @@ export default function ChurchAdminMembersPage() {
                     />
                   </div>
 
-                  <SearchableSelect
-                    label="Relation to Head"
-                    required
-                    options={[
-                      { value: 'head', label: 'Head' },
-                      { value: 'spouse', label: 'Spouse' },
-                      { value: 'child', label: 'Child' },
-                      { value: 'parent', label: 'Parent' },
-                      { value: 'other', label: 'Other' },
-                    ]}
-                    value={formData.relationToHead}
-                    onChange={(value) => setFormData({ ...formData, relationToHead: value as 'head' | 'spouse' | 'child' | 'parent' | 'other' })}
-                    placeholder="Select relation..."
-                  />
+                  <div>
+                    <SearchableSelect
+                      label="Relation to Head"
+                      required
+                      options={[
+                        { value: 'head', label: 'Head' },
+                        { value: 'spouse', label: 'Spouse' },
+                        { value: 'child', label: 'Child' },
+                        { value: 'parent', label: 'Parent' },
+                        { value: 'other', label: 'Other' },
+                      ]}
+                      value={formData.relationToHead}
+                      onChange={(value) => setFormData({ ...formData, relationToHead: value as 'head' | 'spouse' | 'child' | 'parent' | 'other' })}
+                      placeholder="Select relation..."
+                    />
+                    <FieldError message={formErrors.relationToHead} />
+                  </div>
                 </div>
               </div>
 
@@ -683,47 +728,56 @@ export default function ChurchAdminMembersPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Hierarchy Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <SearchableSelect
-                    label="Unit"
-                    required
-                    options={units.map(unit => ({ value: unit._id, label: unit.name }))}
-                    value={formData.unitId}
-                    onChange={(value) => {
-                      setFormData({ ...formData, unitId: value, bavanakutayimaId: '', houseId: '' });
-                      setAllBavanakutayimas([]);
-                      setAllHouses([]);
-                      if (value) {
-                        fetchAllBavanakutayimas(value);
-                      }
-                    }}
-                    placeholder="Search and select unit..."
-                  />
+                  <div>
+                    <SearchableSelect
+                      label="Unit"
+                      required
+                      options={units.map(unit => ({ value: unit._id, label: unit.name }))}
+                      value={formData.unitId}
+                      onChange={(value) => {
+                        setFormData({ ...formData, unitId: value, bavanakutayimaId: '', houseId: '' });
+                        setAllBavanakutayimas([]);
+                        setAllHouses([]);
+                        if (value) {
+                          fetchAllBavanakutayimas(value);
+                        }
+                      }}
+                      placeholder="Search and select unit..."
+                    />
+                    <FieldError message={formErrors.unitId} />
+                  </div>
 
-                  <SearchableSelect
-                    label="Bavanakutayima"
-                    required
-                    options={allBavanakutayimas.map(bk => ({ value: bk._id, label: bk.name }))}
-                    value={formData.bavanakutayimaId}
-                    onChange={(value) => {
-                      setFormData({ ...formData, bavanakutayimaId: value, houseId: '' });
-                      setAllHouses([]);
-                      if (value) {
-                        fetchAllHouses(value);
-                      }
-                    }}
-                    placeholder={formData.unitId ? "Search and select bavanakutayima..." : "Select unit first"}
-                    disabled={!formData.unitId}
-                  />
+                  <div>
+                    <SearchableSelect
+                      label="Bavanakutayima"
+                      required
+                      options={allBavanakutayimas.map(bk => ({ value: bk._id, label: bk.name }))}
+                      value={formData.bavanakutayimaId}
+                      onChange={(value) => {
+                        setFormData({ ...formData, bavanakutayimaId: value, houseId: '' });
+                        setAllHouses([]);
+                        if (value) {
+                          fetchAllHouses(value);
+                        }
+                      }}
+                      placeholder={formData.unitId ? "Search and select bavanakutayima..." : "Select unit first"}
+                      disabled={!formData.unitId}
+                    />
+                    <FieldError message={formErrors.bavanakutayimaId} />
+                  </div>
 
-                  <SearchableSelect
-                    label="House"
-                    required
-                    options={allHouses.map(house => ({ value: house._id, label: house.familyName }))}
-                    value={formData.houseId}
-                    onChange={(value) => setFormData({ ...formData, houseId: value })}
-                    placeholder={formData.bavanakutayimaId ? "Search and select house..." : "Select bavanakutayima first"}
-                    disabled={!formData.bavanakutayimaId}
-                  />
+                  <div>
+                    <SearchableSelect
+                      label="House"
+                      required
+                      options={allHouses.map(house => ({ value: house._id, label: house.familyName }))}
+                      value={formData.houseId}
+                      onChange={(value) => setFormData({ ...formData, houseId: value })}
+                      placeholder={formData.bavanakutayimaId ? "Search and select house..." : "Select bavanakutayima first"}
+                      disabled={!formData.bavanakutayimaId}
+                    />
+                    <FieldError message={formErrors.houseId} />
+                  </div>
                 </div>
               </div>
 
@@ -749,8 +803,11 @@ export default function ChurchAdminMembersPage() {
                       name="password"
                       value={formData.password}
                       onChange={handleFormChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                        formErrors.password ? 'border-red-400' : 'border-gray-300'
+                      }`}
                     />
+                    <FieldError message={formErrors.password} />
                   </div>
 
                   <SearchableSelect

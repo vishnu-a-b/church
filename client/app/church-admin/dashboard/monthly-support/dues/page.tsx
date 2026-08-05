@@ -1,11 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
 import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const paymentSchema = z.object({
+  amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Amount must be greater than 0'),
+  paymentMethod: z.enum(['cash', 'bank_transfer', 'upi', 'cheque']),
+});
 
 export default function MonthlySupportDuesPage() {
   const router = useRouter();
@@ -24,6 +32,7 @@ export default function MonthlySupportDuesPage() {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [processingPayment, setProcessingPayment] = useState(false);
   const [generatingDues, setGeneratingDues] = useState(false);
+  const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     if (planId) {
@@ -68,28 +77,31 @@ export default function MonthlySupportDuesPage() {
     setSelectedDue(due);
     setPaymentAmount(String(due.balance));
     setPaymentMethod('cash');
+    setPaymentErrors({});
     setShowPaymentModal(true);
   };
 
   const handlePaymentSubmit = async () => {
-    if (!selectedDue || !paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error('Please enter a valid payment amount');
-      return;
-    }
+    if (!selectedDue) return;
 
-    const amount = parseFloat(paymentAmount);
-    if (amount > selectedDue.balance) {
-      toast.error('Payment amount cannot exceed remaining balance');
+    const result = validateForm(paymentSchema, { amount: paymentAmount, paymentMethod });
+    if (!result.success) {
+      setPaymentErrors(result.errors);
       return;
     }
+    if (result.data.amount > selectedDue.balance) {
+      setPaymentErrors({ amount: 'Payment amount cannot exceed remaining balance' });
+      return;
+    }
+    setPaymentErrors({});
 
     setProcessingPayment(true);
     try {
       await api.post('/dues/pay', {
         dueId: selectedDue._id,
         dueType: 'monthly_support',
-        amount,
-        paymentMethod,
+        amount: result.data.amount,
+        paymentMethod: result.data.paymentMethod,
       });
 
       toast.success('Payment processed successfully!');
@@ -262,9 +274,9 @@ export default function MonthlySupportDuesPage() {
                   step="0.01"
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                  required
+                  className={`w-full border rounded-lg px-4 py-2 ${paymentErrors.amount ? 'border-red-400' : 'border-gray-300'}`}
                 />
+                <FieldError message={paymentErrors.amount} />
               </div>
 
               <div>

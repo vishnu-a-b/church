@@ -1,12 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { ColumnDef } from '@tanstack/react-table';
 import { FiTrash, FiUserCheck, FiShield, FiPlus, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
+
+const addUserSchema = z.object({
+  church: z.string().min(1, 'Select a church first'),
+  memberId: z.string().min(1, 'Select a member to grant login access to'),
+  username: z.string().trim().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.enum(['member', 'kudumbakutayima_admin', 'unit_admin', 'church_admin']),
+  isActive: z.boolean(),
+});
 
 interface User {
   _id: string;
@@ -41,6 +53,7 @@ export default function UsersPage() {
   });
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [addUserForm, setAddUserForm] = useState(emptyAddUserForm);
+  const [addUserErrors, setAddUserErrors] = useState<FieldErrors>({});
   const [membersWithoutLogin, setMembersWithoutLogin] = useState<any[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [submittingUser, setSubmittingUser] = useState(false);
@@ -92,28 +105,28 @@ export default function UsersPage() {
 
   const openAddUserModal = () => {
     setAddUserForm(emptyAddUserForm);
+    setAddUserErrors({});
     setMembersWithoutLogin([]);
     setShowAddUserModal(true);
   };
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addUserForm.memberId) {
-      toast.error('Select a member to grant login access to');
+
+    const result = validateForm(addUserSchema, addUserForm);
+    if (!result.success) {
+      setAddUserErrors(result.errors);
       return;
     }
-    if (!addUserForm.username.trim() || !addUserForm.password.trim()) {
-      toast.error('Username and password are required');
-      return;
-    }
+    setAddUserErrors({});
 
     setSubmittingUser(true);
     try {
-      await api.put(`/members/${addUserForm.memberId}`, {
-        username: addUserForm.username.trim(),
-        password: addUserForm.password,
-        role: addUserForm.role,
-        isActive: addUserForm.isActive,
+      await api.put(`/members/${result.data.memberId}`, {
+        username: result.data.username,
+        password: result.data.password,
+        role: result.data.role,
+        isActive: result.data.isActive,
       });
       toast.success('Login access granted!');
       setShowAddUserModal(false);
@@ -369,62 +382,71 @@ export default function UsersPage() {
             </div>
 
             <form onSubmit={handleAddUser} className="p-6 space-y-4">
-              <SearchableSelect
-                label="Church"
-                required
-                options={churches.map((church) => ({ value: church._id, label: church.name }))}
-                value={addUserForm.church}
-                onChange={(value) => {
-                  setAddUserForm({ ...addUserForm, church: value, memberId: '' });
-                  setMembersWithoutLogin([]);
-                  if (value) fetchCandidateMembers(value);
-                }}
-                placeholder="Search and select church..."
-              />
+              <div>
+                <SearchableSelect
+                  label="Church"
+                  required
+                  options={churches.map((church) => ({ value: church._id, label: church.name }))}
+                  value={addUserForm.church}
+                  onChange={(value) => {
+                    setAddUserForm({ ...addUserForm, church: value, memberId: '' });
+                    setMembersWithoutLogin([]);
+                    if (value) fetchCandidateMembers(value);
+                  }}
+                  placeholder="Search and select church..."
+                />
+                <FieldError message={addUserErrors.church} />
+              </div>
 
-              <SearchableSelect
-                label="Member"
-                required
-                options={membersWithoutLogin.map((m) => ({
-                  value: m._id,
-                  label: `${m.firstName} ${m.lastName || ''}`.trim(),
-                }))}
-                value={addUserForm.memberId}
-                onChange={(value) => setAddUserForm({ ...addUserForm, memberId: value })}
-                placeholder={
-                  !addUserForm.church
-                    ? 'Select a church first'
-                    : loadingCandidates
-                    ? 'Loading members...'
-                    : membersWithoutLogin.length
-                    ? 'Search and select member...'
-                    : 'No members without login found'
-                }
-                disabled={!addUserForm.church}
-              />
+              <div>
+                <SearchableSelect
+                  label="Member"
+                  required
+                  options={membersWithoutLogin.map((m) => ({
+                    value: m._id,
+                    label: `${m.firstName} ${m.lastName || ''}`.trim(),
+                  }))}
+                  value={addUserForm.memberId}
+                  onChange={(value) => setAddUserForm({ ...addUserForm, memberId: value })}
+                  placeholder={
+                    !addUserForm.church
+                      ? 'Select a church first'
+                      : loadingCandidates
+                      ? 'Loading members...'
+                      : membersWithoutLogin.length
+                      ? 'Search and select member...'
+                      : 'No members without login found'
+                  }
+                  disabled={!addUserForm.church}
+                />
+                <FieldError message={addUserErrors.memberId} />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
                 <input
                   type="text"
-                  required
                   value={addUserForm.username}
                   onChange={(e) => setAddUserForm({ ...addUserForm, username: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    addUserErrors.username ? 'border-red-400' : 'border-gray-300'
+                  }`}
                 />
+                <FieldError message={addUserErrors.username} />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
                 <input
                   type="password"
-                  required
-                  minLength={6}
                   value={addUserForm.password}
                   onChange={(e) => setAddUserForm({ ...addUserForm, password: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    addUserErrors.password ? 'border-red-400' : 'border-gray-300'
+                  }`}
                   placeholder="min 6 characters"
                 />
+                <FieldError message={addUserErrors.password} />
               </div>
 
               <SearchableSelect
@@ -461,7 +483,7 @@ export default function UsersPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submittingUser || !addUserForm.memberId}
+                  disabled={submittingUser}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submittingUser ? 'Granting...' : 'Grant Access'}

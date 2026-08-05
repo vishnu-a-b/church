@@ -7,6 +7,8 @@ import { Sidebar, MenuItem } from '@/components/Sidebar';
 import { FiHome, FiUsers, FiActivity, FiDollarSign, FiSettings, FiUserCheck, FiAlertCircle, FiRepeat, FiRefreshCw } from 'react-icons/fi';
 import { BsBuilding, BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
 import { MdOutlineAccountTree, MdPayment } from 'react-icons/md';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -54,6 +56,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ToastContainer />
       <Sidebar
         menuItems={menuItems}
         title="Super Admin"

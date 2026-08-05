@@ -1,11 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, Donor } from '@/types';
 import { ArrowLeft, Search, Trash, UserPlus } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const planSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Plan name is required'),
+    description: z.string().optional(),
+    defaultAmount: z.coerce.number().positive('Default amount must be greater than 0'),
+    treatment: z.enum(['income', 'liability']),
+    dayOfMonth: z.coerce.number().int().min(1, 'Must be between 1 and 28').max(28, 'Must be between 1 and 28'),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().optional(),
+    isActive: z.boolean(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate && data.endDate < data.startDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endDate'], message: 'End date must be on or after start date' });
+    }
+  });
+
+const donorSchema = z.object({
+  name: z.string().trim().min(1, 'Enter a name for the donor'),
+  phone: z.string().trim().min(1, 'Phone number is required'),
+  email: z.string().optional(),
+  address: z.string().optional(),
+});
 
 interface Member {
   _id: string;
@@ -44,6 +71,8 @@ export default function MonthlySupportPlanFormPage() {
 
   const [loading, setLoading] = useState(!!planId);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
+  const [donorErrors, setDonorErrors] = useState<FieldErrors>({});
 
   const [formData, setFormData] = useState(emptyForm);
   const [planMembers, setPlanMembers] = useState<PlanMemberDraft[]>([]);
@@ -165,26 +194,31 @@ export default function MonthlySupportPlanFormPage() {
   };
 
   const handleCreateDonor = async () => {
-    if (!newDonorName.trim()) {
-      toast.error('Enter a name for the donor');
+    const result = validateForm(donorSchema, {
+      name: newDonorName,
+      phone: newDonorPhone,
+      email: newDonorEmail,
+      address: newDonorAddress,
+    });
+    if (!result.success) {
+      setDonorErrors(result.errors);
       return;
     }
-    if (!newDonorPhone.trim()) {
-      toast.error('Phone number is required');
-      return;
-    }
+    setDonorErrors({});
+
     setCreatingDonor(true);
     try {
       const response = await api.post('/donors', {
-        name: newDonorName.trim(),
-        phone: newDonorPhone.trim(),
-        email: newDonorEmail.trim() || undefined,
-        address: newDonorAddress.trim() || undefined,
+        name: result.data.name,
+        phone: result.data.phone,
+        email: result.data.email?.trim() || undefined,
+        address: result.data.address?.trim() || undefined,
       });
       const donor: Donor = response.data?.data;
       setAllDonors([donor, ...allDonors]);
       addDonor(donor);
       setShowNewDonorForm(false);
+      setDonorErrors({});
       setNewDonorName('');
       setNewDonorPhone('');
       setNewDonorEmail('');
@@ -209,6 +243,13 @@ export default function MonthlySupportPlanFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const result = validateForm(planSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     if (planMembers.length === 0) {
       toast.error('Add at least one member to the plan');
       return;
@@ -217,7 +258,7 @@ export default function MonthlySupportPlanFormPage() {
     setSubmitting(true);
     try {
       const payload = {
-        ...formData,
+        ...result.data,
         members: planMembers.map((m) => ({
           ...(m.memberId ? { memberId: m.memberId } : { donorId: m.donorId }),
           ...(m.amount.trim() !== '' ? { amount: parseFloat(m.amount) } : {}),
@@ -283,12 +324,14 @@ export default function MonthlySupportPlanFormPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Plan Name *</label>
             <input
               type="text"
-              required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                formErrors.name ? 'border-red-400' : 'border-gray-300'
+              }`}
               placeholder="e.g., Widows Monthly Support"
             />
+            <FieldError message={formErrors.name} />
           </div>
 
           <div>
@@ -307,26 +350,30 @@ export default function MonthlySupportPlanFormPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Default Amount (₹) *</label>
               <input
                 type="number"
-                required
                 min="0"
                 value={formData.defaultAmount}
                 onChange={(e) => setFormData({ ...formData, defaultAmount: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  formErrors.defaultAmount ? 'border-red-400' : 'border-gray-300'
+                }`}
               />
               <p className="text-xs text-gray-500 mt-1">Used for members without a custom amount below</p>
+              <FieldError message={formErrors.defaultAmount} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Due Day of Month *</label>
               <input
                 type="number"
-                required
                 min="1"
                 max="28"
                 value={formData.dayOfMonth}
                 onChange={(e) => setFormData({ ...formData, dayOfMonth: parseInt(e.target.value) || 1 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  formErrors.dayOfMonth ? 'border-red-400' : 'border-gray-300'
+                }`}
               />
               <p className="text-xs text-gray-500 mt-1">1-28, to avoid short-month issues</p>
+              <FieldError message={formErrors.dayOfMonth} />
             </div>
           </div>
 
@@ -350,11 +397,13 @@ export default function MonthlySupportPlanFormPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
               <input
                 type="date"
-                required
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  formErrors.startDate ? 'border-red-400' : 'border-gray-300'
+                }`}
               />
+              <FieldError message={formErrors.startDate} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
@@ -362,9 +411,12 @@ export default function MonthlySupportPlanFormPage() {
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  formErrors.endDate ? 'border-red-400' : 'border-gray-300'
+                }`}
               />
               <p className="text-xs text-gray-500 mt-1">Leave blank for an open-ended plan</p>
+              <FieldError message={formErrors.endDate} />
             </div>
           </div>
 
@@ -511,21 +563,26 @@ export default function MonthlySupportPlanFormPage() {
                   </button>
                 ) : (
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3 space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Donor name *"
-                      value={newDonorName}
-                      onChange={(e) => setNewDonorName(e.target.value)}
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Phone *"
-                      required
-                      value={newDonorPhone}
-                      onChange={(e) => setNewDonorPhone(e.target.value)}
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Donor name *"
+                        value={newDonorName}
+                        onChange={(e) => setNewDonorName(e.target.value)}
+                        className={`w-full px-2 py-1.5 text-sm border rounded ${donorErrors.name ? 'border-red-400' : 'border-gray-300'}`}
+                      />
+                      <FieldError message={donorErrors.name} />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Phone *"
+                        value={newDonorPhone}
+                        onChange={(e) => setNewDonorPhone(e.target.value)}
+                        className={`w-full px-2 py-1.5 text-sm border rounded ${donorErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
+                      />
+                      <FieldError message={donorErrors.phone} />
+                    </div>
                     <input
                       type="email"
                       placeholder="Email (optional)"
@@ -551,7 +608,7 @@ export default function MonthlySupportPlanFormPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setShowNewDonorForm(false); setNewDonorName(''); setNewDonorPhone(''); setNewDonorEmail(''); setNewDonorAddress(''); }}
+                        onClick={() => { setShowNewDonorForm(false); setDonorErrors({}); setNewDonorName(''); setNewDonorPhone(''); setNewDonorEmail(''); setNewDonorAddress(''); }}
                         className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800"
                       >
                         Cancel

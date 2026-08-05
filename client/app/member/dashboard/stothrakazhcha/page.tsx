@@ -1,9 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { DollarSign, Calendar, Users, TrendingUp, Plus } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
+
+const contributionSchema = z.object({
+  amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Enter a valid amount'),
+});
 
 interface Stothrakazhcha {
   _id: string;
@@ -47,6 +54,7 @@ export default function MemberStothrakazhchaPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [memberId, setMemberId] = useState<string | null>(null);
   const [processingDues, setProcessingDues] = useState(false);
+  const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     fetchData();
@@ -98,15 +106,17 @@ export default function MemberStothrakazhchaPage() {
   };
 
   const handleAddContribution = async () => {
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error('Please enter a valid amount');
-      return;
-    }
-
     if (!currentWeek) {
       toast.error('No active Stothrakazhcha for this week');
       return;
     }
+
+    const result = validateForm(contributionSchema, { amount: paymentAmount });
+    if (!result.success) {
+      setPaymentErrors(result.errors);
+      return;
+    }
+    setPaymentErrors({});
 
     const token = localStorage.getItem('member_accessToken');
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -114,7 +124,7 @@ export default function MemberStothrakazhchaPage() {
     try {
       await axios.post(
         `${apiUrl}/stothrakazhcha/${currentWeek._id}/contribute`,
-        { amount: parseFloat(paymentAmount) },
+        { amount: result.data.amount },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
@@ -244,7 +254,7 @@ export default function MemberStothrakazhchaPage() {
               </div>
             ) : (
               <button
-                onClick={() => setShowPaymentModal(true)}
+                onClick={() => { setPaymentErrors({}); setShowPaymentModal(true); }}
                 className="bg-white text-purple-600 px-6 py-2 rounded-lg hover:bg-purple-50 transition-colors font-medium flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
@@ -346,9 +356,10 @@ export default function MemberStothrakazhchaPage() {
                   step="0.01"
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  className={`w-full border rounded-lg px-4 py-2 ${paymentErrors.amount ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Enter amount"
                 />
+                <FieldError message={paymentErrors.amount} />
               </div>
 
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">

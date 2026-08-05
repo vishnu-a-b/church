@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { z } from 'zod';
 import { createRoleApi } from '@/lib/roleApi';
 import { ArrowLeft, UserPlus, Users, DollarSign, Calendar, TrendingUp, FileDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import * as XLSX from 'xlsx';
+
+const stothrakazhchaPaymentSchema = z.object({
+  memberId: z.string().min(1, 'Select a member'),
+  amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Enter a valid amount'),
+});
 
 interface Stothrakazhcha {
   _id: string;
@@ -61,6 +69,7 @@ export default function StothrakazhchaPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
 
   // Hierarchy data
   const [units, setUnits] = useState<Unit[]>([]);
@@ -232,17 +241,19 @@ export default function StothrakazhchaPaymentsPage() {
   };
 
   const handleAddPayment = async () => {
-    if (!paymentData.memberId || !paymentData.amount || parseFloat(paymentData.amount) <= 0) {
-      toast.error('Please select a member and enter a valid amount');
+    const result = validateForm(stothrakazhchaPaymentSchema, paymentData);
+    if (!result.success) {
+      setPaymentErrors(result.errors);
       return;
     }
+    setPaymentErrors({});
 
     if (!stothrakazhchaId) return;
 
     try {
       await api.post(`/stothrakazhcha/${stothrakazhchaId}/contribute`, {
-        amount: parseFloat(paymentData.amount),
-        memberId: paymentData.memberId,
+        amount: result.data.amount,
+        memberId: result.data.memberId,
       });
 
       toast.success('Payment added successfully!');
@@ -411,7 +422,7 @@ export default function StothrakazhchaPaymentsPage() {
             Export to Excel
           </button>
           <button
-            onClick={() => setShowPaymentModal(true)}
+            onClick={() => { setPaymentErrors({}); setShowPaymentModal(true); }}
             className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
           >
             <UserPlus className="w-5 h-5" />
@@ -497,7 +508,7 @@ export default function StothrakazhchaPaymentsPage() {
             <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
             <p>No payments yet for this week</p>
             <button
-              onClick={() => setShowPaymentModal(true)}
+              onClick={() => { setPaymentErrors({}); setShowPaymentModal(true); }}
               className="mt-4 text-teal-600 hover:text-teal-700 font-medium"
             >
               Add the first payment
@@ -686,18 +697,21 @@ export default function StothrakazhchaPaymentsPage() {
                 disabled={!selectedBavanakutayima || houses.length === 0}
               />
 
-              <SearchableSelect
-                label="4. Select Member"
-                required
-                options={members.map((member) => ({
-                  value: member._id,
-                  label: `${member.firstName} ${member.lastName}${member.email ? ` (${member.email})` : ''}`
-                }))}
-                value={paymentData.memberId}
-                onChange={(value) => setPaymentData({ ...paymentData, memberId: value })}
-                placeholder={selectedHouse ? "Choose a member..." : "Select house first"}
-                disabled={!selectedHouse || members.length === 0}
-              />
+              <div>
+                <SearchableSelect
+                  label="4. Select Member"
+                  required
+                  options={members.map((member) => ({
+                    value: member._id,
+                    label: `${member.firstName} ${member.lastName}${member.email ? ` (${member.email})` : ''}`
+                  }))}
+                  value={paymentData.memberId}
+                  onChange={(value) => setPaymentData({ ...paymentData, memberId: value })}
+                  placeholder={selectedHouse ? "Choose a member..." : "Select house first"}
+                  disabled={!selectedHouse || members.length === 0}
+                />
+                <FieldError message={paymentErrors.memberId} />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -709,10 +723,10 @@ export default function StothrakazhchaPaymentsPage() {
                   step="0.01"
                   value={paymentData.amount}
                   onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  className={`w-full border rounded-lg px-4 py-2 ${paymentErrors.amount ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Enter amount"
-                  required
                 />
+                <FieldError message={paymentErrors.amount} />
                 {stothrakazhcha.defaultAmount > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
                     Default: ₹{stothrakazhcha.defaultAmount}

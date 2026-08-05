@@ -1,9 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { Plus, Newspaper, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const newsSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Title is required'),
+    contentType: z.enum(['text', 'image', 'video']),
+    content: z.string().trim().min(1, 'Content is required'),
+    mediaUrl: z.string().optional(),
+    description: z.string().optional(),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().min(1, 'End date is required'),
+    isActive: z.boolean(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate && data.endDate < data.startDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endDate'], message: 'End date must be on or after start date' });
+    }
+  });
 
 interface News {
   _id: string;
@@ -24,6 +44,7 @@ export default function NewsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [formData, setFormData] = useState({
     title: '',
     contentType: 'text' as 'text' | 'image' | 'video',
@@ -54,13 +75,21 @@ export default function NewsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const result = validateForm(newsSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     setSubmitting(true);
     try {
       if (editingId) {
-        await api.put(`/news/${editingId}`, formData);
+        await api.put(`/news/${editingId}`, result.data);
         toast.success('News updated successfully!');
       } else {
-        await api.post('/news', formData);
+        await api.post('/news', result.data);
         toast.success('News created successfully!');
       }
       setShowModal(false);
@@ -76,6 +105,7 @@ export default function NewsPage() {
 
   const handleEdit = (news: News) => {
     setEditingId(news._id);
+    setFormErrors({});
     setFormData({
       title: news.title,
       contentType: news.contentType,
@@ -103,6 +133,7 @@ export default function NewsPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setFormErrors({});
     setFormData({
       title: '',
       contentType: 'text',
@@ -245,11 +276,11 @@ export default function NewsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                   <input
                     type="text"
-                    required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    className={`w-full border rounded-lg px-4 py-2 ${formErrors.title ? 'border-red-400' : 'border-gray-300'}`}
                   />
+                  <FieldError message={formErrors.title} />
                 </div>
 
                 <div>
@@ -268,12 +299,12 @@ export default function NewsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Content *</label>
                   <textarea
-                    required
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    className={`w-full border rounded-lg px-4 py-2 ${formErrors.content ? 'border-red-400' : 'border-gray-300'}`}
                   />
+                  <FieldError message={formErrors.content} />
                 </div>
 
                 {(formData.contentType === 'image' || formData.contentType === 'video') && (
@@ -306,21 +337,21 @@ export default function NewsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                     <input
                       type="date"
-                      required
                       value={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                      className={`w-full border rounded-lg px-4 py-2 ${formErrors.startDate ? 'border-red-400' : 'border-gray-300'}`}
                     />
+                    <FieldError message={formErrors.startDate} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
                     <input
                       type="date"
-                      required
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                      className={`w-full border rounded-lg px-4 py-2 ${formErrors.endDate ? 'border-red-400' : 'border-gray-300'}`}
                     />
+                    <FieldError message={formErrors.endDate} />
                   </div>
                 </div>
 

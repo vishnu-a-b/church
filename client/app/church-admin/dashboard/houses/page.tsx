@@ -1,12 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRoleAuth } from '@/context/RoleAuthContext';
 import { createRoleApi } from '@/lib/roleApi';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { House, Bavanakutayima } from '@/types';
 import { Plus, Edit2, Trash2, Search, X, Building2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const houseSchema = z.object({
+  unitId: z.string().optional(),
+  bavanakutayimaId: z.string().min(1, 'Select a bavanakutayima'),
+  familyName: z.string().trim().min(1, 'Family name is required'),
+  headOfFamily: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  houseNumber: z.string().optional(),
+});
 
 export default function HousesPage() {
   const { user, loading: authLoading } = useRoleAuth();
@@ -23,6 +36,7 @@ export default function HousesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingHouse, setEditingHouse] = useState<House | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     unitId: '',
@@ -62,13 +76,21 @@ export default function HousesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const result = validateForm(houseSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     setSubmitting(true);
     try {
       if (editingHouse) {
-        await api.put(`/houses/${editingHouse._id}`, formData);
+        await api.put(`/houses/${editingHouse._id}`, result.data);
         toast.success('House updated successfully!');
       } else {
-        await api.post('/houses', formData);
+        await api.post('/houses', result.data);
         toast.success('House added successfully!');
       }
       setShowModal(false);
@@ -84,6 +106,7 @@ export default function HousesPage() {
 
   const handleEdit = (house: House) => {
     setEditingHouse(house);
+    setFormErrors({});
     // Find the unit for this house's bavanakutayima
     const bavanakutayima = allBavanakutayimas.find(bk => bk._id === house.bavanakutayimaId);
     const unitId = bavanakutayima?.unitId || '';
@@ -115,6 +138,7 @@ export default function HousesPage() {
   };
 
   const resetForm = () => {
+    setFormErrors({});
     setFormData({
       unitId: '',
       bavanakutayimaId: '',
@@ -259,24 +283,29 @@ export default function HousesPage() {
                 placeholder="Search and select unit (optional)..."
               />
 
-              <SearchableSelect
-                label="Bavanakutayima"
-                required
-                options={allBavanakutayimas.map((bk) => ({ value: bk._id, label: bk.name }))}
-                value={formData.bavanakutayimaId}
-                onChange={(value) => setFormData({ ...formData, bavanakutayimaId: value })}
-                placeholder="Search and select bavanakutayima..."
-              />
+              <div>
+                <SearchableSelect
+                  label="Bavanakutayima"
+                  required
+                  options={allBavanakutayimas.map((bk) => ({ value: bk._id, label: bk.name }))}
+                  value={formData.bavanakutayimaId}
+                  onChange={(value) => setFormData({ ...formData, bavanakutayimaId: value })}
+                  placeholder="Search and select bavanakutayima..."
+                />
+                <FieldError message={formErrors.bavanakutayimaId} />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Family Name *</label>
                 <input
                   type="text"
-                  required
                   value={formData.familyName}
                   onChange={(e) => setFormData({ ...formData, familyName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
+                    formErrors.familyName ? 'border-red-400' : 'border-gray-300'
+                  }`}
                 />
+                <FieldError message={formErrors.familyName} />
               </div>
 
               <div>

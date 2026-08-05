@@ -1,11 +1,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
 import { FiEdit, FiTrash, FiUserCheck, FiShield, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
+
+const adminRoleSchema = z
+  .object({
+    memberId: z.string().min(1),
+    role: z.enum(['super_admin', 'church_admin', 'unit_admin', 'kudumbakutayima_admin'], {
+      errorMap: () => ({ message: 'Select an admin role' }),
+    }),
+    churchId: z.string().optional(),
+    unitId: z.string().optional(),
+    bavanakutayimaId: z.string().optional(),
+    permissions: z.array(z.string()),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role !== 'super_admin' && !data.churchId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Church is required', path: ['churchId'] });
+    }
+    if ((data.role === 'unit_admin' || data.role === 'kudumbakutayima_admin') && !data.unitId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Unit is required', path: ['unitId'] });
+    }
+    if (data.role === 'kudumbakutayima_admin' && !data.bavanakutayimaId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Bavanakutayima is required', path: ['bavanakutayimaId'] });
+    }
+  });
 
 interface Admin {
   _id: string;
@@ -30,6 +56,7 @@ export default function AdminManagementPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [filters, setFilters] = useState({
     role: '',
     church: '',
@@ -124,8 +151,15 @@ export default function AdminManagementPage() {
   };
 
   const handleUpdateRole = async (adminId: string) => {
+    const result = validateForm(adminRoleSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     try {
-      await api.put(`/members/${adminId}`, formData);
+      await api.put(`/members/${adminId}`, result.data);
       setShowModal(false);
       setEditingAdmin(null);
       resetForm();
@@ -155,6 +189,7 @@ export default function AdminManagementPage() {
       bavanakutayimaId: typeof admin.bavanakutayimaId === 'object' ? admin.bavanakutayimaId._id : admin.bavanakutayimaId || '',
       permissions: admin.permissions || [],
     });
+    setFormErrors({});
     setShowModal(true);
   };
 
@@ -389,6 +424,7 @@ export default function AdminManagementPage() {
                     </label>
                   ))}
                 </div>
+                <FieldError message={formErrors.role} />
               </div>
 
               {/* Scope Assignment */}
@@ -402,12 +438,12 @@ export default function AdminManagementPage() {
                       <select
                         value={formData.churchId}
                         onChange={(e) => setFormData({ ...formData, churchId: e.target.value, unitId: '', bavanakutayimaId: '' })}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
-                        required
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.churchId ? 'border-red-400' : ''}`}
                       >
                         <option value="">Select Church</option>
                         {churches.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                       </select>
+                      <FieldError message={formErrors.churchId} />
                     </div>
                   )}
 
@@ -417,12 +453,12 @@ export default function AdminManagementPage() {
                       <select
                         value={formData.unitId}
                         onChange={(e) => setFormData({ ...formData, unitId: e.target.value, bavanakutayimaId: '' })}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
-                        required
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.unitId ? 'border-red-400' : ''}`}
                       >
                         <option value="">Select Unit</option>
                         {units.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
                       </select>
+                      <FieldError message={formErrors.unitId} />
                     </div>
                   )}
 
@@ -432,12 +468,12 @@ export default function AdminManagementPage() {
                       <select
                         value={formData.bavanakutayimaId}
                         onChange={(e) => setFormData({ ...formData, bavanakutayimaId: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
-                        required
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.bavanakutayimaId ? 'border-red-400' : ''}`}
                       >
                         <option value="">Select Bavanakutayima</option>
                         {bavanakutayimas.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
                       </select>
+                      <FieldError message={formErrors.bavanakutayimaId} />
                     </div>
                   )}
                 </div>

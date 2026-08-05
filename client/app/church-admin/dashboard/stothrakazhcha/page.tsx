@@ -1,10 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { Plus, Calendar, DollarSign, Users, TrendingUp, Trash2, Edit, UserPlus, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const stothrakazhchaSchema = z.object({
+  weekStartDate: z.string().min(1, 'Select a date to calculate the week'),
+  defaultAmount: z.coerce.number().positive('Default amount must be greater than 0'),
+});
+
+const stothrakazhchaPaymentSchema = z.object({
+  memberId: z.string().min(1, 'Select a member'),
+  amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Enter a valid amount'),
+});
 
 interface Stothrakazhcha {
   _id: string;
@@ -72,6 +85,8 @@ export default function ChurchAdminStothrakazhchaPage() {
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
+  const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
   const itemsPerPage = 10;
 
   // Hierarchy data
@@ -239,6 +254,14 @@ export default function ChurchAdminStothrakazhchaPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const result = validateForm(stothrakazhchaSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     setSubmitting(true);
     try {
       if (editingId) {
@@ -265,6 +288,7 @@ export default function ChurchAdminStothrakazhchaPage() {
 
   const handleEdit = (item: Stothrakazhcha) => {
     setEditingId(item._id);
+    setFormErrors({});
     setFormData({
       weekNumber: item.weekNumber.toString(),
       year: item.year.toString(),
@@ -324,6 +348,7 @@ export default function ChurchAdminStothrakazhchaPage() {
   const handleOpenPaymentModal = (stothrakazhcha: Stothrakazhcha) => {
     setSelectedStothrakazhcha(stothrakazhcha);
     setPaymentData({ memberId: '', amount: '' });
+    setPaymentErrors({});
     setSelectedUnit('');
     setSelectedBavanakutayima('');
     setSelectedHouse('');
@@ -334,18 +359,20 @@ export default function ChurchAdminStothrakazhchaPage() {
   };
 
   const handleAddPayment = async () => {
-    if (!paymentData.memberId || !paymentData.amount || parseFloat(paymentData.amount) <= 0) {
-      toast.error('Please select a member and enter a valid amount');
+    if (!selectedStothrakazhcha) return;
+
+    const result = validateForm(stothrakazhchaPaymentSchema, paymentData);
+    if (!result.success) {
+      setPaymentErrors(result.errors);
       return;
     }
-
-    if (!selectedStothrakazhcha) return;
+    setPaymentErrors({});
 
     setAddingPayment(true);
     try {
       await api.post(`/stothrakazhcha/${selectedStothrakazhcha._id}/contribute`, {
-        amount: parseFloat(paymentData.amount),
-        memberId: paymentData.memberId,
+        amount: result.data.amount,
+        memberId: result.data.memberId,
       });
 
       toast.success('Payment added successfully!');
@@ -366,6 +393,7 @@ export default function ChurchAdminStothrakazhchaPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setFormErrors({});
     setFormData({
       weekNumber: '',
       year: new Date().getFullYear().toString(),
@@ -757,14 +785,14 @@ export default function ChurchAdminStothrakazhchaPage() {
                   </label>
                   <input
                     type="date"
-                    required
                     value={formData.weekStartDate}
                     onChange={(e) => calculateWeekDates(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    className={`w-full border rounded-lg px-4 py-2 ${formErrors.weekStartDate ? 'border-red-400' : 'border-gray-300'}`}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Week number, dates, and due date will be calculated automatically
                   </p>
+                  <FieldError message={formErrors.weekStartDate} />
                 </div>
 
                 {formData.weekNumber && (
@@ -800,12 +828,12 @@ export default function ChurchAdminStothrakazhchaPage() {
                     type="number"
                     min="0"
                     step="0.01"
-                    required
                     value={formData.defaultAmount}
                     onChange={(e) => setFormData({ ...formData, defaultAmount: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    className={`w-full border rounded-lg px-4 py-2 ${formErrors.defaultAmount ? 'border-red-400' : 'border-gray-300'}`}
                     placeholder="Fallback amount if no contributions"
                   />
+                  <FieldError message={formErrors.defaultAmount} />
                 </div>
 
                 <div>
@@ -1077,7 +1105,6 @@ export default function ChurchAdminStothrakazhchaPage() {
                     value={paymentData.memberId}
                     onChange={(e) => setPaymentData({ ...paymentData, memberId: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    required
                   >
                     <option value="">Choose a member...</option>
                     {members.map((member) => (
@@ -1086,6 +1113,7 @@ export default function ChurchAdminStothrakazhchaPage() {
                       </option>
                     ))}
                   </select>
+                  <FieldError message={paymentErrors.memberId} />
                 </div>
               )}
 
@@ -1099,10 +1127,10 @@ export default function ChurchAdminStothrakazhchaPage() {
                   step="0.01"
                   value={paymentData.amount}
                   onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  className={`w-full border rounded-lg px-4 py-2 ${paymentErrors.amount ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Enter amount"
-                  required
                 />
+                <FieldError message={paymentErrors.amount} />
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">

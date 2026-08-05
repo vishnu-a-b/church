@@ -1,8 +1,45 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { FiX, FiUserPlus } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
+
+const churchSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Church name is required'),
+    location: z.string().trim().min(1, 'Location is required'),
+    diocese: z.string().optional(),
+    contactPerson: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().trim().email('Enter a valid email').optional().or(z.literal('')),
+    createAdmin: z.boolean().optional(),
+    adminUsername: z.string().optional(),
+    adminEmail: z.string().optional(),
+    adminPassword: z.string().optional(),
+    adminFirstName: z.string().optional(),
+    adminLastName: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.createAdmin) return;
+    if (!data.adminFirstName?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'First name is required', path: ['adminFirstName'] });
+    }
+    if (!data.adminLastName?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Last name is required', path: ['adminLastName'] });
+    }
+    if (!data.adminUsername?.trim() || data.adminUsername.trim().length < 3) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Username must be at least 3 characters', path: ['adminUsername'] });
+    }
+    if (!data.adminEmail?.trim() || !z.string().email().safeParse(data.adminEmail.trim()).success) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid email', path: ['adminEmail'] });
+    }
+    if (!data.adminPassword || data.adminPassword.length < 6) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Password must be at least 6 characters', path: ['adminPassword'] });
+    }
+  });
 
 interface Church {
   _id?: string;
@@ -44,8 +81,10 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
+    setFormErrors({});
     if (church) {
       setFormData(church);
     } else {
@@ -69,6 +108,13 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const result = validateForm(churchSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
     setSaving(true);
 
     try {
@@ -120,12 +166,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                 </label>
                 <input
                   type="text"
-                  required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none ${formErrors.name ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="St. Mary's Cathedral"
                 />
+                <FieldError message={formErrors.name} />
               </div>
 
               <div>
@@ -134,12 +180,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                 </label>
                 <input
                   type="text"
-                  required
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none ${formErrors.location ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Kochi, Kerala"
                 />
+                <FieldError message={formErrors.location} />
               </div>
 
               <div>
@@ -189,9 +235,10 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                   type="email"
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none ${formErrors.email ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="church@example.com"
                 />
+                <FieldError message={formErrors.email} />
               </div>
 
               {/* Church Admin Creation Option */}
@@ -222,12 +269,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                           </label>
                           <input
                             type="text"
-                            required={formData.createAdmin}
                             value={formData.adminFirstName || ''}
                             onChange={(e) => setFormData({ ...formData, adminFirstName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.adminFirstName ? 'border-red-400' : 'border-gray-300'}`}
                             placeholder="John"
                           />
+                          <FieldError message={formErrors.adminFirstName} />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -235,12 +282,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                           </label>
                           <input
                             type="text"
-                            required={formData.createAdmin}
                             value={formData.adminLastName || ''}
                             onChange={(e) => setFormData({ ...formData, adminLastName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.adminLastName ? 'border-red-400' : 'border-gray-300'}`}
                             placeholder="Doe"
                           />
+                          <FieldError message={formErrors.adminLastName} />
                         </div>
                       </div>
 
@@ -250,12 +297,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                         </label>
                         <input
                           type="text"
-                          required={formData.createAdmin}
                           value={formData.adminUsername || ''}
                           onChange={(e) => setFormData({ ...formData, adminUsername: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.adminUsername ? 'border-red-400' : 'border-gray-300'}`}
                           placeholder="churchadmin"
                         />
+                        <FieldError message={formErrors.adminUsername} />
                       </div>
 
                       <div>
@@ -264,12 +311,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                         </label>
                         <input
                           type="email"
-                          required={formData.createAdmin}
                           value={formData.adminEmail || ''}
                           onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.adminEmail ? 'border-red-400' : 'border-gray-300'}`}
                           placeholder="admin@church.com"
                         />
+                        <FieldError message={formErrors.adminEmail} />
                       </div>
 
                       <div>
@@ -278,13 +325,12 @@ export function ChurchModal({ isOpen, onClose, onSave, church }: ChurchModalProp
                         </label>
                         <input
                           type="password"
-                          required={formData.createAdmin}
                           value={formData.adminPassword || ''}
                           onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none ${formErrors.adminPassword ? 'border-red-400' : 'border-gray-300'}`}
                           placeholder="Min. 6 characters"
-                          minLength={6}
                         />
+                        <FieldError message={formErrors.adminPassword} />
                       </div>
                     </div>
                   )}

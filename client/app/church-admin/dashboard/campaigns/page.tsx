@@ -1,11 +1,61 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { Campaign } from '@/types';
 import { Wallet, TrendingUp, Plus, Clock, UserPlus, Users, Edit, Trash2, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const campaignSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Campaign name is required'),
+    campaignType: z.enum(['spl_contribution', 'general_fund', 'building_fund', 'charity', 'other']),
+    contributionMode: z.enum(['fixed', 'variable']),
+    amountType: z.enum(['per_member', 'per_house', 'flexible']),
+    fixedAmount: z.coerce.number().min(0),
+    minimumAmount: z.coerce.number().min(0),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().optional(),
+    dueDate: z.string().optional(),
+    isActive: z.boolean(),
+    isCompulsory: z.boolean(),
+    targetType: z.enum(['all', 'specific_members', 'specific_houses']),
+    specificTargets: z.array(
+      z.object({
+        targetId: z.string(),
+        targetModel: z.enum(['Member', 'House']),
+        amount: z.number(),
+        name: z.string().optional(),
+      })
+    ),
+  })
+  .superRefine((data, ctx) => {
+    if (data.contributionMode === 'fixed' && (!data.fixedAmount || data.fixedAmount <= 0)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['fixedAmount'], message: 'Fixed amount is required and must be greater than 0' });
+    }
+    if (data.contributionMode === 'variable' && !data.dueDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dueDate'], message: 'Due date is required for variable campaigns' });
+    }
+    if (data.endDate && data.startDate && data.endDate < data.startDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endDate'], message: 'End date must be on or after start date' });
+    }
+    if (data.targetType !== 'all' && data.specificTargets.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['specificTargets'],
+        message: `Select at least one ${data.targetType === 'specific_members' ? 'member' : 'house'}`,
+      });
+    }
+  });
+
+const campaignPaymentSchema = z.object({
+  memberId: z.string().min(1, 'Select a member'),
+  amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Enter a valid amount'),
+});
 
 interface Member {
   _id: string;
@@ -48,6 +98,8 @@ export default function CampaignsPage() {
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
+  const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -270,13 +322,21 @@ export default function CampaignsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const result = validateForm(campaignSchema, formData);
+    if (!result.success) {
+      setFormErrors(result.errors);
+      return;
+    }
+    setFormErrors({});
+
     setSubmitting(true);
     try {
       if (editingId) {
-        await api.put(`/campaigns/${editingId}`, formData);
+        await api.put(`/campaigns/${editingId}`, result.data);
         toast.success('Campaign updated successfully!');
       } else {
-        await api.post('/campaigns', formData);
+        await api.post('/campaigns', result.data);
         toast.success('Campaign created successfully!');
       }
       setShowModal(false);
@@ -292,6 +352,7 @@ export default function CampaignsPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setFormErrors({});
     setTargetSearchTerm('');
     setFormData({
       name: '',
@@ -312,6 +373,7 @@ export default function CampaignsPage() {
 
   const handleEdit = async (campaign: Campaign) => {
     setEditingId(campaign._id);
+    setFormErrors({});
 
     // Fetch names for specific targets if they exist
     let targetsWithNames = campaign.specificTargets || [];
@@ -443,6 +505,7 @@ export default function CampaignsPage() {
   const handleOpenPaymentModal = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setPaymentData({ memberId: '', amount: '' });
+    setPaymentErrors({});
     setSelectedUnit('');
     setSelectedBavanakutayima('');
     setSelectedHouse('');
@@ -453,18 +516,20 @@ export default function CampaignsPage() {
   };
 
   const handleAddPayment = async () => {
-    if (!paymentData.memberId || !paymentData.amount || parseFloat(paymentData.amount) <= 0) {
-      toast.error('Please select a member and enter a valid amount');
+    if (!selectedCampaign) return;
+
+    const result = validateForm(campaignPaymentSchema, paymentData);
+    if (!result.success) {
+      setPaymentErrors(result.errors);
       return;
     }
-
-    if (!selectedCampaign) return;
+    setPaymentErrors({});
 
     setAddingPayment(true);
     try {
       await api.post(`/campaigns/${selectedCampaign._id}/contribute`, {
-        amount: parseFloat(paymentData.amount),
-        memberId: paymentData.memberId,
+        amount: result.data.amount,
+        memberId: result.data.memberId,
       });
 
       toast.success('Payment added successfully!');
@@ -865,12 +930,14 @@ export default function CampaignsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Campaign Name *</label>
                 <input
                   type="text"
-                  required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    formErrors.name ? 'border-red-400' : 'border-gray-300'
+                  }`}
                   placeholder="e.g., Christmas Fund 2024"
                 />
+                <FieldError message={formErrors.name} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -925,13 +992,15 @@ export default function CampaignsPage() {
                   </label>
                   <input
                     type="number"
-                    required={formData.contributionMode === 'fixed'}
                     min="0"
                     value={formData.fixedAmount}
                     onChange={(e) => setFormData({ ...formData, fixedAmount: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      formErrors.fixedAmount ? 'border-red-400' : 'border-gray-300'
+                    }`}
                     placeholder="Amount per member/house"
                   />
+                  <FieldError message={formErrors.fixedAmount} />
                 </div>
               </div>
 
@@ -954,11 +1023,13 @@ export default function CampaignsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                   <input
                     type="date"
-                    required
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      formErrors.startDate ? 'border-red-400' : 'border-gray-300'
+                    }`}
                   />
+                  <FieldError message={formErrors.startDate} />
                 </div>
 
                 <div>
@@ -967,17 +1038,19 @@ export default function CampaignsPage() {
                   </label>
                   <input
                     type="date"
-                    required={formData.contributionMode === 'variable'}
                     value={formData.contributionMode === 'variable' ? formData.dueDate : formData.endDate}
                     onChange={(e) => setFormData({
                       ...formData,
                       [formData.contributionMode === 'variable' ? 'dueDate' : 'endDate']: e.target.value
                     })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      (formData.contributionMode === 'variable' ? formErrors.dueDate : formErrors.endDate) ? 'border-red-400' : 'border-gray-300'
+                    }`}
                   />
                   {formData.contributionMode === 'variable' && (
                     <p className="text-xs text-gray-500 mt-1">Dues will be added after this date</p>
                   )}
+                  <FieldError message={formData.contributionMode === 'variable' ? formErrors.dueDate : formErrors.endDate} />
                 </div>
 
                 {formData.contributionMode === 'fixed' && (
@@ -1034,6 +1107,7 @@ export default function CampaignsPage() {
                       Select specific {formData.targetType === 'specific_members' ? 'members' : 'houses'} and set custom amounts for each
                     </p>
                   )}
+                  <FieldError message={formErrors.specificTargets} />
                 </div>
 
                 {/* Specific Targets Selector */}
@@ -1333,7 +1407,6 @@ export default function CampaignsPage() {
                     value={paymentData.memberId}
                     onChange={(e) => setPaymentData({ ...paymentData, memberId: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    required
                   >
                     <option value="">Choose a member...</option>
                     {members.map((member) => (
@@ -1342,6 +1415,7 @@ export default function CampaignsPage() {
                       </option>
                     ))}
                   </select>
+                  <FieldError message={paymentErrors.memberId} />
                 </div>
               )}
 
@@ -1356,10 +1430,10 @@ export default function CampaignsPage() {
                   step="0.01"
                   value={paymentData.amount}
                   onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  className={`w-full border rounded-lg px-4 py-2 ${paymentErrors.amount ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Enter amount"
-                  required
                 />
+                <FieldError message={paymentErrors.amount} />
                 {selectedCampaign.fixedAmount > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
                     Suggested: ₹{selectedCampaign.fixedAmount}

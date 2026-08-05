@@ -1,10 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { createRoleApi } from '@/lib/roleApi';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import { AlertCircle, DollarSign, CheckCircle, X } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const paymentSchema = z.object({
+  amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Amount must be greater than 0'),
+  paymentMethod: z.enum(['cash', 'bank_transfer', 'upi', 'cheque']),
+});
 
 interface DueItem {
   _id: string;
@@ -32,6 +40,7 @@ export default function DuesPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
   const [filters, setFilters] = useState({
     unit: '',
     bavanakutayima: '',
@@ -136,28 +145,31 @@ export default function DuesPage() {
   const handlePayDue = (due: DueItem) => {
     setSelectedDue(due);
     setPaymentAmount(due.remainingAmount.toString());
+    setPaymentErrors({});
     setShowPaymentModal(true);
   };
 
   const handlePaymentSubmit = async () => {
-    if (!selectedDue || !paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error('Please enter a valid payment amount');
-      return;
-    }
+    if (!selectedDue) return;
 
-    const amount = parseFloat(paymentAmount);
-    if (amount > selectedDue.remainingAmount) {
-      toast.error('Payment amount cannot exceed remaining balance');
+    const result = validateForm(paymentSchema, { amount: paymentAmount, paymentMethod });
+    if (!result.success) {
+      setPaymentErrors(result.errors);
       return;
     }
+    if (result.data.amount > selectedDue.remainingAmount) {
+      setPaymentErrors({ amount: 'Payment amount cannot exceed remaining balance' });
+      return;
+    }
+    setPaymentErrors({});
 
     setProcessingPayment(true);
     try {
       await api.post('/dues/pay', {
         dueId: selectedDue._id,
         dueType: selectedDue.campaignId ? 'campaign' : 'stothrakazhcha',
-        amount,
-        paymentMethod,
+        amount: result.data.amount,
+        paymentMethod: result.data.paymentMethod,
       });
 
       toast.success('Payment processed successfully!');
@@ -447,9 +459,12 @@ export default function DuesPage() {
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   max={selectedDue.remainingAmount}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${
+                    paymentErrors.amount ? 'border-red-400' : 'border-gray-300'
+                  }`}
                   placeholder="Enter amount"
                 />
+                <FieldError message={paymentErrors.amount} />
               </div>
 
               <div>

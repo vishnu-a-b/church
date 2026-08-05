@@ -6,6 +6,8 @@ import axios from 'axios';
 import Link from 'next/link';
 import { MapPin, Users, Home } from 'lucide-react';
 import PasswordInput from '@/components/PasswordInput';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors, usernameLoginSchema } from '@/lib/validation';
 
 export default function MemberLogin() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function MemberLogin() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [memberInfo, setMemberInfo] = useState<any>(null);
@@ -21,17 +24,25 @@ export default function MemberLogin() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+
+    const validation = validateForm(usernameLoginSchema, formData);
+    if (!validation.success) {
+      setFieldErrors(validation.errors);
+      return;
+    }
+    setFieldErrors({});
+
     setIsLoading(true);
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
       console.log('🔐 Attempting member login...');
       console.log('API URL:', apiUrl);
-      console.log('Username:', formData.username);
+      console.log('Username:', validation.data.username);
 
       const response = await axios.post(`${apiUrl}/auth/member-login`, {
-        username: formData.username,
-        password: formData.password,
+        username: validation.data.username,
+        password: validation.data.password,
       });
 
       console.log('✅ Login response:', response.data);
@@ -142,13 +153,15 @@ export default function MemberLogin() {
             <input
               id="username"
               type="text"
-              required
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all ${
+                fieldErrors.username ? 'border-red-400' : 'border-gray-300'
+              }`}
               placeholder="Enter your username"
               disabled={isLoading}
             />
+            <FieldError message={fieldErrors.username} />
           </div>
 
           <PasswordInput

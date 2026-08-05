@@ -1,13 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { Campaign } from '@/types';
 import { ArrowLeft, UserPlus, Users, DollarSign, Calendar, TrendingUp, FileDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import { FieldError } from '@/components/FieldError';
+import { validateForm, FieldErrors } from '@/lib/validation';
 import * as XLSX from 'xlsx';
+
+const contributionPaymentSchema = z
+  .object({
+    paymentType: z.enum(['member', 'house']),
+    memberId: z.string().optional(),
+    houseId: z.string().optional(),
+    amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Enter a valid amount'),
+  })
+  .superRefine((data, ctx) => {
+    if (data.paymentType === 'member' && !data.memberId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['memberId'], message: 'Select a member' });
+    }
+    if (data.paymentType === 'house' && !data.houseId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['houseId'], message: 'Select a house' });
+    }
+  });
 
 interface Member {
   _id: string;
@@ -44,6 +63,7 @@ export default function CampaignPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
 
   // Hierarchy data
   const [units, setUnits] = useState<Unit[]>([]);
@@ -223,27 +243,21 @@ export default function CampaignPaymentsPage() {
   };
 
   const handleAddPayment = async () => {
-    // Validation based on payment type
-    if (paymentType === 'member') {
-      if (!paymentData.memberId || !paymentData.amount || parseFloat(paymentData.amount) <= 0) {
-        toast.error('Please select a member and enter a valid amount');
-        return;
-      }
-    } else {
-      if (!paymentData.houseId || !paymentData.amount || parseFloat(paymentData.amount) <= 0) {
-        toast.error('Please select a house and enter a valid amount');
-        return;
-      }
-    }
-
     if (!campaignId) return;
+
+    const result = validateForm(contributionPaymentSchema, { ...paymentData, paymentType });
+    if (!result.success) {
+      setPaymentErrors(result.errors);
+      return;
+    }
+    setPaymentErrors({});
 
     try {
       await api.post(`/campaigns/${campaignId}/contribute`, {
-        amount: parseFloat(paymentData.amount),
-        memberId: paymentType === 'member' ? paymentData.memberId : undefined,
-        houseId: paymentType === 'house' ? paymentData.houseId : undefined,
-        paymentType,
+        amount: result.data.amount,
+        memberId: result.data.paymentType === 'member' ? result.data.memberId : undefined,
+        houseId: result.data.paymentType === 'house' ? result.data.houseId : undefined,
+        paymentType: result.data.paymentType,
       });
 
       toast.success('Payment added successfully!');
@@ -404,7 +418,7 @@ export default function CampaignPaymentsPage() {
             Export to Excel
           </button>
           <button
-            onClick={() => setShowPaymentModal(true)}
+            onClick={() => { setPaymentErrors({}); setShowPaymentModal(true); }}
             className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
           >
             <UserPlus className="w-5 h-5" />
@@ -490,7 +504,7 @@ export default function CampaignPaymentsPage() {
             <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
             <p>No payments yet for this campaign</p>
             <button
-              onClick={() => setShowPaymentModal(true)}
+              onClick={() => { setPaymentErrors({}); setShowPaymentModal(true); }}
               className="mt-4 text-purple-600 hover:text-purple-700 font-medium"
             >
               Add the first payment
@@ -706,30 +720,36 @@ export default function CampaignPaymentsPage() {
                 disabled={!selectedUnit || bavanakutayimas.length === 0}
               />
 
-              <SearchableSelect
-                label="3. Select House"
-                required
-                options={houses.map((house) => ({ value: house._id, label: house.familyName }))}
-                value={selectedHouse}
-                onChange={handleHouseChange}
-                placeholder={selectedBavanakutayima ? "Choose a house..." : "Select bavanakutayima first"}
-                disabled={!selectedBavanakutayima || houses.length === 0}
-              />
+              <div>
+                <SearchableSelect
+                  label="3. Select House"
+                  required
+                  options={houses.map((house) => ({ value: house._id, label: house.familyName }))}
+                  value={selectedHouse}
+                  onChange={handleHouseChange}
+                  placeholder={selectedBavanakutayima ? "Choose a house..." : "Select bavanakutayima first"}
+                  disabled={!selectedBavanakutayima || houses.length === 0}
+                />
+                {paymentType === 'house' && <FieldError message={paymentErrors.houseId} />}
+              </div>
 
               {/* Member Selection - Only for Member Payments */}
               {paymentType === 'member' && (
-                <SearchableSelect
-                  label="4. Select Member"
-                  required
-                  options={members.map((member) => ({
-                    value: member._id,
-                    label: `${member.firstName} ${member.lastName}${member.email ? ` (${member.email})` : ''}`
-                  }))}
-                  value={paymentData.memberId}
-                  onChange={(value) => setPaymentData({ ...paymentData, memberId: value, houseId: '' })}
-                  placeholder={selectedHouse ? "Choose a member..." : "Select house first"}
-                  disabled={!selectedHouse || members.length === 0}
-                />
+                <div>
+                  <SearchableSelect
+                    label="4. Select Member"
+                    required
+                    options={members.map((member) => ({
+                      value: member._id,
+                      label: `${member.firstName} ${member.lastName}${member.email ? ` (${member.email})` : ''}`
+                    }))}
+                    value={paymentData.memberId}
+                    onChange={(value) => setPaymentData({ ...paymentData, memberId: value, houseId: '' })}
+                    placeholder={selectedHouse ? "Choose a member..." : "Select house first"}
+                    disabled={!selectedHouse || members.length === 0}
+                  />
+                  <FieldError message={paymentErrors.memberId} />
+                </div>
               )}
 
               <div>
@@ -742,10 +762,10 @@ export default function CampaignPaymentsPage() {
                   step="0.01"
                   value={paymentData.amount}
                   onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  className={`w-full border rounded-lg px-4 py-2 ${paymentErrors.amount ? 'border-red-400' : 'border-gray-300'}`}
                   placeholder="Enter amount"
-                  required
                 />
+                <FieldError message={paymentErrors.amount} />
                 {campaign.fixedAmount > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
                     Suggested: ₹{campaign.fixedAmount}
