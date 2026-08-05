@@ -6,6 +6,7 @@ const PORTALS: Array<{ role: PortalRole; label: string; color: string }> = [
   { role: 'member', label: 'Member', color: '#0d9488' },
   { role: 'donor', label: 'Donor', color: '#7c3aed' },
   { role: 'kudumbakutayima_admin', label: 'Kudumbakutayima Admin', color: '#ea580c' },
+  { role: 'unit_admin', label: 'Unit Admin', color: '#2563eb' },
   { role: 'church_admin', label: 'Church Admin', color: '#059669' },
 ];
 
