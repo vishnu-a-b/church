@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import bcrypt from 'bcrypt';
 import Unit from '../models/Unit';
 import Bavanakutayima from '../models/Bavanakutayima';
 import House from '../models/House';
@@ -998,6 +999,13 @@ export const updateMember = async (req: AuthRequest, res: Response, next: NextFu
     if (req.body.password === '') {
       delete req.body.password;
     }
+    // findByIdAndUpdate bypasses the model's pre('save') hashing hook, so a plaintext
+    // password here would be stored as-is and could never match on login — hash it
+    // ourselves before the update, same as the hook would.
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      req.body.password = await bcrypt.hash(req.body.password, salt);
+    }
     const member = await Member.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
       .populate('houseId', 'familyName uniqueId');
     if (!member) {
@@ -1345,6 +1353,12 @@ export const createTransaction = async (req: AuthRequest, res: Response, next: N
         return;
       }
     }
+
+    // Every Transaction needs a unique receiptNumber and a createdBy — generate/set
+    // them here rather than trusting the client, matching the pattern used by every
+    // other transaction-creating endpoint (addContribution, createMyPathavarmContribution).
+    req.body.receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    req.body.createdBy = req.user?._id;
 
     // Thirukkarmangal payments snapshot the rite's split breakdown at creation time,
     // so historical payments keep their split even if the rite's config changes later.
@@ -2580,6 +2594,13 @@ export const updateUser = async (req: AuthRequest, res: Response, next: NextFunc
     // If password is empty, remove it from update
     if (req.body.password === '') {
       delete req.body.password;
+    }
+    // findByIdAndUpdate bypasses the model's pre('save') hashing hook, so a plaintext
+    // password here would be stored as-is and could never match on login — hash it
+    // ourselves before the update, same as the hook would.
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      req.body.password = await bcrypt.hash(req.body.password, salt);
     }
     const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
       .select('-password -refreshToken');

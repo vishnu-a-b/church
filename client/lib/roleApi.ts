@@ -126,8 +126,15 @@ export function createRoleApi(role: string): AxiosInstance {
       const originalRequest: any = error.config;
       const state = getRefreshState(role);
 
+      // A 401 from a login endpoint itself just means "invalid credentials" —
+      // never "session expired" — so it must never trigger a refresh/redirect.
+      // Without this guard a failed login attempt (e.g. while a caller is trying
+      // a fallback endpoint after this one 401s) races a hard window.location
+      // redirect against that fallback request.
+      const isLoginRequest = /\/auth\/(login|member-login|donor-login)$/.test(originalRequest?.url || '');
+
       // Handle 401 Unauthorized errors (token expired)
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest) {
 
         // If already refreshing, queue this request
         if (state.isRefreshing) {

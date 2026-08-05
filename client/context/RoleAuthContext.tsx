@@ -152,11 +152,30 @@ export function RoleAuthProvider({ children, role, expectedRole }: RoleAuthProvi
 
       console.log(`[${role}] Using endpoint:`, loginEndpoint);
 
-      const response = await api.post<AuthResponse>(loginEndpoint, {
+      const loginBody = {
         username: email, // Send as username (backend accepts email or username)
         email: email,    // Also send as email for admin login
         password
-      });
+      };
+
+      let response;
+      try {
+        response = await api.post<AuthResponse>(loginEndpoint, loginBody);
+      } catch (primaryError: any) {
+        // unit_admin/kudumbakutayima_admin accounts can be created either as a User
+        // (e.g. via the create-all-admins script) or as a Member with that role
+        // assigned (e.g. via the "Create Unit/Kudumbakutayima Admin Account" checkbox
+        // on Units/Bavanakutayimas, or via Users > Add User "Grant Access"). Since
+        // /auth/login only searches Users and /auth/member-login only searches
+        // Members, a 401 on the first attempt doesn't necessarily mean bad
+        // credentials — retry against the other collection before giving up.
+        const canFallback = (role === 'unit_admin' || role === 'kudumbakutayima_admin') && primaryError.response?.status === 401;
+        if (!canFallback) throw primaryError;
+
+        const fallbackEndpoint = loginEndpoint === '/auth/login' ? '/auth/member-login' : '/auth/login';
+        console.log(`[${role}] Primary login failed, retrying via:`, fallbackEndpoint);
+        response = await api.post<AuthResponse>(fallbackEndpoint, loginBody);
+      }
 
       console.log(`[${role}] Full response:`, response);
       console.log(`[${role}] Response data:`, response.data);
