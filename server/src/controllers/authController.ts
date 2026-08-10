@@ -152,16 +152,19 @@ export const memberLogin = async (
     if (!username || !password) {
       res.status(400).json({
         success: false,
-        error: 'Please provide username/email and password',
+        error: 'Please provide username/email/phone and password',
       });
       return;
     }
 
-    // Find member by username OR email with populated hierarchy
-    const member = await Member.findOne({
+    // Find candidates by username, email, OR phone with populated hierarchy.
+    // Phone is not unique (family members often share a household number), so
+    // more than one member can match — disambiguate by trying each one's password.
+    const candidates = await Member.find({
       $or: [
         { username: username },
-        { email: username }
+        { email: username },
+        { phone: username }
       ]
     })
       .select('+password')
@@ -169,6 +172,32 @@ export const memberLogin = async (
       .populate('unitId', 'name uniqueId')
       .populate('bavanakutayimaId', 'name uniqueId')
       .populate('houseId', 'familyName uniqueId');
+
+    if (candidates.length === 0) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
+      return;
+    }
+
+    const loginableCandidates = candidates.filter((candidate) => !!candidate.password);
+
+    if (loginableCandidates.length === 0) {
+      res.status(401).json({
+        success: false,
+        error: 'This member account does not have login access',
+      });
+      return;
+    }
+
+    let member = null;
+    for (const candidate of loginableCandidates) {
+      if (await candidate.comparePassword(password)) {
+        member = candidate;
+        break;
+      }
+    }
 
     if (!member) {
       res.status(401).json({
@@ -178,29 +207,10 @@ export const memberLogin = async (
       return;
     }
 
-    // Check if member has login credentials
-    if (!member.password) {
-      res.status(401).json({
-        success: false,
-        error: 'This member account does not have login access',
-      });
-      return;
-    }
-
     if (!member.isActive) {
       res.status(401).json({
         success: false,
         error: 'Account is deactivated',
-      });
-      return;
-    }
-
-    const isMatch = await member.comparePassword(password);
-
-    if (!isMatch) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid credentials',
       });
       return;
     }
@@ -251,16 +261,44 @@ export const donorLogin = async (
     if (!username || !password) {
       res.status(400).json({
         success: false,
-        error: 'Please provide username/email and password',
+        error: 'Please provide username/email/phone and password',
       });
       return;
     }
 
-    const donor = await Donor.findOne({
-      $or: [{ username: username }, { email: username }],
+    // Phone is not unique (family members often share a household number), so
+    // more than one donor can match — disambiguate by trying each one's password.
+    const candidates = await Donor.find({
+      $or: [{ username: username }, { email: username }, { phone: username }],
     })
       .select('+password')
       .populate('churchId', 'name uniqueId');
+
+    if (candidates.length === 0) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
+      return;
+    }
+
+    const loginableCandidates = candidates.filter((candidate) => !!candidate.password);
+
+    if (loginableCandidates.length === 0) {
+      res.status(401).json({
+        success: false,
+        error: 'This donor account does not have login access',
+      });
+      return;
+    }
+
+    let donor = null;
+    for (const candidate of loginableCandidates) {
+      if (await candidate.comparePassword(password)) {
+        donor = candidate;
+        break;
+      }
+    }
 
     if (!donor) {
       res.status(401).json({
@@ -270,28 +308,10 @@ export const donorLogin = async (
       return;
     }
 
-    if (!donor.password) {
-      res.status(401).json({
-        success: false,
-        error: 'This donor account does not have login access',
-      });
-      return;
-    }
-
     if (!donor.isActive) {
       res.status(401).json({
         success: false,
         error: 'Account is deactivated',
-      });
-      return;
-    }
-
-    const isMatch = await donor.comparePassword(password);
-
-    if (!isMatch) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid credentials',
       });
       return;
     }

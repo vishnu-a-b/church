@@ -106,7 +106,7 @@ export default function DonorLogin() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
+                  Username, Email, or Phone
                 </label>
                 <input
                   id="username"
@@ -116,7 +116,7 @@ export default function DonorLogin() {
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all ${
                     fieldErrors.username ? 'border-red-400' : 'border-gray-300'
                   }`}
-                  placeholder="Enter your username"
+                  placeholder="Enter your username, email, or phone"
                   disabled={isLoading}
                 />
                 <FieldError message={fieldErrors.username} />

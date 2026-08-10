@@ -11,7 +11,7 @@ export default function LoginScreen() {
 
   const handleSubmit = async () => {
     if (!username.trim() || !password) {
-      setError('Enter your username/email and password');
+      setError('Enter your username/email/phone and password');
       return;
     }
     setError('');
@@ -33,7 +33,7 @@ export default function LoginScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Username or email"
+        placeholder="Username, email, or phone"
         autoCapitalize="none"
         value={username}
         onChangeText={setUsername}
