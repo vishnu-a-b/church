@@ -136,12 +136,13 @@ export default function HousesPage() {
     setEditingHouse(house);
     setFormErrors({});
     // Find the unit for this house's bavanakutayima
-    const bavanakutayima = allBavanakutayimas.find(bk => bk._id === house.bavanakutayimaId);
-    const unitId = bavanakutayima?.unitId || '';
+    const bkId = resolveId(house.bavanakutayimaId);
+    const bavanakutayima = allBavanakutayimas.find(bk => bk._id === bkId);
+    const unitId = resolveId(bavanakutayima?.unitId) || '';
 
     setFormData({
       unitId: unitId,
-      bavanakutayimaId: house.bavanakutayimaId,
+      bavanakutayimaId: bkId,
       familyName: house.familyName,
       headOfFamily: house.headOfFamily || '',
       address: house.address || '',
@@ -178,18 +179,23 @@ export default function HousesPage() {
     });
   };
 
-  const getBavanakutayimaName = (id: string) => {
+  const resolveId = (val: any): string =>
+    typeof val === 'object' && val !== null ? val._id : val ?? '';
+
+  const getBavanakutayimaName = (id: any) => {
+    if (typeof id === 'object' && id !== null) return id.name || 'Unknown';
     return allBavanakutayimas.find((b) => b._id === id)?.name || 'Unknown';
   };
 
   const filteredHouses = houses.filter((house) => {
     // Filter by unit
     if (filters.unit) {
-      const bavanakutayima = allBavanakutayimas.find(bk => bk._id === house.bavanakutayimaId);
-      if (!bavanakutayima || bavanakutayima.unitId !== filters.unit) return false;
+      const bkId = resolveId(house.bavanakutayimaId);
+      const bavanakutayima = allBavanakutayimas.find(bk => bk._id === bkId);
+      if (!bavanakutayima || resolveId(bavanakutayima.unitId) !== filters.unit) return false;
     }
     // Filter by bavanakutayima
-    if (filters.bavanakutayima && house.bavanakutayimaId !== filters.bavanakutayima) return false;
+    if (filters.bavanakutayima && resolveId(house.bavanakutayimaId) !== filters.bavanakutayima) return false;
     return true;
   }).filter((house) =>
     house.familyName.toLowerCase().includes('') ||
