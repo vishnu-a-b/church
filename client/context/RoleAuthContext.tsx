@@ -169,7 +169,7 @@ export function RoleAuthProvider({ children, role, expectedRole }: RoleAuthProvi
         // /auth/login only searches Users and /auth/member-login only searches
         // Members, a 401 on the first attempt doesn't necessarily mean bad
         // credentials — retry against the other collection before giving up.
-        const canFallback = (role === 'unit_admin' || role === 'kudumbakutayima_admin') && primaryError.response?.status === 401;
+        const canFallback = isAdminRole && primaryError.response?.status === 401;
         if (!canFallback) throw primaryError;
 
         const fallbackEndpoint = loginEndpoint === '/auth/login' ? '/auth/member-login' : '/auth/login';
