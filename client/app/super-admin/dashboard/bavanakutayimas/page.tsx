@@ -182,7 +182,7 @@ export default function BavanakutayimasPage() {
     setEditing(item);
     setFormErrors({});
     setFormData({
-      unitId: item.unitId,
+      unitId: resolveUnitId(item.unitId),
       name: item.name,
       leaderName: item.leaderName || '',
       createAdmin: false,
@@ -218,14 +218,19 @@ export default function BavanakutayimasPage() {
     setFormData(initialFormState);
   };
 
-  const getUnitName = (id: string) => units.find((u) => u._id === id)?.name || 'Unknown';
+  // unitId comes back populated (object) from the API
+  const resolveUnitId = (unitId: any): string =>
+    typeof unitId === 'object' && unitId !== null ? unitId._id : unitId;
+
+  const getUnitName = (unitId: any): string => {
+    if (typeof unitId === 'object' && unitId !== null) return unitId.name || 'Unknown';
+    return units.find((u) => u._id === unitId)?.name || 'Unknown';
+  };
 
   const filtered = bavanakutayimas.filter((b) => {
-    // Filter by search term
     if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !(b.hierarchicalNumber && b.hierarchicalNumber.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
-    // Filter by unit
-    if (filters.unit && b.unitId !== filters.unit) return false;
+    if (filters.unit && resolveUnitId(b.unitId) !== filters.unit) return false;
     return true;
   });
 
