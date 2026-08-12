@@ -192,6 +192,7 @@ async function main() {
   const createAdmin = async (opts: {
     role: string;
     username: string;
+    email: string;
     password: string;
     firstName: string;
     entry: FirstHouseEntry;
@@ -211,32 +212,35 @@ async function main() {
       gender: 'male' as const,
       relationToHead: 'other' as const,
       username: opts.username,
+      email: opts.email,
       password: opts.password,
       role: opts.role as any,
       isActive: true,
     });
-    credentials.push(`${opts.role.padEnd(26)}| ${opts.username.padEnd(22)}| ${opts.password}`);
+    credentials.push(`${opts.role.padEnd(26)}| ${opts.email.padEnd(38)}| ${opts.password}`);
   };
+
+  const D = 'elthuruth.church'; // email domain
 
   // super_admin at U1-BK1-H1
   const firstEntry = unitFirstHouse.get(1)!;
-  await createAdmin({ role: 'super_admin', username: 'superadmin', password: 'Admin@1234', firstName: 'Super Admin', entry: firstEntry });
+  await createAdmin({ role: 'super_admin', username: 'superadmin', email: `superadmin@${D}`, password: 'Admin@1234', firstName: 'Super Admin', entry: firstEntry });
 
   // church_admin at U1-BK1-H1
-  await createAdmin({ role: 'church_admin', username: 'churchadmin', password: 'Church@1234', firstName: 'Church Admin', entry: firstEntry });
+  await createAdmin({ role: 'church_admin', username: 'churchadmin', email: `churchadmin@${D}`, password: 'Church@1234', firstName: 'Church Admin', entry: firstEntry });
 
   // unit_admin for each unit
   for (let uNo = 1; uNo <= 12; uNo++) {
     const entry = unitFirstHouse.get(uNo);
     if (!entry) { console.warn(`No first house for unit ${uNo}`); continue; }
-    await createAdmin({ role: 'unit_admin', username: `unitadmin${uNo}`, password: 'Unit@1234', firstName: `Unit Admin ${uNo}`, entry });
+    await createAdmin({ role: 'unit_admin', username: `unitadmin${uNo}`, email: `unitadmin${uNo}@${D}`, password: 'Unit@1234', firstName: `Unit Admin ${uNo}`, entry });
   }
 
   // bk_admin for each global BK
   for (let gbk = 1; gbk <= 28; gbk++) {
     const entry = bkFirstHouse.get(gbk);
     if (!entry) { console.warn(`No first house for global BK ${gbk}`); continue; }
-    await createAdmin({ role: 'kudumbakutayima_admin', username: `bkadmin${gbk}`, password: 'BK@1234', firstName: `BK Admin ${gbk}`, entry });
+    await createAdmin({ role: 'kudumbakutayima_admin', username: `bkadmin${gbk}`, email: `bkadmin${gbk}@${D}`, password: 'BK@1234', firstName: `BK Admin ${gbk}`, entry });
   }
 
   const totalAdmins = 2 + 12 + 28; // 42
@@ -251,11 +255,11 @@ async function main() {
   console.log(`Members : ${data.members.length} (xlsx) + ${totalAdmins} (admins) = ${data.members.length + totalAdmins}`);
 
   console.log('\n======= ADMIN CREDENTIALS =======');
-  console.log('Role                      | Username               | Password');
-  console.log('--------------------------|------------------------|----------');
+  console.log('Role                      | Email                                  | Password');
+  console.log('--------------------------|----------------------------------------|----------');
   for (const c of credentials) console.log(c);
 
-  console.log('\nLogin with: superadmin / Admin@1234');
+  console.log('\nLogin with: superadmin@elthuruth.church / Admin@1234');
   process.exit(0);
 }
 
