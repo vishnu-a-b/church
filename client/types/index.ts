@@ -208,6 +208,7 @@ export interface Campaign {
   participantCount: number;
   duesProcessed: boolean;
   createdBy?: string;
+  edvLedgerId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

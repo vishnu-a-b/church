@@ -2332,7 +2332,8 @@ export const addCampaignContribution = async (req: AuthRequest, res: Response, n
       paymentMethod: 'cash',
       notes: `Campaign contribution: ${campaign.name}`,
       smsNotificationSent: false,
-      createdBy: req.user?._id
+      createdBy: req.user?._id,
+      edvOverrideLedgerId: campaign.edvLedgerId || undefined,
     });
 
     // Add contribution to Campaign
@@ -2374,7 +2375,7 @@ export const addCampaignContribution = async (req: AuthRequest, res: Response, n
 
     // Push into EDV asynchronously (don't block response)
     if (edvBridgeConfig.enabled) {
-      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+      pushTransactionToEdv(transaction, { overridePartyLedgerId: campaign.edvLedgerId }).catch((err) => console.error('EDV bridge push failed:', err));
     }
 
     res.json({
@@ -2863,7 +2864,7 @@ export const createNews = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     // Set createdBy to current user
-    req.body.createdBy = req.user?.id;
+    req.body.createdBy = req.user?._id;
 
     const news = await News.create(req.body);
     const populated = await News.findById(news._id)
@@ -3012,7 +3013,7 @@ export const createEvent = async (req: AuthRequest, res: Response, next: NextFun
     }
 
     // Set createdBy to current user
-    req.body.createdBy = req.user?.id;
+    req.body.createdBy = req.user?._id;
 
     const event = await Event.create(req.body);
     const populated = await Event.findById(event._id)
@@ -3395,9 +3396,15 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
     let campaignNameForEmail: string | undefined;
 
     if (dueType === "campaign") {
-      const campaign = await Campaign.findById(due.campaignId);
+      const campaign = await Campaign.findById(due.campaignId).select('name contributors totalCollected participantCount edvLedgerId');
       if (campaign) {
         campaignNameForEmail = campaign.name;
+        // Store the campaign's EDV ledger override on the transaction so retries
+        // also route to the correct ledger without needing extra context.
+        if (campaign.edvLedgerId) {
+          await Transaction.findByIdAndUpdate(transaction._id, { edvOverrideLedgerId: campaign.edvLedgerId });
+          (transaction as any).edvOverrideLedgerId = campaign.edvLedgerId;
+        }
         campaign.contributors = campaign.contributors || [];
         const existing = campaign.contributors.find((c: any) => String(c.contributorId) === String(due.dueForId));
         if (existing) {
@@ -3476,7 +3483,10 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
       }
     }
 
-    // Push into EDV asynchronously (don't block response)
+    // Push into EDV asynchronously (don't block response).
+    // edvOverrideLedgerId is already stored on the transaction document (set above
+    // for campaign dues), so pushTransactionToEdv will read it as a fallback even
+    // when no explicit options are passed.
     if (edvBridgeConfig.enabled) {
       pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
     }

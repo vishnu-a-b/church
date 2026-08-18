@@ -136,6 +136,7 @@ import {
   listUnsyncedTransactions,
   retrySync,
   retrySyncAll,
+  listEdvLedgers,
 } from '../controllers/edvSyncController';
 import {
   getAllRites,
@@ -778,6 +779,7 @@ router.post('/dues/pay', payDue);
 
 // Manual EDV sync — lists what's pending and lets an admin retry on demand,
 // instead of only relying on the invisible fire-and-forget + 10-min cron retry.
+router.get('/edv-sync/ledgers', listEdvLedgers);
 router.get('/edv-sync/pending', listUnsyncedTransactions);
 router.post('/edv-sync/:id/retry', retrySync);
 router.post('/edv-sync/retry-all', retrySyncAll);

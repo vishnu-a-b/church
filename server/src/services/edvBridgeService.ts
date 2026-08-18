@@ -11,7 +11,10 @@ import { ITransaction } from '../types';
 // Pushes a Church transaction into the EDV accounting system as a posted voucher.
 // Never blocks the caller's response — callers invoke this fire-and-forget after
 // the transaction is already saved, and always chain .catch() around it.
-export async function pushTransactionToEdv(transaction: ITransaction): Promise<void> {
+export async function pushTransactionToEdv(
+  transaction: ITransaction,
+  options?: { overridePartyLedgerId?: string },
+): Promise<void> {
   const church = await Church.findById(transaction.churchId).select('+settings.edvApiKey');
   const apiKey = church?.settings?.edvApiKey;
   if (!apiKey) {
@@ -59,6 +62,7 @@ export async function pushTransactionToEdv(transaction: ITransaction): Promise<v
     donorId: transaction.donorId ? String(transaction.donorId) : undefined,
     notes: transaction.notes,
     ledgerTreatment,
+    overridePartyLedgerId: options?.overridePartyLedgerId ?? transaction.edvOverrideLedgerId,
   };
 
   try {

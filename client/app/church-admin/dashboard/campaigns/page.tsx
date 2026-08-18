@@ -88,6 +88,7 @@ interface House {
 export default function CampaignsPage() {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [edvLedgers, setEdvLedgers] = useState<{ id: string; name: string; group: { name: string; nature: string } }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [processingDues, setProcessingDues] = useState(false);
@@ -140,12 +141,14 @@ export default function CampaignsPage() {
     isCompulsory: true,
     targetType: 'all' as 'all' | 'specific_members' | 'specific_houses',
     specificTargets: [] as Array<{ targetId: string; targetModel: 'Member' | 'House'; amount: number; name?: string }>,
+    edvLedgerId: '',
   });
   const api = createRoleApi('church_admin');
 
   useEffect(() => {
     fetchCampaigns();
     fetchUnits();
+    api.get('/edv-sync/ledgers').then(r => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
   }, []);
 
   // Fetch members or houses when targetType changes
@@ -332,11 +335,12 @@ export default function CampaignsPage() {
 
     setSubmitting(true);
     try {
+      const payload = { ...result.data, edvLedgerId: formData.edvLedgerId || undefined };
       if (editingId) {
-        await api.put(`/campaigns/${editingId}`, result.data);
+        await api.put(`/campaigns/${editingId}`, payload);
         toast.success('Campaign updated successfully!');
       } else {
-        await api.post('/campaigns', result.data);
+        await api.post('/campaigns', payload);
         toast.success('Campaign created successfully!');
       }
       setShowModal(false);
@@ -368,6 +372,7 @@ export default function CampaignsPage() {
       isCompulsory: true,
       targetType: 'all' as 'all' | 'specific_members' | 'specific_houses',
       specificTargets: [],
+      edvLedgerId: '',
     });
   };
 
@@ -435,6 +440,7 @@ export default function CampaignsPage() {
       isCompulsory: campaign.isCompulsory ?? true,
       targetType: campaign.targetType || 'all',
       specificTargets: targetsWithNames,
+      edvLedgerId: campaign.edvLedgerId || '',
     });
     setShowModal(true);
     setExpandedRowId(null);
@@ -727,6 +733,12 @@ export default function CampaignsPage() {
                             <div className="text-sm text-gray-500">
                               {formatDate(campaign.startDate)}
                             </div>
+                            {campaign.edvLedgerId && (() => {
+                              const linked = edvLedgers.find(l => l.id === campaign.edvLedgerId);
+                              return linked ? (
+                                <div className="text-xs text-purple-600 mt-0.5">EDV: {linked.group.name} › {linked.name}</div>
+                              ) : null;
+                            })()}
                           </div>
                         </div>
                       </td>
@@ -970,6 +982,25 @@ export default function CampaignsPage() {
                   </select>
                 </div>
               </div>
+
+              {edvLedgers.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    EDV Ledger <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <select
+                    value={formData.edvLedgerId}
+                    onChange={(e) => setFormData({ ...formData, edvLedgerId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">— None (use default) —</option>
+                    {edvLedgers.map(l => (
+                      <option key={l.id} value={l.id}>{l.group.name} › {l.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Route contributions for this campaign to a specific EDV ledger instead of the default.</p>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

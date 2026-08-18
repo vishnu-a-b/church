@@ -169,6 +169,7 @@ export interface ITransaction extends Document {
   createdBy: Types.ObjectId;
   edvSynced: boolean;
   edvVoucherId?: string;
+  edvOverrideLedgerId?: string;
   edvSyncError?: string;
   edvSyncedAt?: Date;
   // Thirukkarmangal-only fields — populated only when transactionType === 'thirukkarmangal'
@@ -234,6 +235,7 @@ export interface ICampaign extends Document {
   totalCollected: number;
   participantCount: number;
   createdBy?: Types.ObjectId;
+  edvLedgerId?: string;
 }
 
 // Stothrakazhcha Types

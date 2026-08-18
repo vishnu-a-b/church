@@ -113,6 +113,9 @@ const campaignSchema = new Schema<ICampaign>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    edvLedgerId: {
+      type: String,
+    },
   },
   {
     timestamps: true,

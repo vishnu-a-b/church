@@ -1,7 +1,30 @@
 import { Response, NextFunction } from 'express';
+import axios from 'axios';
 import Transaction from '../models/Transaction';
+import Church from '../models/Church';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
+import edvBridgeConfig from '../config/edvBridge';
 import { AuthRequest } from '../types';
+
+// Fetches the list of ledgers from EDV for the church's bridge mapping,
+// so the church admin can pick a specific ledger when creating a Campaign.
+export const listEdvLedgers = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const church = await Church.findById(req.user?.churchId).select('+settings.edvApiKey');
+    const apiKey = church?.settings?.edvApiKey;
+    if (!apiKey) {
+      res.json({ success: true, data: [] });
+      return;
+    }
+    const response = await axios.get(
+      `${edvBridgeConfig.apiUrl}/api/v1/church-bridge/ledgers`,
+      { headers: { 'x-church-bridge-key': apiKey }, timeout: 8000 },
+    );
+    res.json({ success: true, data: response.data?.data ?? [] });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // List transactions that haven't synced to EDV yet, for the manual Sync admin page.
 export const listUnsyncedTransactions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
