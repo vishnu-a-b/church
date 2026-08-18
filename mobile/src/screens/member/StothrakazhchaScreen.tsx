@@ -50,7 +50,7 @@ export default function MemberStothrakazhchaScreen() {
   useEffect(() => { fetchCurrentWeek(); }, [fetchCurrentWeek]);
 
   const myContribution = current?.contributors?.find(
-    (c) => c.contributorType === 'Member' && c.contributorId === (user as any)?._id
+    (c) => c.contributorType === 'Member' && c.contributorId === user?.id
   );
 
   const totalCollected = current?.totalCollected

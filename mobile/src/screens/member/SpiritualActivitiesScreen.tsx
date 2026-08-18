@@ -57,7 +57,7 @@ export default function MemberSpiritualActivitiesScreen() {
         emptyText="No spiritual activities recorded yet"
         renderItem={(a) => (
           <View style={styles.rowTop}>
-            <Text style={styles.type}>{a.activityType}</Text>
+            <Text style={styles.type}>{a.activityType.replace(/_/g, ' ')}</Text>
             <Text style={styles.status}>{STATUS_LABEL[a.approvalStatus || 'approved']}</Text>
           </View>
         )}
