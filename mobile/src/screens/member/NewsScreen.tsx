@@ -6,7 +6,7 @@ import { createRoleApi } from '../../lib/api';
 interface NewsItem {
   _id: string;
   title: string;
-  publishedDate: string;
+  startDate: string;
 }
 
 const api = createRoleApi('member');
@@ -43,7 +43,7 @@ export default function MemberNewsScreen() {
           <View style={styles.row}>
             <Text style={styles.title} numberOfLines={2}>{i.title}</Text>
             <View style={styles.chip}>
-              <Text style={styles.chipText}>{new Date(i.publishedDate).toLocaleDateString('en-IN')}</Text>
+              <Text style={styles.chipText}>{new Date(i.startDate).toLocaleDateString('en-IN')}</Text>
             </View>
           </View>
         )}
