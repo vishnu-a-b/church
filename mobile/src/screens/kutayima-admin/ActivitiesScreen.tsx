@@ -57,7 +57,7 @@ export default function KutayimaAdminActivitiesScreen() {
             <View style={styles.rowTop}>
               <View>
                 <Text style={styles.name}>{a.memberId ? `${a.memberId.firstName} ${a.memberId.lastName}` : '-'}</Text>
-                <Text style={styles.meta}>{a.activityType}</Text>
+                <Text style={styles.meta}>{a.activityType.replace(/_/g, ' ')}</Text>
               </View>
               <View style={[styles.badge, { backgroundColor: status.bg }]}>
                 <Text style={[styles.badgeText, { color: status.color }]}>{status.label}</Text>

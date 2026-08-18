@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 
@@ -102,9 +102,9 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.sheet}>
-          <ScrollView>
+          <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>Mark Spiritual Activity</Text>
             <Text style={styles.hint}>Counted only once church management approves</Text>
 
@@ -163,7 +163,7 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
             </View>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
 
       <PickerModal
         visible={memberPickerVisible}
