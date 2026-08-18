@@ -19,9 +19,9 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const LOGIN_ENDPOINT: Record<PortalRole, string> = {
   member: '/auth/member-login',
   donor: '/auth/donor-login',
-  church_admin: '/auth/login',
-  unit_admin: '/auth/login',
-  kudumbakutayima_admin: '/auth/login',
+  church_admin: '/auth/member-login',
+  unit_admin: '/auth/member-login',
+  kudumbakutayima_admin: '/auth/member-login',
 };
 
 // A single provider mounted once at the app root. `activeRole` tracks which portal
