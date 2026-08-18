@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { DataList } from '../../components/DataList';
 import { createRoleApi } from '../../lib/api';
 
@@ -67,7 +67,7 @@ export default function MemberPathavarmScreen() {
   const total = history.reduce((sum, t) => sum + t.totalAmount, 0);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.summary}>
         <Text style={styles.summaryLabel}>Total Contributed</Text>
         <Text style={styles.summaryAmount}>₹{total.toLocaleString()}</Text>
@@ -118,7 +118,7 @@ export default function MemberPathavarmScreen() {
           </View>
         )}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

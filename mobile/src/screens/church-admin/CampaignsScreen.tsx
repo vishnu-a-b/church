@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { DataList } from '../../components/DataList';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
@@ -123,8 +123,9 @@ export default function ChurchAdminCampaignsScreen() {
         transparent
         onRequestClose={() => setSelectedCampaign(null)}
       >
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.sheet}>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <Text style={styles.sheetTitle}>{selectedCampaign?.name}</Text>
             <Text style={styles.sheetSub}>
               ₹{collected.toLocaleString()} of ₹{(selectedCampaign?.targetAmount ?? 0).toLocaleString()} collected
@@ -157,8 +158,9 @@ export default function ChurchAdminCampaignsScreen() {
                 {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Contribute</Text>}
               </TouchableOpacity>
             </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
 
         <PickerModal
           visible={memberPickerVisible}

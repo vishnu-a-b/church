@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, RefreshControl, Platform } from 'react-native';
 
 interface Props<T> {
   data: T[];
@@ -25,17 +25,34 @@ export function DataList<T>({ data, loading, refreshing, onRefresh, keyExtractor
       data={data}
       keyExtractor={keyExtractor}
       contentContainerStyle={data.length === 0 ? styles.emptyContainer : styles.listContainer}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      ListEmptyComponent={<Text style={styles.emptyText}>{emptyText}</Text>}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0d9488" />}
+      ListEmptyComponent={
+        <View style={styles.emptyInner}>
+          <Text style={styles.emptyText}>{emptyText}</Text>
+        </View>
+      }
       renderItem={({ item }) => <View style={styles.row}>{renderItem(item)}</View>}
+      keyboardShouldPersistTaps="handled"
     />
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContainer: { padding: 16 },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { color: '#9ca3af', fontSize: 14 },
-  row: { backgroundColor: '#fff', borderRadius: 10, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#f3f4f6' },
+  listContainer: { padding: 16, paddingBottom: 100 },
+  emptyContainer: { flexGrow: 1 },
+  emptyInner: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+  emptyText: { color: '#9ca3af', fontSize: 15, textAlign: 'center' },
+  row: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+      android: { elevation: 2 },
+    }),
+  },
 });

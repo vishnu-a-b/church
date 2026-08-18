@@ -50,21 +50,23 @@ export function PickerModal({ visible, title, options, onSelect, onClose }: Prop
 export function PickerField({ label, placeholder, onPress }: { label?: string; placeholder: string; onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.field} onPress={onPress}>
-      <Text style={label ? styles.fieldValue : styles.fieldPlaceholder}>{label || placeholder}</Text>
+      <Text style={label ? styles.fieldValue : styles.fieldPlaceholder} numberOfLines={1}>{label || placeholder}</Text>
+      <Text style={styles.chevron}>›</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '70%' },
-  title: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 12 },
-  option: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  optionText: { fontSize: 15, color: '#111827' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '70%' },
+  title: { fontSize: 17, fontWeight: '700', color: '#111827', marginBottom: 4, textAlign: 'center' },
+  option: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f9fafb', flexDirection: 'row', alignItems: 'center' },
+  optionText: { fontSize: 15, color: '#111827', flex: 1 },
   empty: { color: '#9ca3af', paddingVertical: 20, textAlign: 'center' },
-  cancelButton: { marginTop: 12, paddingVertical: 12, alignItems: 'center' },
-  cancelText: { color: '#6b7280', fontWeight: '600' },
-  field: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, marginBottom: 10 },
-  fieldValue: { color: '#111827' },
-  fieldPlaceholder: { color: '#9ca3af' },
+  cancelButton: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  cancelText: { color: '#dc2626', fontWeight: '600', fontSize: 15 },
+  field: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 10, backgroundColor: '#fff' },
+  fieldValue: { color: '#111827', flex: 1, fontSize: 15 },
+  fieldPlaceholder: { color: '#9ca3af', flex: 1, fontSize: 15 },
+  chevron: { color: '#9ca3af', fontSize: 20, marginLeft: 4 },
 });

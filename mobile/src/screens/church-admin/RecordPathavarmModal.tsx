@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 import { useAuth } from '../../context/AuthContext';
@@ -67,8 +67,9 @@ export default function RecordPathavarmModal({ visible, onClose, onSaved }: Prop
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.sheet}>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Record Pathavarm Contribution</Text>
 
           <Text style={styles.label}>Member</Text>
@@ -100,8 +101,9 @@ export default function RecordPathavarmModal({ visible, onClose, onSaved }: Prop
               {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Record</Text>}
             </TouchableOpacity>
           </View>
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
 
       <PickerModal
         visible={memberPickerVisible}
