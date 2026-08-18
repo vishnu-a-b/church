@@ -47,7 +47,7 @@ export default function UnitAdminActivitiesScreen() {
         renderItem={(a) => (
           <View>
             <Text style={styles.name}>{a.memberId ? `${a.memberId.firstName} ${a.memberId.lastName}` : '-'}</Text>
-            <Text style={styles.meta}>{a.activityType}</Text>
+            <Text style={styles.meta}>{a.activityType.replace(/_/g, ' ')}</Text>
           </View>
         )}
       />

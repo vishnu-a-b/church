@@ -51,7 +51,7 @@ export default function UnitAdminTransactionsScreen() {
               <Text style={styles.amount}>₹{t.totalAmount.toLocaleString()}</Text>
             </View>
             <Text style={styles.meta}>
-              {t.transactionType.replace('_', ' ')} · {t.paymentMethod.replace('_', ' ')} · {new Date(t.paymentDate).toLocaleDateString('en-IN')}
+              {t.transactionType.replace(/_/g, ' ')} · {t.paymentMethod.replace(/_/g, ' ')} · {new Date(t.paymentDate).toLocaleDateString('en-IN')}
             </Text>
           </View>
         )}
