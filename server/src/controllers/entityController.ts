@@ -3128,8 +3128,10 @@ export const getActiveEvents = async (req: AuthRequest, res: Response, next: Nex
     const now = new Date();
     const filter: any = {
       isActive: true,
-      startDate: { $lte: now },
-      endDate: { $gte: now }
+      $or: [
+        { startDate: { $lte: now }, endDate: { $gte: now } },
+        { startDate: { $gt: now } }
+      ]
     };
 
     // Filter by churchId if user has one

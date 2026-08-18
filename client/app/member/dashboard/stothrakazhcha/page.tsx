@@ -53,7 +53,6 @@ export default function MemberStothrakazhchaPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [memberId, setMemberId] = useState<string | null>(null);
-  const [processingDues, setProcessingDues] = useState(false);
   const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
@@ -67,7 +66,7 @@ export default function MemberStothrakazhchaPage() {
     if (!token || !userStr) return;
 
     const user = JSON.parse(userStr);
-    setMemberId(user.memberId || user._id);
+    setMemberId(user.id);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -88,9 +87,9 @@ export default function MemberStothrakazhchaPage() {
 
     try {
       // Fetch my dues
-      if (user.memberId || user._id) {
+      if (user.id) {
         const duesResponse = await axios.get(
-          `${apiUrl}/stothrakazhcha-dues/entity/Member/${user.memberId || user._id}`,
+          `${apiUrl}/stothrakazhcha-dues/entity/Member/${user.id}`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         if (duesResponse.data.success) {
@@ -135,32 +134,6 @@ export default function MemberStothrakazhchaPage() {
     } catch (error: any) {
       console.error('Error adding contribution:', error);
       toast.error(error.response?.data?.error || 'Failed to add contribution');
-    }
-  };
-
-  const handleProcessDues = async () => {
-    if (!confirm('This will process dues for all overdue Stothrakazhchas. Continue?')) return;
-
-    setProcessingDues(true);
-    const token = localStorage.getItem('member_accessToken');
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
-    try {
-      const response = await axios.post(
-        `${apiUrl}/stothrakazhcha-dues/process`,
-        {},
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
-
-      toast.success(
-        `Dues processed successfully! ${response.data?.data?.totalMembersProcessed || 0} members, ${response.data?.data?.totalHousesProcessed || 0} houses`
-      );
-      fetchData();
-    } catch (error: any) {
-      console.error('Error processing dues:', error);
-      toast.error(error.response?.data?.error || 'Failed to process dues');
-    } finally {
-      setProcessingDues(false);
     }
   };
 
@@ -365,29 +338,6 @@ export default function MemberStothrakazhchaPage() {
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
                 <p className="text-sm text-purple-800">
                   <strong>Note:</strong> This is a variable payment. You can contribute any amount you wish.
-                </p>
-              </div>
-
-              <div className="border-t pt-4">
-                <button
-                  onClick={handleProcessDues}
-                  disabled={processingDues}
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 mb-3"
-                >
-                  {processingDues ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Processing Dues...
-                    </>
-                  ) : (
-                    <>
-                      <TrendingUp className="w-5 h-5" />
-                      Process Due
-                    </>
-                  )}
-                </button>
-                <p className="text-xs text-gray-500 text-center">
-                  This will calculate and assign dues to non-contributors
                 </p>
               </div>
 
