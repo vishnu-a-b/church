@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 import { useAuth } from '../../context/AuthContext';
@@ -78,9 +78,9 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.sheet}>
-          <ScrollView>
+          <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>Record Payment</Text>
             <Text style={styles.hint}>{rite.nameEnglish}</Text>
 
@@ -117,7 +117,7 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
             </View>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
 
       <PickerModal
         visible={memberPickerVisible}

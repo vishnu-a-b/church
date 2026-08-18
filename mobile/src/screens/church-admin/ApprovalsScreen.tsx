@@ -87,7 +87,7 @@ export default function ChurchAdminApprovalsScreen() {
           <View key={a._id} style={styles.row}>
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>
-                {a.memberId ? `${a.memberId.firstName} ${a.memberId.lastName}` : 'Unknown'} — {a.activityType}
+                {a.memberId ? `${a.memberId.firstName} ${a.memberId.lastName}` : 'Unknown'} — {a.activityType.replace(/_/g, ' ')}
               </Text>
               <Text style={styles.meta}>Marked by {a.markedBy?.username || a.markedBy?.email || 'unknown'}</Text>
             </View>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { createRoleApi } from '../../lib/api';
 
 const api = createRoleApi('church_admin');
@@ -74,9 +74,9 @@ export default function SplitEditorModal({ visible, rite, onClose, onSaved }: Pr
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.sheet}>
-          <ScrollView>
+          <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>{rite.nameEnglish}</Text>
             <Text style={styles.hint}>₹{rite.amount.toLocaleString()} — recipient split</Text>
 
@@ -119,7 +119,7 @@ export default function SplitEditorModal({ visible, rite, onClose, onSaved }: Pr
             </View>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
