@@ -7,9 +7,8 @@ import { PickerModal, PickerField } from '../../components/PickerModal';
 interface Campaign {
   _id: string;
   name: string;
-  targetAmount: number;
   totalCollected?: number;
-  collectedAmount?: number;
+  participantCount?: number;
 }
 
 interface Member { _id: string; firstName: string; lastName: string; }
@@ -86,9 +85,7 @@ export default function ChurchAdminCampaignsScreen() {
   };
 
   const selectedMember = members.find((m) => m._id === memberId);
-  const collected = selectedCampaign
-    ? (selectedCampaign.totalCollected ?? selectedCampaign.collectedAmount ?? 0)
-    : 0;
+  const collected = selectedCampaign?.totalCollected ?? 0;
 
   return (
     <View style={styles.container}>
@@ -100,18 +97,14 @@ export default function ChurchAdminCampaignsScreen() {
         keyExtractor={(c) => c._id}
         emptyText="No campaigns"
         renderItem={(c) => {
-          const col = c.totalCollected ?? c.collectedAmount ?? 0;
-          const pct = c.targetAmount > 0 ? Math.min(100, Math.round((col / c.targetAmount) * 100)) : 0;
+          const col = c.totalCollected ?? 0;
           return (
             <TouchableOpacity onPress={() => openContribute(c)}>
               <View style={styles.rowTop}>
                 <Text style={styles.name}>{c.name}</Text>
-                <Text style={styles.pct}>{pct}%</Text>
+                <Text style={styles.pct}>₹{col.toLocaleString()}</Text>
               </View>
-              <View style={styles.progressBg}>
-                <View style={[styles.progressFill, { width: `${pct}%` as any }]} />
-              </View>
-              <Text style={styles.meta}>₹{col.toLocaleString()} of ₹{c.targetAmount.toLocaleString()}</Text>
+              <Text style={styles.meta}>{c.participantCount ?? 0} contributor{(c.participantCount ?? 0) !== 1 ? 's' : ''}</Text>
             </TouchableOpacity>
           );
         }}
@@ -128,7 +121,7 @@ export default function ChurchAdminCampaignsScreen() {
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <Text style={styles.sheetTitle}>{selectedCampaign?.name}</Text>
             <Text style={styles.sheetSub}>
-              ₹{collected.toLocaleString()} of ₹{(selectedCampaign?.targetAmount ?? 0).toLocaleString()} collected
+              ₹{collected.toLocaleString()} collected · {selectedCampaign?.participantCount ?? 0} contributor{(selectedCampaign?.participantCount ?? 0) !== 1 ? 's' : ''}
             </Text>
 
             <Text style={styles.label}>Member</Text>
@@ -186,9 +179,7 @@ const styles = StyleSheet.create({
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { fontWeight: '600', color: '#111827', flex: 1 },
   pct: { fontSize: 12, fontWeight: '700', color: '#059669' },
-  progressBg: { height: 6, backgroundColor: '#f3f4f6', borderRadius: 3, marginVertical: 6 },
-  progressFill: { height: 6, backgroundColor: '#059669', borderRadius: 3 },
-  meta: { fontSize: 12, color: '#6b7280' },
+  meta: { fontSize: 12, color: '#6b7280', marginTop: 4 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
   sheetTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },

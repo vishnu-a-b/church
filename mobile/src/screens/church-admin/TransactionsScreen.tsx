@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityInd
 import { DataList } from '../../components/DataList';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
+import { useAuth } from '../../context/AuthContext';
 
 interface Transaction {
   _id: string;
@@ -17,10 +18,20 @@ interface Member { _id: string; firstName: string; lastName: string; }
 
 const api = createRoleApi('church_admin');
 
-const TRANSACTION_TYPES = ['pathavarm', 'due', 'donation', 'offering', 'campaign', 'other'];
+const TRANSACTION_TYPES = [
+  'lelam',
+  'thirunnaal_panam',
+  'dashamansham',
+  'spl_contribution',
+  'stothrakazhcha',
+  'monthly_support',
+  'thirukkarmangal',
+  'pathavarm',
+];
 const PAYMENT_METHODS = ['cash', 'bank_transfer', 'upi', 'cheque'];
 
 export default function ChurchAdminTransactionsScreen() {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,6 +94,7 @@ export default function ChurchAdminTransactionsScreen() {
     setSubmitting(true);
     try {
       await api.post('/transactions', {
+        churchId: user?.churchId,
         memberId,
         transactionType,
         totalAmount: amount,

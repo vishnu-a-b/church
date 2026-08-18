@@ -61,7 +61,6 @@ export default function TransactionsPage() {
   // Fetch bavanakutayimas when unit changes
   useEffect(() => {
     if (filters.unit) {
-      console.log('🔍 Fetching bavanakutayimas for unit:', filters.unit);
       fetchBavanakutayimas(filters.unit);
     } else {
       setBavanakutayimas([]);
@@ -72,7 +71,6 @@ export default function TransactionsPage() {
   // Fetch houses when bavanakutayima changes
   useEffect(() => {
     if (filters.bavanakutayima) {
-      console.log('🔍 Fetching houses for bavanakutayima:', filters.bavanakutayima);
       fetchHouses(filters.bavanakutayima);
     } else {
       setHouses([]);
@@ -96,9 +94,7 @@ export default function TransactionsPage() {
       const queryString = params.toString();
       const url = queryString ? `/transactions?${queryString}` : '/transactions';
 
-      console.log('📡 Fetching transactions with filters:', url);
       const response = await api.get(url);
-      console.log('✅ Received', response.data.data?.length, 'transactions');
       setTransactions(response.data.data || []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -118,16 +114,8 @@ export default function TransactionsPage() {
 
   const fetchBavanakutayimas = async (unitId: string) => {
     try {
-      console.log('📡 API call: /bavanakutayimas?unitId=' + unitId);
       const response = await api.get(`/bavanakutayimas?unitId=${unitId}`);
-      console.log('✅ Bavanakutayimas response:', response.data);
-      const bavanakutayimasList = response.data.data || [];
-      console.log('📊 Found', bavanakutayimasList.length, 'bavanakutayimas');
-      setBavanakutayimas(bavanakutayimasList);
-
-      if (bavanakutayimasList.length === 0) {
-        console.warn('⚠️ No bavanakutayimas found for unit:', unitId);
-      }
+      setBavanakutayimas(response.data.data || []);
     } catch (error) {
       console.error('❌ Error fetching bavanakutayimas:', error);
       setBavanakutayimas([]);
@@ -136,16 +124,8 @@ export default function TransactionsPage() {
 
   const fetchHouses = async (bavanakutayimaId: string) => {
     try {
-      console.log('📡 API call: /houses?bavanakutayimaId=' + bavanakutayimaId);
       const response = await api.get(`/houses?bavanakutayimaId=${bavanakutayimaId}`);
-      console.log('✅ Houses response:', response.data);
-      const housesList = response.data.data || [];
-      console.log('📊 Found', housesList.length, 'houses');
-      setHouses(housesList);
-
-      if (housesList.length === 0) {
-        console.warn('⚠️ No houses found for bavanakutayima:', bavanakutayimaId);
-      }
+      setHouses(response.data.data || []);
     } catch (error) {
       console.error('❌ Error fetching houses:', error);
       setHouses([]);
@@ -155,8 +135,6 @@ export default function TransactionsPage() {
   const fetchAllHouses = async () => {
     try {
       const response = await api.get('/houses');
-      console.log('🏠 ALL HOUSES DATA:', response.data.data);
-      console.log('🏠 SAMPLE HOUSE:', response.data.data?.[0]);
       setAllHouses(response.data.data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -166,8 +144,6 @@ export default function TransactionsPage() {
   const fetchMembers = async () => {
     try {
       const response = await api.get('/members');
-      console.log('👥 MEMBERS DATA:', response.data.data);
-      console.log('👥 SAMPLE MEMBER:', response.data.data?.[0]);
       setMembers(response.data.data || []);
     } catch (error) {
       console.error('Error:', error);
