@@ -100,9 +100,12 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
   const [newDonorPhone, setNewDonorPhone] = useState('');
   const [newDonorEmail, setNewDonorEmail] = useState('');
   const [newDonorAddress, setNewDonorAddress] = useState('');
+  const [newDonorJgccNo, setNewDonorJgccNo] = useState('');
   const [creatingDonor, setCreatingDonor] = useState(false);
 
-  const [editingDonor, setEditingDonor] = useState<{ id: string; name: string; phone: string; address: string; notes: string } | null>(null);
+  const [planMemberSearch, setPlanMemberSearch] = useState('');
+
+  const [editingDonor, setEditingDonor] = useState<{ id: string; name: string; phone: string; address: string; notes: string; jgccNo: string } | null>(null);
   const [savingDonor, setSavingDonor] = useState(false);
 
   useEffect(() => {
@@ -205,7 +208,7 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
       toast.warning('Already added to this plan');
       return;
     }
-    setPlanMembers([...planMembers, { donorId: donor._id, amount: '', name: donor.name }]);
+    setPlanMembers([...planMembers, { donorId: donor._id, amount: '', name: donor.name, donorNotes: donor.notes }]);
   };
 
   const handleCreateDonor = async () => {
@@ -223,12 +226,14 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
 
     setCreatingDonor(true);
     try {
+      const jgccTrimmed = newDonorJgccNo.trim();
       const response = await api.post('/donors', {
         churchId,
         name: result.data.name,
         phone: result.data.phone,
         email: result.data.email?.trim() || undefined,
         address: result.data.address?.trim() || undefined,
+        notes: jgccTrimmed ? `JGCC_NOS:${jgccTrimmed}` : undefined,
       });
       const donor: Donor = response.data?.data;
       setAllDonors([donor, ...allDonors]);
@@ -239,6 +244,7 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
       setNewDonorPhone('');
       setNewDonorEmail('');
       setNewDonorAddress('');
+      setNewDonorJgccNo('');
       toast.success('Donor registered and added to plan');
     } catch (error: any) {
       console.error('Error creating donor:', error);
@@ -260,7 +266,15 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
     try {
       const res = await api.get(`/donors/${donorId}`);
       const d = res.data?.data;
-      setEditingDonor({ id: donorId, name: d.name || '', phone: d.phone || '', address: d.address || '', notes: d.notes || '' });
+      const jgccMatch = (d.notes || '').match(/JGCC_NOS:([^|]+)/);
+      setEditingDonor({
+        id: donorId,
+        name: d.name || '',
+        phone: d.phone || '',
+        address: d.address || '',
+        notes: d.notes || '',
+        jgccNo: jgccMatch ? jgccMatch[1].trim() : '',
+      });
     } catch {
       toast.error('Failed to load donor details');
     }
@@ -270,11 +284,21 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
     if (!editingDonor) return;
     setSavingDonor(true);
     try {
+      // Rebuild the notes with the updated JGCC No
+      const jgcc = editingDonor.jgccNo.trim();
+      let updatedNotes = editingDonor.notes;
+      if (/JGCC_NOS:/.test(updatedNotes)) {
+        updatedNotes = updatedNotes.replace(/JGCC_NOS:[^|]+/, jgcc ? `JGCC_NOS:${jgcc} ` : '');
+      } else if (jgcc) {
+        updatedNotes = updatedNotes ? `${updatedNotes} | JGCC_NOS:${jgcc}` : `JGCC_NOS:${jgcc}`;
+      }
+      updatedNotes = updatedNotes.replace(/\s*\|\s*$/, '').trim();
+
       const res = await api.put(`/donors/${editingDonor.id}`, {
         name: editingDonor.name,
         phone: editingDonor.phone,
         address: editingDonor.address,
-        notes: editingDonor.notes,
+        notes: updatedNotes,
       });
       const updated: Donor = res.data?.data;
       setPlanMembers(planMembers.map((m) =>
@@ -492,8 +516,24 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
             <h3 className="text-md font-semibold text-gray-800 mb-3">Members ({planMembers.length})</h3>
 
             {planMembers.length > 0 && (
-              <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
-                {planMembers.map((m) => (
+              <>
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search members by name or JGCC No…"
+                    value={planMemberSearch}
+                    onChange={(e) => setPlanMemberSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+                {planMembers.filter((m) => {
+                  const term = planMemberSearch.toLowerCase();
+                  if (!term) return true;
+                  const jgcc = extractJgccNos(m.donorNotes) || '';
+                  return m.name.toLowerCase().includes(term) || jgcc.toLowerCase().includes(term);
+                }).map((m) => (
                   <div key={entryId(m)} className="flex items-center gap-2 bg-gray-50 p-3 rounded border border-gray-200">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{m.name}</p>
@@ -538,7 +578,8 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
                     </button>
                   </div>
                 ))}
-              </div>
+                </div>
+              </>
             )}
 
             {/* Members / Outside Donors tab switcher */}
@@ -668,6 +709,13 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
                       <FieldError message={donorErrors.phone} />
                     </div>
                     <input
+                      type="text"
+                      placeholder="JGCC No (optional, e.g. JGCC 0519)"
+                      value={newDonorJgccNo}
+                      onChange={(e) => setNewDonorJgccNo(e.target.value)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
+                    />
+                    <input
                       type="email"
                       placeholder="Email (optional)"
                       value={newDonorEmail}
@@ -692,7 +740,7 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setShowNewDonorForm(false); setDonorErrors({}); setNewDonorName(''); setNewDonorPhone(''); setNewDonorEmail(''); setNewDonorAddress(''); }}
+                        onClick={() => { setShowNewDonorForm(false); setDonorErrors({}); setNewDonorName(''); setNewDonorPhone(''); setNewDonorEmail(''); setNewDonorAddress(''); setNewDonorJgccNo(''); }}
                         className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800"
                       >
                         Cancel
@@ -783,12 +831,16 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Outside Donor</h3>
 
-            {extractJgccNos(editingDonor.notes) && (
-              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">JGCC No</p>
-                <p className="text-sm text-blue-800 font-mono">{extractJgccNos(editingDonor.notes)}</p>
-              </div>
-            )}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">JGCC No</label>
+              <input
+                type="text"
+                value={editingDonor.jgccNo}
+                onChange={(e) => setEditingDonor({ ...editingDonor, jgccNo: e.target.value })}
+                placeholder="e.g. JGCC 0001-JGCC 0030"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono"
+              />
+            </div>
 
             <div className="space-y-3">
               <div>
