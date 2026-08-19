@@ -28,6 +28,7 @@ API_URL="https://api.offerings.stmaryselthuruth.org"
 echo "▶ [1/6] Pulling latest code..."
 cd "$PROJECT_DIR"
 git reset --hard HEAD
+git clean -fd   # remove untracked non-gitignored files/dirs that would block a pull
 git pull --rebase origin main
 
 : "${MONGODB_URI:?MONGODB_URI is not set}"

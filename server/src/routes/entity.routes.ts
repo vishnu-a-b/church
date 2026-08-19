@@ -159,6 +159,8 @@ import {
   rejectSpiritualActivity,
   approveStothrakazhchaContributor,
   rejectStothrakazhchaContributor,
+  updateStothrakazhchaContributorAmount,
+  approveStothrakazhchaByBavanakutayima,
 } from '../controllers/approvalController';
 
 const router = Router();
@@ -901,8 +903,10 @@ router.post('/approvals/spiritual-activities/mark-pending', markSpiritualActivit
 router.post('/approvals/spiritual-activities/:id/approve', approveSpiritualActivity);
 router.post('/approvals/spiritual-activities/:id/reject', rejectSpiritualActivity);
 router.post('/approvals/stothrakazhcha/:stothrakazhchaId/mark-pending', markStothrakazhchaContributorPending);
+router.put('/approvals/stothrakazhcha/:stothrakazhchaId/contributors/:contributorId', updateStothrakazhchaContributorAmount);
 router.post('/approvals/stothrakazhcha/:stothrakazhchaId/contributors/:contributorId/approve', approveStothrakazhchaContributor);
 router.post('/approvals/stothrakazhcha/:stothrakazhchaId/contributors/:contributorId/reject', rejectStothrakazhchaContributor);
+router.post('/approvals/stothrakazhcha/:stothrakazhchaId/bavanakutayima/:bkId/approve-all', approveStothrakazhchaByBavanakutayima);
 router.get('/approvals/pending', getPendingApprovals);
 
 // Donor Routes (outside supporters)

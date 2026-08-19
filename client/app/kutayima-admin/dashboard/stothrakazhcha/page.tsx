@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { Coins, Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Coins, Plus, Clock, CheckCircle, XCircle, Send } from 'lucide-react';
 
 interface Member {
   _id: string;
@@ -22,7 +22,6 @@ interface Contributor {
   contributorType: 'Member' | 'House';
   amount: number;
   approvalStatus: 'pending_approval' | 'approved' | 'rejected';
-  markedBy?: string;
 }
 
 interface CurrentWeek {
@@ -40,7 +39,8 @@ export default function KutayimaAdminStothrakazhchaPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [houses, setHouses] = useState<House[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [contributorId, setContributorId] = useState('');
   const [amount, setAmount] = useState('');
@@ -56,7 +56,7 @@ export default function KutayimaAdminStothrakazhchaPage() {
     try {
       const response = await api.get('/stothrakazhcha/current/week');
       setCurrent(response.data?.data || null);
-    } catch (error) {
+    } catch {
       setCurrent(null);
     } finally {
       setLoading(false);
@@ -64,14 +64,37 @@ export default function KutayimaAdminStothrakazhchaPage() {
   };
 
   const fetchMembers = async () => {
-    const response = await api.get('/members');
-    setMembers(response.data?.data || []);
+    try {
+      const response = await api.get('/members');
+      setMembers(response.data?.data || []);
+    } catch {}
   };
 
   const fetchHouses = async () => {
-    const response = await api.get('/houses');
-    setHouses(response.data?.data || []);
+    try {
+      const response = await api.get('/houses');
+      setHouses(response.data?.data || []);
+    } catch {}
   };
+
+  // Only show MY group's contributions (those whose contributorId is in my entities)
+  const entityIds = useMemo(() => {
+    const entities = current?.amountType === 'per_member' ? members : houses;
+    return new Set(entities.map((e) => e._id));
+  }, [current, members, houses]);
+
+  const myContributions = useMemo(
+    () => (current?.contributors || []).filter((c) => entityIds.has(c.contributorId)),
+    [current, entityIds]
+  );
+
+  const totalCollected = myContributions
+    .filter((c) => c.approvalStatus !== 'rejected')
+    .reduce((sum, c) => sum + c.amount, 0);
+
+  const pendingEntries = myContributions.filter((c) => c.approvalStatus === 'pending_approval');
+  const approvedCount = myContributions.filter((c) => c.approvalStatus === 'approved').length;
+  const totalEntities = (current?.amountType === 'per_member' ? members : houses).length;
 
   const contributorLabel = (c: Contributor) => {
     if (c.contributorType === 'Member') {
@@ -82,10 +105,10 @@ export default function KutayimaAdminStothrakazhchaPage() {
     return h ? h.familyName : c.contributorId;
   };
 
-  const handleSubmit = async () => {
+  const handleAdd = async () => {
     if (!current) return;
     if (!contributorId || !amount || Number(amount) <= 0) {
-      toast.error('Select a member and enter a valid amount');
+      toast.error('Select a member/house and enter a valid amount');
       return;
     }
     setSubmitting(true);
@@ -95,8 +118,8 @@ export default function KutayimaAdminStothrakazhchaPage() {
         contributorType: current.amountType === 'per_member' ? 'Member' : 'House',
         amount: Number(amount),
       });
-      toast.success('Marked as pending approval');
-      setShowModal(false);
+      toast.success('Contribution marked as pending approval');
+      setShowAddModal(false);
       setContributorId('');
       setAmount('');
       fetchCurrentWeek();
@@ -108,8 +131,10 @@ export default function KutayimaAdminStothrakazhchaPage() {
   };
 
   const statusBadge = (status: string) => {
-    if (status === 'approved') return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle className="w-3 h-3" /> Approved</span>;
-    if (status === 'rejected') return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"><XCircle className="w-3 h-3" /> Rejected</span>;
+    if (status === 'approved')
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle className="w-3 h-3" /> Approved</span>;
+    if (status === 'rejected')
+      return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"><XCircle className="w-3 h-3" /> Rejected</span>;
     return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800"><Clock className="w-3 h-3" /> Pending</span>;
   };
 
@@ -130,37 +155,73 @@ export default function KutayimaAdminStothrakazhchaPage() {
     );
   }
 
-  const groupContributors = current.contributors || [];
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Sthothrakazhcha — Week {current.weekNumber}, {current.year}</h2>
-          <p className="text-gray-600">Mark contributions for your group — counted only once approved</p>
+      {/* Summary card */}
+      <div className="bg-orange-600 rounded-xl p-6 text-white">
+        <p className="text-orange-200 text-sm mb-1">Week {current.weekNumber}, {current.year}</p>
+        <p className="text-4xl font-extrabold mb-4">₹{totalCollected.toLocaleString('en-IN')}</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white/20 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold">{myContributions.filter(c => c.approvalStatus !== 'rejected').length}/{totalEntities}</p>
+            <p className="text-orange-200 text-xs mt-1">entered</p>
+          </div>
+          <div className="bg-amber-100/30 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold">{pendingEntries.length}</p>
+            <p className="text-orange-200 text-xs mt-1">pending</p>
+          </div>
+          <div className="bg-green-100/30 rounded-lg p-3 text-center">
+            <p className="text-2xl font-bold">{approvedCount}</p>
+            <p className="text-orange-200 text-xs mt-1">approved</p>
+          </div>
         </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
-          <Plus className="w-5 h-5" /> Mark Contribution
-        </button>
       </div>
 
+      {/* Actions */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-800">Your Group&apos;s Contributions</h2>
+        <div className="flex gap-3">
+          {pendingEntries.length > 0 && (
+            <button
+              onClick={() => setShowSubmitModal(true)}
+              className="flex items-center gap-2 border-2 border-orange-600 text-orange-600 px-4 py-2 rounded-lg hover:bg-orange-50 font-semibold"
+            >
+              <Send className="w-4 h-4" /> Submit Cash ({pendingEntries.length})
+            </button>
+          )}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
+          >
+            <Plus className="w-5 h-5" /> Add Contribution
+          </button>
+        </div>
+      </div>
+
+      {/* Contributions table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contributor</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {current.amountType === 'per_member' ? 'Member' : 'House'}
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {groupContributors.length === 0 ? (
-              <tr><td colSpan={3} className="px-6 py-4 text-center text-gray-500">No contributions marked yet</td></tr>
+            {myContributions.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                  No contributions marked yet — click &ldquo;Add Contribution&rdquo; to start
+                </td>
+              </tr>
             ) : (
-              groupContributors.map((c) => (
+              myContributions.map((c) => (
                 <tr key={c._id}>
                   <td className="px-6 py-4 text-sm text-gray-900">{contributorLabel(c)}</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-green-600">₹{c.amount.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-green-600">₹{c.amount.toLocaleString('en-IN')}</td>
                   <td className="px-6 py-4">{statusBadge(c.approvalStatus)}</td>
                 </tr>
               ))
@@ -169,33 +230,97 @@ export default function KutayimaAdminStothrakazhchaPage() {
         </table>
       </div>
 
-      {showModal && (
+      {/* Add contribution modal */}
+      {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
-            <h3 className="text-xl font-bold">Mark Sthothrakazhcha Contribution</h3>
-            <select value={contributorId} onChange={(e) => setContributorId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2">
-              <option value="">
-                {current.amountType === 'per_member' ? 'Select member...' : 'Select house...'}
-              </option>
-              {(current.amountType === 'per_member' ? members : houses).map((entity: any) => (
-                <option key={entity._id} value={entity._id}>
-                  {current.amountType === 'per_member' ? `${entity.firstName} ${entity.lastName}` : entity.familyName}
+          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900">Add Contribution</h3>
+            <p className="text-sm text-gray-500">Counted only after church admin approves</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {current.amountType === 'per_member' ? 'Member' : 'House'}
+              </label>
+              <select
+                value={contributorId}
+                onChange={(e) => setContributorId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              >
+                <option value="">
+                  {current.amountType === 'per_member' ? 'Select member...' : 'Select house...'}
                 </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder={`Amount (default ₹${current.defaultAmount})`}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
-            />
+                {(current.amountType === 'per_member' ? members : houses).map((entity: any) => (
+                  <option key={entity._id} value={entity._id}>
+                    {current.amountType === 'per_member'
+                      ? `${entity.firstName} ${entity.lastName}`
+                      : entity.familyName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Amount (default ₹{current.defaultAmount})
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder={`₹${current.defaultAmount}`}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              />
+            </div>
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-              <button onClick={handleSubmit} disabled={submitting} className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50">
+              <button
+                onClick={() => { setShowAddModal(false); setContributorId(''); setAmount(''); }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAdd}
+                disabled={submitting}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+              >
                 {submitting ? 'Marking...' : 'Mark as Pending'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit cash modal */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900">Submit Cash to Church Admin</h3>
+            <p className="text-gray-600">
+              Please physically hand over{' '}
+              <span className="font-bold text-orange-600">
+                ₹{pendingEntries.reduce((s, e) => s + e.amount, 0).toLocaleString('en-IN')}
+              </span>{' '}
+              to the Church Admin.
+            </p>
+            <p className="text-sm text-gray-500">
+              Your {pendingEntries.length} pending {pendingEntries.length === 1 ? 'entry' : 'entries'} will be
+              counted only after the church admin reviews and approves them.
+            </p>
+            <div className="border border-gray-100 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Pending Entries</div>
+              {pendingEntries.map((c) => (
+                <div key={c._id} className="flex justify-between px-4 py-2 border-t border-gray-100">
+                  <span className="text-sm text-gray-700">{contributorLabel(c)}</span>
+                  <span className="text-sm font-semibold text-gray-900">₹{c.amount.toLocaleString('en-IN')}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowSubmitModal(false)}
+                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold"
+              >
+                Got it
               </button>
             </div>
           </div>
