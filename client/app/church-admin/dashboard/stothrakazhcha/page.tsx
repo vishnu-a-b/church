@@ -645,7 +645,7 @@ export default function ChurchAdminStothrakazhchaPage() {
                         <td colSpan={8} className="px-6 py-4">
                           <div className="flex flex-wrap gap-3">
                             <button
-                              onClick={() => router.push(`/church-admin/dashboard/stothrakazhcha/${item._id}`)}
+                              onClick={() => router.push(`/church-admin/dashboard/stothrakazhcha/detail?id=${item._id}`)}
                               className="flex items-center gap-2 bg-teal-700 text-white px-4 py-2 rounded-lg hover:bg-teal-800 transition-colors text-sm font-medium"
                             >
                               <Users className="w-4 h-4" />
