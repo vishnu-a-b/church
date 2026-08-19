@@ -48,6 +48,13 @@ interface PlanMemberDraft {
   donorId?: string;
   amount: string; // empty string = use plan default
   name: string;
+  donorNotes?: string; // raw notes field from Donor (contains JGCC_NOS: tag)
+}
+
+function extractJgccNos(notes?: string): string | null {
+  if (!notes) return null;
+  const m = notes.match(/JGCC_NOS:([^|]+)/);
+  return m ? m[1].trim() : null;
 }
 
 const entryId = (m: PlanMemberDraft): string => (m.memberId ?? m.donorId)!;
@@ -129,6 +136,7 @@ export default function MonthlySupportPlanFormPage() {
               donorId: typeof m.donorId === 'object' ? m.donorId._id : m.donorId,
               amount: m.amount !== undefined && m.amount !== null ? String(m.amount) : '',
               name: donor ? donor.name : 'Donor',
+              donorNotes: donor ? donor.notes : undefined,
             };
           }
           const member = typeof m.memberId === 'object' ? m.memberId : null;
@@ -430,9 +438,16 @@ export default function MonthlySupportPlanFormPage() {
                   <div key={entryId(m)} className="flex items-center gap-2 bg-gray-50 p-3 rounded border border-gray-200">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{m.name}</p>
-                      {m.donorId && (
-                        <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Outside Donor</span>
-                      )}
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {m.donorId && (
+                          <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Outside Donor</span>
+                        )}
+                        {m.donorId && extractJgccNos(m.donorNotes) && (
+                          <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                            {extractJgccNos(m.donorNotes)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="w-36">
                       <input

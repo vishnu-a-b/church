@@ -231,7 +231,7 @@ export interface Donor {
 // Monthly Support Types
 export interface MonthlySupportMember {
   memberId?: string | { _id: string; firstName: string; lastName: string; email?: string };
-  donorId?: string | { _id: string; name: string; phone?: string; email?: string };
+  donorId?: string | { _id: string; name: string; phone?: string; email?: string; notes?: string };
   amount?: number;
   drawnAt?: Date;
   drawId?: string;

@@ -103,7 +103,7 @@ export const getAllPlans = async (req: AuthRequest, res: Response, next: NextFun
     const plans = await MonthlySupportPlan.find(filter)
       .populate('churchId', 'name')
       .populate('members.memberId', 'firstName lastName')
-      .populate('members.donorId', 'name phone')
+      .populate('members.donorId', 'name phone notes')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: plans });
@@ -117,7 +117,7 @@ export const getPlanById = async (req: AuthRequest, res: Response, next: NextFun
     const plan = await MonthlySupportPlan.findById(req.params.id)
       .populate('churchId', 'name')
       .populate('members.memberId', 'firstName lastName email phone')
-      .populate('members.donorId', 'name phone email');
+      .populate('members.donorId', 'name phone email notes');
 
     if (!plan) {
       res.status(404).json({ success: false, error: 'Monthly support plan not found' });

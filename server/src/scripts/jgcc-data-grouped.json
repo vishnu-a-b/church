@@ -1,0 +1,8152 @@
+[
+  {
+    "jgccFirst": "JGCC 0001",
+    "jgccNos": [
+      "JGCC 0001",
+      "JGCC 0002",
+      "JGCC 0003",
+      "JGCC 0004",
+      "JGCC 0005",
+      "JGCC 0006",
+      "JGCC 0007",
+      "JGCC 0008",
+      "JGCC 0009",
+      "JGCC 0010",
+      "JGCC 0011",
+      "JGCC 0012",
+      "JGCC 0013",
+      "JGCC 0014",
+      "JGCC 0015",
+      "JGCC 0016",
+      "JGCC 0017",
+      "JGCC 0018",
+      "JGCC 0019",
+      "JGCC 0020",
+      "JGCC 0021",
+      "JGCC 0022",
+      "JGCC 0023",
+      "JGCC 0024",
+      "JGCC 0025",
+      "JGCC 0026",
+      "JGCC 0027",
+      "JGCC 0028",
+      "JGCC 0029",
+      "JGCC 0030"
+    ],
+    "jgccDisplay": "JGCC 0001-JGCC 0030",
+    "totalSlots": 30,
+    "totalAmount": 35400,
+    "name": "Jaimon A J",
+    "phone": "9847551808",
+    "house": "Alappat, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 35400.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0031",
+    "jgccNos": [
+      "JGCC 0031"
+    ],
+    "jgccDisplay": "JGCC 0031",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Paul Anto Vadakkethala",
+    "phone": "9496751366",
+    "house": "Vadakkethala, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0032",
+    "jgccNos": [
+      "JGCC 0032"
+    ],
+    "jgccDisplay": "JGCC 0032",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anto Melvin Paul",
+    "phone": "9496751599",
+    "house": "Vadakkethala, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0033",
+    "jgccNos": [
+      "JGCC 0033",
+      "JGCC 0035"
+    ],
+    "jgccDisplay": "JGCC 0033, JGCC 0035",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Pranoy Francis",
+    "phone": "9895109234",
+    "house": "Thottungal, Peramangalam",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0034",
+    "jgccNos": [
+      "JGCC 0034"
+    ],
+    "jgccDisplay": "JGCC 0034",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Aaron Francis",
+    "phone": "9895109234",
+    "house": "Thottungal, Peramangalam",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0036",
+    "jgccNos": [
+      "JGCC 0036",
+      "JGCC 0041",
+      "JGCC 0042",
+      "JGCC 0043"
+    ],
+    "jgccDisplay": "JGCC 0036, JGCC 0041-JGCC 0043",
+    "totalSlots": 4,
+    "totalAmount": 4720,
+    "name": "Primal Francis       (Paul Anto)",
+    "phone": "9895109234",
+    "house": "Thottungal, Peramangalam",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 4720.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 4720.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0037",
+    "jgccNos": [
+      "JGCC 0037"
+    ],
+    "jgccDisplay": "JGCC 0037",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Priya Francis",
+    "phone": "9895109234",
+    "house": "Thottungal, Peramangalam",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0038",
+    "jgccNos": [
+      "JGCC 0038"
+    ],
+    "jgccDisplay": "JGCC 0038",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Thangam Francis",
+    "phone": "9895109234",
+    "house": "Thottungal, Peramangalam",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0039",
+    "jgccNos": [
+      "JGCC 0039"
+    ],
+    "jgccDisplay": "JGCC 0039",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Basil Sunny",
+    "phone": "9745239125",
+    "house": "Vadakkethala, Aranattukara",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0040",
+    "jgccNos": [
+      "JGCC 0040"
+    ],
+    "jgccDisplay": "JGCC 0040",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jaseentha Sunny",
+    "phone": "9567256929",
+    "house": "Vadakkethala, Aranattukara",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0044",
+    "jgccNos": [
+      "JGCC 0044"
+    ],
+    "jgccDisplay": "JGCC 0044",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Samanta Victor",
+    "phone": "7057663388",
+    "house": "Payyanadan, Mumbai, PIN 421501",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0045",
+    "jgccNos": [
+      "JGCC 0045"
+    ],
+    "jgccDisplay": "JGCC 0045",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mercy Thomas",
+    "phone": "9495105705",
+    "house": "Chittilappilly, Pullazhi",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-09",
+        "amount": 2.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0046",
+    "jgccNos": [
+      "JGCC 0046"
+    ],
+    "jgccDisplay": "JGCC 0046",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Baby Baby",
+    "phone": "6238057041",
+    "house": "Chirayth, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0047",
+    "jgccNos": [
+      "JGCC 0047"
+    ],
+    "jgccDisplay": "JGCC 0047",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Binosh Baby",
+    "phone": "9446142234",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 5900.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0048",
+    "jgccNos": [
+      "JGCC 0048"
+    ],
+    "jgccDisplay": "JGCC 0048",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Leona Binosh",
+    "phone": "9446142234",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0049",
+    "jgccNos": [
+      "JGCC 0049"
+    ],
+    "jgccDisplay": "JGCC 0049",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Abel Binosh",
+    "phone": "9446142234",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0050",
+    "jgccNos": [
+      "JGCC 0050"
+    ],
+    "jgccDisplay": "JGCC 0050",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Aleena Binosh",
+    "phone": "9446142234",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0051",
+    "jgccNos": [
+      "JGCC 0051"
+    ],
+    "jgccDisplay": "JGCC 0051",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Angelina Binosh",
+    "phone": "9446142234",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0052",
+    "jgccNos": [
+      "JGCC 0052"
+    ],
+    "jgccDisplay": "JGCC 0052",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Elvina Mary Sinosh",
+    "phone": "8075879955",
+    "house": "Chiryath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0053",
+    "jgccNos": [
+      "JGCC 0053"
+    ],
+    "jgccDisplay": "JGCC 0053",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Eythan Joe Sinosh",
+    "phone": "8075879955",
+    "house": "Chirayth, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0054",
+    "jgccNos": [
+      "JGCC 0054"
+    ],
+    "jgccDisplay": "JGCC 0054",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joy C D",
+    "phone": "7736107553",
+    "house": "Chittilappilly, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 7080.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0055",
+    "jgccNos": [
+      "JGCC 0055"
+    ],
+    "jgccDisplay": "JGCC 0055",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Arun Joy",
+    "phone": "8129720526",
+    "house": "Chittiappilly, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0056",
+    "jgccNos": [
+      "JGCC 0056"
+    ],
+    "jgccDisplay": "JGCC 0056",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Siyanna Antony P",
+    "phone": "8129720526",
+    "house": "Chittilappilly",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0057",
+    "jgccNos": [
+      "JGCC 0057"
+    ],
+    "jgccDisplay": "JGCC 0057",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Elaine Elizza Arun",
+    "phone": "8129720526",
+    "house": "Chittilappilly, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0058",
+    "jgccNos": [
+      "JGCC 0058"
+    ],
+    "jgccDisplay": "JGCC 0058",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sana Liza Sinto",
+    "phone": "8985151654",
+    "house": "Pallissery, Ammadam",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0059",
+    "jgccNos": [
+      "JGCC 0059"
+    ],
+    "jgccDisplay": "JGCC 0059",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sera Maria Sinto",
+    "phone": "8985151654",
+    "house": "Pallissery, Parala, Ammadam",
+    "unit": "Fathima",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0060",
+    "jgccNos": [
+      "JGCC 0060"
+    ],
+    "jgccDisplay": "JGCC 0060",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sinto Antony           (Joy C D)",
+    "phone": "9037545405",
+    "house": "Kuruthukulangara,  Puthenpeedika",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0061",
+    "jgccNos": [
+      "JGCC 0061"
+    ],
+    "jgccDisplay": "JGCC 0061",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rosy Antony           (Joy C D)",
+    "phone": "8304087954",
+    "house": "Kuruthukulangara,  Puthenpeedika",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0062",
+    "jgccNos": [
+      "JGCC 0062"
+    ],
+    "jgccDisplay": "JGCC 0062",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Linard Liston",
+    "phone": "8921379515",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0063",
+    "jgccNos": [
+      "JGCC 0063"
+    ],
+    "jgccDisplay": "JGCC 0063",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lihan Liston",
+    "phone": "8921379515",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0064",
+    "jgccNos": [
+      "JGCC 0064",
+      "JGCC 0065"
+    ],
+    "jgccDisplay": "JGCC 0064-JGCC 0065",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Franco Chirayath",
+    "phone": "9538229170",
+    "house": "Chirayath Parappookara",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0066",
+    "jgccNos": [
+      "JGCC 0066",
+      "JGCC 0067",
+      "JGCC 0068"
+    ],
+    "jgccDisplay": "JGCC 0066-JGCC 0068",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Rony Chirayath",
+    "phone": "9539542973",
+    "house": "Chirayath Parappookara",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0069",
+    "jgccNos": [
+      "JGCC 0069",
+      "JGCC 0070",
+      "JGCC 0071",
+      "JGCC 0072",
+      "JGCC 0073",
+      "JGCC 0074"
+    ],
+    "jgccDisplay": "JGCC 0069-JGCC 0074",
+    "totalSlots": 6,
+    "totalAmount": 7080,
+    "name": "Justine P J",
+    "phone": "9847803338",
+    "house": "Palatty, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 7080.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 7080.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0075",
+    "jgccNos": [
+      "JGCC 0075"
+    ],
+    "jgccDisplay": "JGCC 0075",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Abin Mathew",
+    "phone": "8111961120",
+    "house": "Pudussery Perepadan, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 4720.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0076",
+    "jgccNos": [
+      "JGCC 0076"
+    ],
+    "jgccDisplay": "JGCC 0076",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Blessy Abin",
+    "phone": "9947761120",
+    "house": "Pudussery Perepadan, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0077",
+    "jgccNos": [
+      "JGCC 0077"
+    ],
+    "jgccDisplay": "JGCC 0077",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Esther Abin",
+    "phone": "8111961120",
+    "house": "Pudussery Perepadan, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0078",
+    "jgccNos": [
+      "JGCC 0078"
+    ],
+    "jgccDisplay": "JGCC 0078",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ethen Abin",
+    "phone": "8111961120",
+    "house": "Pudussery Perepadan, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0079",
+    "jgccNos": [
+      "JGCC 0079"
+    ],
+    "jgccDisplay": "JGCC 0079",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Thomas P D",
+    "phone": "9048254986",
+    "house": "Pudussery Perepadan, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0080",
+    "jgccNos": [
+      "JGCC 0080"
+    ],
+    "jgccDisplay": "JGCC 0080",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Abssy Raphael",
+    "phone": "8281217948",
+    "house": "Peramangalam, Arimbur",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0081",
+    "jgccNos": [
+      "JGCC 0081",
+      "JGCC 0082",
+      "JGCC 0083"
+    ],
+    "jgccDisplay": "JGCC 0081-JGCC 0083",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Varghese A K",
+    "phone": "9495094601",
+    "house": "Alappat Thotian, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 7080.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0084",
+    "jgccNos": [
+      "JGCC 0084",
+      "JGCC 0085",
+      "JGCC 0086",
+      "JGCC 0517"
+    ],
+    "jgccDisplay": "JGCC 0084-JGCC 0086, JGCC 0517",
+    "totalSlots": 4,
+    "totalAmount": 4720,
+    "name": "Jessy Paul",
+    "phone": "9744722629",
+    "house": "Alappat Thotian, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0087",
+    "jgccNos": [
+      "JGCC 0087"
+    ],
+    "jgccDisplay": "JGCC 0087",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Davis C J",
+    "phone": "9349933674",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0088",
+    "jgccNos": [
+      "JGCC 0088"
+    ],
+    "jgccDisplay": "JGCC 0088",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Metty Davis",
+    "phone": "9349929874",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0089",
+    "jgccNos": [
+      "JGCC 0089"
+    ],
+    "jgccDisplay": "JGCC 0089",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Steffan Davis",
+    "phone": "7559977287",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0090",
+    "jgccNos": [
+      "JGCC 0090"
+    ],
+    "jgccDisplay": "JGCC 0090",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Livan Davis",
+    "phone": "9847177287",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0091",
+    "jgccNos": [
+      "JGCC 0091"
+    ],
+    "jgccDisplay": "JGCC 0091",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Reshma Steffan",
+    "phone": "7907272318",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0092",
+    "jgccNos": [
+      "JGCC 0092"
+    ],
+    "jgccDisplay": "JGCC 0092",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rachel Elsa Steffan",
+    "phone": "9349933674",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0093",
+    "jgccNos": [
+      "JGCC 0093",
+      "JGCC 0094",
+      "JGCC 0095"
+    ],
+    "jgccDisplay": "JGCC 0093-JGCC 0095",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Biju K J",
+    "phone": "9846145745",
+    "house": "Kuruthukulangara Vallookaren,  Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 7080.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0096",
+    "jgccNos": [
+      "JGCC 0096"
+    ],
+    "jgccDisplay": "JGCC 0096",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shanti Biju",
+    "phone": "9567920513",
+    "house": "Kuruthukulangara Vallookaren,  Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0097",
+    "jgccNos": [
+      "JGCC 0097"
+    ],
+    "jgccDisplay": "JGCC 0097",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Irine Biju",
+    "phone": "9846145745",
+    "house": "Kuruthukulangara Vallookaren,  Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0098",
+    "jgccNos": [
+      "JGCC 0098"
+    ],
+    "jgccDisplay": "JGCC 0098",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Catherin Biju",
+    "phone": "9846145745",
+    "house": "Kuruthukulangara Vallookaren,  Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0099",
+    "jgccNos": [
+      "JGCC 0099",
+      "JGCC 0100",
+      "JGCC 0101",
+      "JGCC 0102",
+      "JGCC 0103",
+      "JGCC 0104"
+    ],
+    "jgccDisplay": "JGCC 0099-JGCC 0104",
+    "totalSlots": 6,
+    "totalAmount": 7080,
+    "name": "Varghese P A",
+    "phone": "9745237155",
+    "house": "Pulickan, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 7080.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 7080.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0105",
+    "jgccNos": [
+      "JGCC 0105"
+    ],
+    "jgccDisplay": "JGCC 0105",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joseph D Menachery",
+    "phone": "9847852269",
+    "house": "Menachery, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0106",
+    "jgccNos": [
+      "JGCC 0106"
+    ],
+    "jgccDisplay": "JGCC 0106",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lipson T L",
+    "phone": "9061896024",
+    "house": "Thrikkukaren, Varakkara, Amballur-680302",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0107",
+    "jgccNos": [
+      "JGCC 0107"
+    ],
+    "jgccDisplay": "JGCC 0107",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lidiya Joseph",
+    "phone": "9745146024",
+    "house": "Menachery, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0108",
+    "jgccNos": [
+      "JGCC 0108"
+    ],
+    "jgccDisplay": "JGCC 0108",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Liyander Joseph",
+    "phone": "7012137095",
+    "house": "Menachery, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0109",
+    "jgccNos": [
+      "JGCC 0109"
+    ],
+    "jgccDisplay": "JGCC 0109",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shyja Tharayil",
+    "phone": "9847852269",
+    "house": "Menachery, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0110",
+    "jgccNos": [
+      "JGCC 0110"
+    ],
+    "jgccDisplay": "JGCC 0110",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anto C J",
+    "phone": "9605370639",
+    "house": "Chiramel Padinjarethala, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 100300.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0111",
+    "jgccNos": [
+      "JGCC 0111"
+    ],
+    "jgccDisplay": "JGCC 0111",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Litty Anto",
+    "phone": "9605370639",
+    "house": "Chiramel Padinjarethala, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0112",
+    "jgccNos": [
+      "JGCC 0112"
+    ],
+    "jgccDisplay": "JGCC 0112",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Faustin C Anto",
+    "phone": "9605370639",
+    "house": "Chiramel Padinjarethala, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0113",
+    "jgccNos": [
+      "JGCC 0113"
+    ],
+    "jgccDisplay": "JGCC 0113",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anna Elna C Anto",
+    "phone": "9605370639",
+    "house": "Chiramel Padinjarethala, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0114",
+    "jgccNos": [
+      "JGCC 0114"
+    ],
+    "jgccDisplay": "JGCC 0114",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Edwin C Anto",
+    "phone": "9605370639",
+    "house": "Chiramel Padinjarethala, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0115",
+    "jgccNos": [
+      "JGCC 0115"
+    ],
+    "jgccDisplay": "JGCC 0115",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Tomy Thomas C",
+    "phone": "9539317095",
+    "house": "Chittilappilly Vaidyakaren, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0116",
+    "jgccNos": [
+      "JGCC 0116"
+    ],
+    "jgccDisplay": "JGCC 0116",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ginny Tomy",
+    "phone": "9446873475",
+    "house": "Chittilappilly Vaidyakaren, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0117",
+    "jgccNos": [
+      "JGCC 0117"
+    ],
+    "jgccDisplay": "JGCC 0117",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Fr.Jose Chittilappilly",
+    "phone": "9539317095",
+    "house": "Chittilappilly Vaidyakaren, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0118",
+    "jgccNos": [
+      "JGCC 0118"
+    ],
+    "jgccDisplay": "JGCC 0118",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Celin Rose Tomy",
+    "phone": "9539317095",
+    "house": "Chittilappilly Vaidyakaren, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0119",
+    "jgccNos": [
+      "JGCC 0119"
+    ],
+    "jgccDisplay": "JGCC 0119",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Alfred Tomy",
+    "phone": "9539317095",
+    "house": "Chittilappilly Vaidyakaren, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0120",
+    "jgccNos": [
+      "JGCC 0120",
+      "JGCC 0121",
+      "JGCC 0122",
+      "JGCC 0123",
+      "JGCC 0124"
+    ],
+    "jgccDisplay": "JGCC 0120-JGCC 0124",
+    "totalSlots": 5,
+    "totalAmount": 5900,
+    "name": "Alappat Bijoy Jacob",
+    "phone": "9961524898",
+    "house": "Alappat, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0125",
+    "jgccNos": [
+      "JGCC 0125",
+      "JGCC 0126",
+      "JGCC 0127"
+    ],
+    "jgccDisplay": "JGCC 0125-JGCC 0127",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Varghese C I",
+    "phone": "0000000000",
+    "house": "Chakkalakkal, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0128",
+    "jgccNos": [
+      "JGCC 0128",
+      "JGCC 0129"
+    ],
+    "jgccDisplay": "JGCC 0128-JGCC 0129",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Shyji Varghese",
+    "phone": "9495341029",
+    "house": "Chakkalakkal, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0130",
+    "jgccNos": [
+      "JGCC 0130",
+      "JGCC 0131",
+      "JGCC 0132",
+      "JGCC 0133",
+      "JGCC 0134"
+    ],
+    "jgccDisplay": "JGCC 0130-JGCC 0134",
+    "totalSlots": 5,
+    "totalAmount": 5900,
+    "name": "Anto Johny Therattil",
+    "phone": "9400553702",
+    "house": "Therattil House, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0135",
+    "jgccNos": [
+      "JGCC 0135"
+    ],
+    "jgccDisplay": "JGCC 0135",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "KochuDevasssy",
+    "phone": "9847142150",
+    "house": "Thettayil,Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 5900.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0136",
+    "jgccNos": [
+      "JGCC 0136"
+    ],
+    "jgccDisplay": "JGCC 0136",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lissy Kochu Devassy",
+    "phone": "0000000000",
+    "house": "Thettayil,Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0137",
+    "jgccNos": [
+      "JGCC 0137"
+    ],
+    "jgccDisplay": "JGCC 0137",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Delin Devassy",
+    "phone": "0000000000",
+    "house": "Thettayil,Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0138",
+    "jgccNos": [
+      "JGCC 0138"
+    ],
+    "jgccDisplay": "JGCC 0138",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Geethu Delin",
+    "phone": "0000000000",
+    "house": "Thettayil,Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0139",
+    "jgccNos": [
+      "JGCC 0139"
+    ],
+    "jgccDisplay": "JGCC 0139",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Heaven Rose Delin",
+    "phone": "0000000000",
+    "house": "Thettayil,Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0140",
+    "jgccNos": [
+      "JGCC 0140"
+    ],
+    "jgccDisplay": "JGCC 0140",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Johny V U",
+    "phone": "9142172434",
+    "house": "Vazheparambil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0141",
+    "jgccNos": [
+      "JGCC 0141"
+    ],
+    "jgccDisplay": "JGCC 0141",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shiji Johny",
+    "phone": "7902434559",
+    "house": "Vazheparambil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0142",
+    "jgccNos": [
+      "JGCC 0142"
+    ],
+    "jgccDisplay": "JGCC 0142",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Josmy Johny",
+    "phone": "9074600722",
+    "house": "Vazheparambil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0143",
+    "jgccNos": [
+      "JGCC 0143"
+    ],
+    "jgccDisplay": "JGCC 0143",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jismy Johny",
+    "phone": "8590899795",
+    "house": "Vazheparambil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0144",
+    "jgccNos": [
+      "JGCC 0144"
+    ],
+    "jgccDisplay": "JGCC 0144",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jincy V J",
+    "phone": "8086720552",
+    "house": "Vazheparambil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0145",
+    "jgccNos": [
+      "JGCC 0145",
+      "JGCC 0146"
+    ],
+    "jgccDisplay": "JGCC 0145-JGCC 0146",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Annie David",
+    "phone": "9961210428",
+    "house": "Brahmakulam, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0147",
+    "jgccNos": [
+      "JGCC 0147"
+    ],
+    "jgccDisplay": "JGCC 0147",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Nevan Gilbert",
+    "phone": "9496983289",
+    "house": "Brahmakulam, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0148",
+    "jgccNos": [
+      "JGCC 0148"
+    ],
+    "jgccDisplay": "JGCC 0148",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Nehan Gilbert",
+    "phone": "9497883299",
+    "house": "Brahmakulam, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0149",
+    "jgccNos": [
+      "JGCC 0149"
+    ],
+    "jgccDisplay": "JGCC 0149",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Neeha Gilbert",
+    "phone": "8547763150",
+    "house": "Brahmakulam, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0150",
+    "jgccNos": [
+      "JGCC 0150"
+    ],
+    "jgccDisplay": "JGCC 0150",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joseph B I",
+    "phone": "8547561181",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0151",
+    "jgccNos": [
+      "JGCC 0151"
+    ],
+    "jgccDisplay": "JGCC 0151",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Susy Joseph",
+    "phone": "8547561181",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0152",
+    "jgccNos": [
+      "JGCC 0152"
+    ],
+    "jgccDisplay": "JGCC 0152",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Arun Joseph",
+    "phone": "8547561181",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0153",
+    "jgccNos": [
+      "JGCC 0153"
+    ],
+    "jgccDisplay": "JGCC 0153",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Athira James T",
+    "phone": "8547561181",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0154",
+    "jgccNos": [
+      "JGCC 0154"
+    ],
+    "jgccDisplay": "JGCC 0154",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Raihan Joseph",
+    "phone": "8547561181",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0155",
+    "jgccNos": [
+      "JGCC 0155",
+      "JGCC 0156",
+      "JGCC 0157",
+      "JGCC 0158",
+      "JGCC 0504"
+    ],
+    "jgccDisplay": "JGCC 0155-JGCC 0158, JGCC 0504",
+    "totalSlots": 5,
+    "totalAmount": 5900,
+    "name": "Fijo C J",
+    "phone": "9744101077",
+    "house": "Chirammel Kunjavu, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5720.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 5720.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0159",
+    "jgccNos": [
+      "JGCC 0159"
+    ],
+    "jgccDisplay": "JGCC 0159",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anto  V L   (Fijo)",
+    "phone": "9946248074",
+    "house": "Vadakken, Manakody",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0160",
+    "jgccNos": [
+      "JGCC 0160"
+    ],
+    "jgccDisplay": "JGCC 0160",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Benson Kurian",
+    "phone": "9846994099",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 5900.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 5900.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0161",
+    "jgccNos": [
+      "JGCC 0161"
+    ],
+    "jgccDisplay": "JGCC 0161",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Noella Eliz Benson",
+    "phone": "9846994099",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0162",
+    "jgccNos": [
+      "JGCC 0162"
+    ],
+    "jgccDisplay": "JGCC 0162",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Benon Kurian Tharakan",
+    "phone": "9846994099",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0163",
+    "jgccNos": [
+      "JGCC 0163"
+    ],
+    "jgccDisplay": "JGCC 0163",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ryan Benon Tharakan",
+    "phone": "9846994099",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0164",
+    "jgccNos": [
+      "JGCC 0164"
+    ],
+    "jgccDisplay": "JGCC 0164",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Maria Kurian",
+    "phone": "9846994099",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0165",
+    "jgccNos": [
+      "JGCC 0165",
+      "JGCC 0166",
+      "JGCC 0167"
+    ],
+    "jgccDisplay": "JGCC 0165-JGCC 0167",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Antony E L",
+    "phone": "9207807948",
+    "house": "Edakkalathur, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0168",
+    "jgccNos": [
+      "JGCC 0168"
+    ],
+    "jgccDisplay": "JGCC 0168",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lissy George",
+    "phone": "9496531138",
+    "house": "Vadakkethala, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0169",
+    "jgccNos": [
+      "JGCC 0169"
+    ],
+    "jgccDisplay": "JGCC 0169",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ligi Antony",
+    "phone": "9207807948",
+    "house": "Edakkalathur, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0170",
+    "jgccNos": [
+      "JGCC 0170"
+    ],
+    "jgccDisplay": "JGCC 0170",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Francis A R",
+    "phone": "9037274494",
+    "house": "Alappat, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 4720.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0171",
+    "jgccNos": [
+      "JGCC 0171"
+    ],
+    "jgccDisplay": "JGCC 0171",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sunny P K",
+    "phone": "9188730373",
+    "house": "Palathingal, Ayyanthole, Thrissur",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0172",
+    "jgccNos": [
+      "JGCC 0172"
+    ],
+    "jgccDisplay": "JGCC 0172",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sara Ann Salish",
+    "phone": "8921382398",
+    "house": "Mozhiparambil, Chevoor, Thrissur",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0173",
+    "jgccNos": [
+      "JGCC 0173"
+    ],
+    "jgccDisplay": "JGCC 0173",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Alphonsa Francis",
+    "phone": "9037274494",
+    "house": "Alappat, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0174",
+    "jgccNos": [
+      "JGCC 0174"
+    ],
+    "jgccDisplay": "JGCC 0174",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Yesudhas K L",
+    "phone": "9847532377",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 4720.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 4720.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0175",
+    "jgccNos": [
+      "JGCC 0175"
+    ],
+    "jgccDisplay": "JGCC 0175",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Nidhin Yesudhas",
+    "phone": "9747818207",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0176",
+    "jgccNos": [
+      "JGCC 0176"
+    ],
+    "jgccDisplay": "JGCC 0176",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Siji K Johny",
+    "phone": "9744848079",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0177",
+    "jgccNos": [
+      "JGCC 0177"
+    ],
+    "jgccDisplay": "JGCC 0177",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Daniel Yesudhas",
+    "phone": "9207580350",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0178",
+    "jgccNos": [
+      "JGCC 0178"
+    ],
+    "jgccDisplay": "JGCC 0178",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Kapil Dolphy",
+    "phone": "9847693254",
+    "house": "Palayoor Mundokaren, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 4720.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 4720.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0179",
+    "jgccNos": [
+      "JGCC 0179"
+    ],
+    "jgccDisplay": "JGCC 0179",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Bini Varghese N",
+    "phone": "9656918161",
+    "house": "Palayoor Mundokaren, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0180",
+    "jgccNos": [
+      "JGCC 0180"
+    ],
+    "jgccDisplay": "JGCC 0180",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Edward Joseph Kapil",
+    "phone": "9847693254",
+    "house": "Palayoor Mundokaren, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0181",
+    "jgccNos": [
+      "JGCC 0181"
+    ],
+    "jgccDisplay": "JGCC 0181",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Felipe George Kapil",
+    "phone": "9656918161",
+    "house": "Palayoor Mundokaren, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0182",
+    "jgccNos": [
+      "JGCC 0182"
+    ],
+    "jgccDisplay": "JGCC 0182",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jezal Biju",
+    "phone": "8089705330",
+    "house": "Kunnathuparambil, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0183",
+    "jgccNos": [
+      "JGCC 0183"
+    ],
+    "jgccDisplay": "JGCC 0183",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jewel Rose Biju",
+    "phone": "9995902555",
+    "house": "Kunnathuparambil, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0184",
+    "jgccNos": [
+      "JGCC 0184"
+    ],
+    "jgccDisplay": "JGCC 0184",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Seena Biju",
+    "phone": "9895005417",
+    "house": "Kunnathuparambil, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0185",
+    "jgccNos": [
+      "JGCC 0185"
+    ],
+    "jgccDisplay": "JGCC 0185",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Biju George",
+    "phone": "9995902555",
+    "house": "Kunnathuparambil, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0186",
+    "jgccNos": [
+      "JGCC 0186"
+    ],
+    "jgccDisplay": "JGCC 0186",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Devassy A J",
+    "phone": "9048561939",
+    "house": "Alappat,  Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0187",
+    "jgccNos": [
+      "JGCC 0187",
+      "JGCC 0188",
+      "JGCC 0189"
+    ],
+    "jgccDisplay": "JGCC 0187-JGCC 0189",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Febin D Alappatt",
+    "phone": "9745769853",
+    "house": "Alappat , Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0190",
+    "jgccNos": [
+      "JGCC 0190"
+    ],
+    "jgccDisplay": "JGCC 0190",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jeena Roy",
+    "phone": "9562290359",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0191",
+    "jgccNos": [
+      "JGCC 0191"
+    ],
+    "jgccDisplay": "JGCC 0191",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Resto Roy",
+    "phone": "9947463117",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0192",
+    "jgccNos": [
+      "JGCC 0192"
+    ],
+    "jgccDisplay": "JGCC 0192",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Revinto Roy",
+    "phone": "9947463117",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0193",
+    "jgccNos": [
+      "JGCC 0193"
+    ],
+    "jgccDisplay": "JGCC 0193",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Remeto Roy",
+    "phone": "7560825416",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0194",
+    "jgccNos": [
+      "JGCC 0194"
+    ],
+    "jgccDisplay": "JGCC 0194",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Francis T A",
+    "phone": "9400863546",
+    "house": "Thanickal Chammanath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0195",
+    "jgccNos": [
+      "JGCC 0195"
+    ],
+    "jgccDisplay": "JGCC 0195",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Tino",
+    "phone": "9048177716",
+    "house": "Thanickal Chammanath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0196",
+    "jgccNos": [
+      "JGCC 0196",
+      "JGCC 0197"
+    ],
+    "jgccDisplay": "JGCC 0196-JGCC 0197",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Tintu",
+    "phone": "9745051616",
+    "house": "Thanickal Chammanath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0198",
+    "jgccNos": [
+      "JGCC 0198",
+      "JGCC 0199",
+      "JGCC 0200"
+    ],
+    "jgccDisplay": "JGCC 0198-JGCC 0200",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Paul T O",
+    "phone": "9526359201",
+    "house": "Mary Land, Thattil House, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0201",
+    "jgccNos": [
+      "JGCC 0201",
+      "JGCC 0202",
+      "JGCC 0203"
+    ],
+    "jgccDisplay": "JGCC 0201-JGCC 0203",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Chungath Saji Francis",
+    "phone": "8086161536",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0204",
+    "jgccNos": [
+      "JGCC 0204",
+      "JGCC 0205",
+      "JGCC 0206"
+    ],
+    "jgccDisplay": "JGCC 0204-JGCC 0206",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Joy J Alappat",
+    "phone": "7025829041",
+    "house": "Alappat Thotian, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0207",
+    "jgccNos": [
+      "JGCC 0207"
+    ],
+    "jgccDisplay": "JGCC 0207",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Simson C S",
+    "phone": "9747686125",
+    "house": "Chiriyankandathdh, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0208",
+    "jgccNos": [
+      "JGCC 0208"
+    ],
+    "jgccDisplay": "JGCC 0208",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sajani Simson",
+    "phone": "9747169656",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Fathima",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0209",
+    "jgccNos": [
+      "JGCC 0209"
+    ],
+    "jgccDisplay": "JGCC 0209",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Stina Simson",
+    "phone": "9747169656",
+    "house": "chiriyankandath, Elthuruth",
+    "unit": "Fathima",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0210",
+    "jgccNos": [
+      "JGCC 0210"
+    ],
+    "jgccDisplay": "JGCC 0210",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Baby T A",
+    "phone": "9447062129",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0211",
+    "jgccNos": [
+      "JGCC 0211"
+    ],
+    "jgccDisplay": "JGCC 0211",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ijo Baby",
+    "phone": "8921166703",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0212",
+    "jgccNos": [
+      "JGCC 0212"
+    ],
+    "jgccDisplay": "JGCC 0212",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Fancy Baby",
+    "phone": "9446032129",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0213",
+    "jgccNos": [
+      "JGCC 0213"
+    ],
+    "jgccDisplay": "JGCC 0213",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rijo Justine",
+    "phone": "6282471889",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0214",
+    "jgccNos": [
+      "JGCC 0214"
+    ],
+    "jgccDisplay": "JGCC 0214",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rinto Justine",
+    "phone": "0000000000",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0215",
+    "jgccNos": [
+      "JGCC 0215"
+    ],
+    "jgccDisplay": "JGCC 0215",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Nathan Anton Eby",
+    "phone": "7034436802",
+    "house": "Maliekkal Anchery, Avinissery",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0216",
+    "jgccNos": [
+      "JGCC 0216",
+      "JGCC 0217"
+    ],
+    "jgccDisplay": "JGCC 0216-JGCC 0217",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Alwin Anto",
+    "phone": "9496287565",
+    "house": "Thekkethala, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0218",
+    "jgccNos": [
+      "JGCC 0218"
+    ],
+    "jgccDisplay": "JGCC 0218",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Seethu P Palayoor",
+    "phone": "9496257684",
+    "house": "Thekkethala, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0219",
+    "jgccNos": [
+      "JGCC 0219"
+    ],
+    "jgccDisplay": "JGCC 0219",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Philip T V",
+    "phone": "9747430858",
+    "house": "Thettayil , Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0220",
+    "jgccNos": [
+      "JGCC 0220"
+    ],
+    "jgccDisplay": "JGCC 0220",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shiny A A",
+    "phone": "9747038909",
+    "house": "Thettayil , Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0221",
+    "jgccNos": [
+      "JGCC 0221"
+    ],
+    "jgccDisplay": "JGCC 0221",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shifin T Philip",
+    "phone": "7025819719",
+    "house": "Thettayil , Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0222",
+    "jgccNos": [
+      "JGCC 0222"
+    ],
+    "jgccDisplay": "JGCC 0222",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Neha Ranjith (Pappachan T V)",
+    "phone": "9048884872",
+    "house": "Thettayil, Chettupuzha",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0223",
+    "jgccNos": [
+      "JGCC 0223"
+    ],
+    "jgccDisplay": "JGCC 0223",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Riya Ranjith",
+    "phone": "0000000000",
+    "house": "Thettayil, Chettupuzha",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0224",
+    "jgccNos": [
+      "JGCC 0224"
+    ],
+    "jgccDisplay": "JGCC 0224",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Noel Ranjith",
+    "phone": "0000000000",
+    "house": "Thettayil, Chettupuzha",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0225",
+    "jgccNos": [
+      "JGCC 0225",
+      "JGCC 0226",
+      "JGCC 0227"
+    ],
+    "jgccDisplay": "JGCC 0225-JGCC 0227",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Raphael Karerakkatil",
+    "phone": "9427110660",
+    "house": "Karerakkatil, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0228",
+    "jgccNos": [
+      "JGCC 0228",
+      "JGCC 0229",
+      "JGCC 0230"
+    ],
+    "jgccDisplay": "JGCC 0228-JGCC 0230",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Anto M G",
+    "phone": "9497179389",
+    "house": "Maliekkal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 3840.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0231",
+    "jgccNos": [
+      "JGCC 0231",
+      "JGCC 0232",
+      "JGCC 0233"
+    ],
+    "jgccDisplay": "JGCC 0231-JGCC 0233",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Shaju C R",
+    "phone": "9349130919",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0234",
+    "jgccNos": [
+      "JGCC 0234"
+    ],
+    "jgccDisplay": "JGCC 0234",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Vincent A P",
+    "phone": "9539542966",
+    "house": "Arimbuparambil House, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0235",
+    "jgccNos": [
+      "JGCC 0235"
+    ],
+    "jgccDisplay": "JGCC 0235",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ciya Panthallookaren",
+    "phone": "9620035387",
+    "house": "Arimbuparambil House, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0236",
+    "jgccNos": [
+      "JGCC 0236"
+    ],
+    "jgccDisplay": "JGCC 0236",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jinto John C",
+    "phone": "9497670028",
+    "house": "Chungath, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0237",
+    "jgccNos": [
+      "JGCC 0237"
+    ],
+    "jgccDisplay": "JGCC 0237",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lovesy Jinto",
+    "phone": "6238871106",
+    "house": "Chungath, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0238",
+    "jgccNos": [
+      "JGCC 0238"
+    ],
+    "jgccDisplay": "JGCC 0238",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Johnson Antony N",
+    "phone": "9447805424",
+    "house": "Neelankavil, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0239",
+    "jgccNos": [
+      "JGCC 0239"
+    ],
+    "jgccDisplay": "JGCC 0239",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Priya Johnson",
+    "phone": "9400603876",
+    "house": "Neelankavil, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0240",
+    "jgccNos": [
+      "JGCC 0240",
+      "JGCC 0241"
+    ],
+    "jgccDisplay": "JGCC 0240-JGCC 0241",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Paul C A",
+    "phone": "9995497510",
+    "house": "Chathely, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0242",
+    "jgccNos": [
+      "JGCC 0242",
+      "JGCC 0243"
+    ],
+    "jgccDisplay": "JGCC 0242-JGCC 0243",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Rejin C R",
+    "phone": "9745551100",
+    "house": "Chuulliparambil, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0244",
+    "jgccNos": [
+      "JGCC 0244",
+      "JGCC 0245"
+    ],
+    "jgccDisplay": "JGCC 0244-JGCC 0245",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Joju Augustine",
+    "phone": "9744559598",
+    "house": "Kannamkunny, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0246",
+    "jgccNos": [
+      "JGCC 0246"
+    ],
+    "jgccDisplay": "JGCC 0246",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Prince K J",
+    "phone": "9387425086",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0247",
+    "jgccNos": [
+      "JGCC 0247"
+    ],
+    "jgccDisplay": "JGCC 0247",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Reena Prince",
+    "phone": "9400497138",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0248",
+    "jgccNos": [
+      "JGCC 0248"
+    ],
+    "jgccDisplay": "JGCC 0248",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sherin Paul",
+    "phone": "9496983542",
+    "house": "Thattil Iyyu",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0249",
+    "jgccNos": [
+      "JGCC 0249"
+    ],
+    "jgccDisplay": "JGCC 0249",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lima Rose",
+    "phone": "9447808111",
+    "house": "Thattil Iyyu",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0250",
+    "jgccNos": [
+      "JGCC 0250"
+    ],
+    "jgccDisplay": "JGCC 0250",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Pius D Kunjappu",
+    "phone": "9656003962",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0251",
+    "jgccNos": [
+      "JGCC 0251"
+    ],
+    "jgccDisplay": "JGCC 0251",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sheena Pius",
+    "phone": "9497625152",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0252",
+    "jgccNos": [
+      "JGCC 0252"
+    ],
+    "jgccDisplay": "JGCC 0252",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Francis Feon C",
+    "phone": "9496292065",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0253",
+    "jgccNos": [
+      "JGCC 0253"
+    ],
+    "jgccDisplay": "JGCC 0253",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Alfred Sojan",
+    "phone": "9400075224",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0254",
+    "jgccNos": [
+      "JGCC 0254"
+    ],
+    "jgccDisplay": "JGCC 0254",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Raphy K R",
+    "phone": "9847867312",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0255",
+    "jgccNos": [
+      "JGCC 0255"
+    ],
+    "jgccDisplay": "JGCC 0255",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sibi Raphy",
+    "phone": "7736029706",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0256",
+    "jgccNos": [
+      "JGCC 0256"
+    ],
+    "jgccDisplay": "JGCC 0256",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "George C J",
+    "phone": "9847036512",
+    "house": "Chittilappilly , Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0257",
+    "jgccNos": [
+      "JGCC 0257"
+    ],
+    "jgccDisplay": "JGCC 0257",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mini George",
+    "phone": "9400965121",
+    "house": "Chittilappilly, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0258",
+    "jgccNos": [
+      "JGCC 0258"
+    ],
+    "jgccDisplay": "JGCC 0258",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Richard Joseph T",
+    "phone": "9447686196",
+    "house": "Thalakkottoor House, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0259",
+    "jgccNos": [
+      "JGCC 0259"
+    ],
+    "jgccDisplay": "JGCC 0259",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rickardo Joseph T",
+    "phone": "9447686196",
+    "house": "Thalakkottoor House, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0260",
+    "jgccNos": [
+      "JGCC 0260",
+      "JGCC 0261"
+    ],
+    "jgccDisplay": "JGCC 0260-JGCC 0261",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Joy Thomas",
+    "phone": "9400964097",
+    "house": "Pulikken, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0262",
+    "jgccNos": [
+      "JGCC 0262"
+    ],
+    "jgccDisplay": "JGCC 0262",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rajesh Albert C",
+    "phone": "9480213880",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0263",
+    "jgccNos": [
+      "JGCC 0263"
+    ],
+    "jgccDisplay": "JGCC 0263",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lino Anto",
+    "phone": "0000000000",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0264",
+    "jgccNos": [
+      "JGCC 0264"
+    ],
+    "jgccDisplay": "JGCC 0264",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anna Thomas",
+    "phone": "9446524781",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0265",
+    "jgccNos": [
+      "JGCC 0265"
+    ],
+    "jgccDisplay": "JGCC 0265",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mathew Thomas",
+    "phone": "9447524781",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0266",
+    "jgccNos": [
+      "JGCC 0266",
+      "JGCC 0267"
+    ],
+    "jgccDisplay": "JGCC 0266-JGCC 0267",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Ajayakumar K V",
+    "phone": "9446039915",
+    "house": "Kunduvara valappil, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0268",
+    "jgccNos": [
+      "JGCC 0268"
+    ],
+    "jgccDisplay": "JGCC 0268",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Chiriyankandath   Jose Francis",
+    "phone": "9495852060",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0269",
+    "jgccNos": [
+      "JGCC 0269"
+    ],
+    "jgccDisplay": "JGCC 0269",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Bindu Francis",
+    "phone": "9495852060",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0270",
+    "jgccNos": [
+      "JGCC 0270",
+      "JGCC 0271"
+    ],
+    "jgccDisplay": "JGCC 0270-JGCC 0271",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Cijo Johnson",
+    "phone": "6238532162",
+    "house": "Pozhathuparambil, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0272",
+    "jgccNos": [
+      "JGCC 0272"
+    ],
+    "jgccDisplay": "JGCC 0272",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Avin K Thomas",
+    "phone": "9446421910",
+    "house": "Kuruthukulangara Koola, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0273",
+    "jgccNos": [
+      "JGCC 0273"
+    ],
+    "jgccDisplay": "JGCC 0273",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Thomas K V",
+    "phone": "9446421910",
+    "house": "Kuruthukulangara Koola, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0274",
+    "jgccNos": [
+      "JGCC 0274",
+      "JGCC 0275"
+    ],
+    "jgccDisplay": "JGCC 0274-JGCC 0275",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Titus V J",
+    "phone": "9249734836",
+    "house": "Vadakken, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0276",
+    "jgccNos": [
+      "JGCC 0276"
+    ],
+    "jgccDisplay": "JGCC 0276",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Christian Clint",
+    "phone": "9809761431",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0277",
+    "jgccNos": [
+      "JGCC 0277"
+    ],
+    "jgccDisplay": "JGCC 0277",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Beretta Anne Clint",
+    "phone": "9809761431",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0278",
+    "jgccNos": [
+      "JGCC 0278",
+      "JGCC 0279"
+    ],
+    "jgccDisplay": "JGCC 0278-JGCC 0279",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Raffy C A",
+    "phone": "9349626775",
+    "house": "Chittilappilly, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0280",
+    "jgccNos": [
+      "JGCC 0280"
+    ],
+    "jgccDisplay": "JGCC 0280",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Paul N P",
+    "phone": "9447137784",
+    "house": "Neelankavil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0281",
+    "jgccNos": [
+      "JGCC 0281"
+    ],
+    "jgccDisplay": "JGCC 0281",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Thresiamma Paul",
+    "phone": "8921309335",
+    "house": "Neelankavil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0282",
+    "jgccNos": [
+      "JGCC 0282"
+    ],
+    "jgccDisplay": "JGCC 0282",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jacob P J",
+    "phone": "8547000966",
+    "house": "Palatty, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0283",
+    "jgccNos": [
+      "JGCC 0283"
+    ],
+    "jgccDisplay": "JGCC 0283",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Miniy Jacob",
+    "phone": "8943638029",
+    "house": "Palatty, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0284",
+    "jgccNos": [
+      "JGCC 0284",
+      "JGCC 0285"
+    ],
+    "jgccDisplay": "JGCC 0284-JGCC 0285",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Sebi K J",
+    "phone": "9447691519",
+    "house": "Kuruthukulangara Karippai",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0286",
+    "jgccNos": [
+      "JGCC 0286"
+    ],
+    "jgccDisplay": "JGCC 0286",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Omana C D",
+    "phone": "9947040892",
+    "house": "Chirammel, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0287",
+    "jgccNos": [
+      "JGCC 0287"
+    ],
+    "jgccDisplay": "JGCC 0287",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Immanuel Joy",
+    "phone": "7510870162",
+    "house": "Parekkattil Mapranam, Chettupuzha",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0288",
+    "jgccNos": [
+      "JGCC 0288"
+    ],
+    "jgccDisplay": "JGCC 0288",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Francis B I",
+    "phone": "9142830599",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0289",
+    "jgccNos": [
+      "JGCC 0289"
+    ],
+    "jgccDisplay": "JGCC 0289",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Fijo Francis",
+    "phone": "9349390898",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0290",
+    "jgccNos": [
+      "JGCC 0290"
+    ],
+    "jgccDisplay": "JGCC 0290",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anie Anto",
+    "phone": "9447691205",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0291",
+    "jgccNos": [
+      "JGCC 0291"
+    ],
+    "jgccDisplay": "JGCC 0291",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Tintu B Anto",
+    "phone": "9562130047",
+    "house": "Porathukaren, Pullazhi",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0292",
+    "jgccNos": [
+      "JGCC 0292"
+    ],
+    "jgccDisplay": "JGCC 0292",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Antony David B G",
+    "phone": "9446582931",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0293",
+    "jgccNos": [
+      "JGCC 0293"
+    ],
+    "jgccDisplay": "JGCC 0293",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mangamma George",
+    "phone": "9446586931",
+    "house": "Brahmmakkulath Thekketh, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0294",
+    "jgccNos": [
+      "JGCC 0294",
+      "JGCC 0295"
+    ],
+    "jgccDisplay": "JGCC 0294-JGCC 0295",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Joy T V",
+    "phone": "9447766192",
+    "house": "Thettayil , Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0296",
+    "jgccNos": [
+      "JGCC 0296"
+    ],
+    "jgccDisplay": "JGCC 0296",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ginto George",
+    "phone": "9400730709",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0297",
+    "jgccNos": [
+      "JGCC 0297"
+    ],
+    "jgccDisplay": "JGCC 0297",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Molly George",
+    "phone": "9495013367",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0298",
+    "jgccNos": [
+      "JGCC 0298"
+    ],
+    "jgccDisplay": "JGCC 0298",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Angelo Simon",
+    "phone": "9400557749",
+    "house": "Karerakattil, S.N.park, Poothole",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0299",
+    "jgccNos": [
+      "JGCC 0299"
+    ],
+    "jgccDisplay": "JGCC 0299",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Moly Simon",
+    "phone": "9400557749",
+    "house": "Karerakattil, S.N.park, Poothole",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0300",
+    "jgccNos": [
+      "JGCC 0300",
+      "JGCC 0301"
+    ],
+    "jgccDisplay": "JGCC 0300-JGCC 0301",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Lawrence P T",
+    "phone": "9847518689",
+    "house": "Palatty, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0302",
+    "jgccNos": [
+      "JGCC 0302",
+      "JGCC 0303"
+    ],
+    "jgccDisplay": "JGCC 0302-JGCC 0303",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Sunish P D",
+    "phone": "7559005825",
+    "house": "Palayoor, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0304",
+    "jgccNos": [
+      "JGCC 0304",
+      "JGCC 0305"
+    ],
+    "jgccDisplay": "JGCC 0304-JGCC 0305",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Lissy Raphael",
+    "phone": "9745095655",
+    "house": "Mapranathukaren, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0306",
+    "jgccNos": [
+      "JGCC 0306",
+      "JGCC 0307"
+    ],
+    "jgccDisplay": "JGCC 0306-JGCC 0307",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Agnes George",
+    "phone": "9446711285",
+    "house": "Alappat Thotian, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0308",
+    "jgccNos": [
+      "JGCC 0308"
+    ],
+    "jgccDisplay": "JGCC 0308",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Akshay T A",
+    "phone": "9447134846",
+    "house": "S/o Asokan T B, Thoppil , Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0309",
+    "jgccNos": [
+      "JGCC 0309"
+    ],
+    "jgccDisplay": "JGCC 0309",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anagha T A",
+    "phone": "8139885007",
+    "house": "D/o Asokan T B, Thoppil, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0310",
+    "jgccNos": [
+      "JGCC 0310",
+      "JGCC 0311"
+    ],
+    "jgccDisplay": "JGCC 0310-JGCC 0311",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Ditto T P",
+    "phone": "9526903669",
+    "house": "Thekkinieth, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0312",
+    "jgccNos": [
+      "JGCC 0312"
+    ],
+    "jgccDisplay": "JGCC 0312",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jose P V",
+    "phone": "9446566568",
+    "house": "Ponmany , Elthuruth.P.O",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0313",
+    "jgccNos": [
+      "JGCC 0313"
+    ],
+    "jgccDisplay": "JGCC 0313",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Celina K V",
+    "phone": "9495966568",
+    "house": "Ponmany , Elthuruth.P.O",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0314",
+    "jgccNos": [
+      "JGCC 0314"
+    ],
+    "jgccDisplay": "JGCC 0314",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sebastian A K",
+    "phone": "8547220893",
+    "house": "Alappat Thotian , Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0315",
+    "jgccNos": [
+      "JGCC 0315"
+    ],
+    "jgccDisplay": "JGCC 0315",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mareena Sebastian",
+    "phone": "8547220893",
+    "house": "Alappat Thotian , Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0316",
+    "jgccNos": [
+      "JGCC 0316"
+    ],
+    "jgccDisplay": "JGCC 0316",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Raphael C V",
+    "phone": "7005831813",
+    "house": "Chirammel, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0317",
+    "jgccNos": [
+      "JGCC 0317"
+    ],
+    "jgccDisplay": "JGCC 0317",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lilly Raphael",
+    "phone": "9895623277",
+    "house": "Chirammel, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0318",
+    "jgccNos": [
+      "JGCC 0318"
+    ],
+    "jgccDisplay": "JGCC 0318",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Femina V M",
+    "phone": "9747701845",
+    "house": "Vadakkeveetil, Chettupuzha",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0319",
+    "jgccNos": [
+      "JGCC 0319"
+    ],
+    "jgccDisplay": "JGCC 0319",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ramlath K A",
+    "phone": "9526359524",
+    "house": "Vadakkeveetil, Chettupuzha",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0320",
+    "jgccNos": [
+      "JGCC 0320"
+    ],
+    "jgccDisplay": "JGCC 0320",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Thomas A K",
+    "phone": "9544028299",
+    "house": "Alukkal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0321",
+    "jgccNos": [
+      "JGCC 0321"
+    ],
+    "jgccDisplay": "JGCC 0321",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rosily Thomas",
+    "phone": "8848384387",
+    "house": "Alukkal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0322",
+    "jgccNos": [
+      "JGCC 0322"
+    ],
+    "jgccDisplay": "JGCC 0322",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Johnson K R",
+    "phone": "9446936858",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0323",
+    "jgccNos": [
+      "JGCC 0323"
+    ],
+    "jgccDisplay": "JGCC 0323",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Linsy Johnson",
+    "phone": "9746643199",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0324",
+    "jgccNos": [
+      "JGCC 0324"
+    ],
+    "jgccDisplay": "JGCC 0324",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sushan Kumar T S",
+    "phone": "6282956045",
+    "house": "Thaivalappil House, Chettupuzha",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0325",
+    "jgccNos": [
+      "JGCC 0325"
+    ],
+    "jgccDisplay": "JGCC 0325",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sini Thushan",
+    "phone": "9895303931",
+    "house": "Thaivalappil House, Chettupuzha",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0326",
+    "jgccNos": [
+      "JGCC 0326"
+    ],
+    "jgccDisplay": "JGCC 0326",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sumesh P S",
+    "phone": "9895312233",
+    "house": "Thaivalappil House, Chettupuzha",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0327",
+    "jgccNos": [
+      "JGCC 0327"
+    ],
+    "jgccDisplay": "JGCC 0327",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jinsha V S",
+    "phone": "9895255333",
+    "house": "Thaivalappil, Chettupuzha",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0328",
+    "jgccNos": [
+      "JGCC 0328",
+      "JGCC 0329"
+    ],
+    "jgccDisplay": "JGCC 0328-JGCC 0329",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Santhosh Paul         (Joy C D)",
+    "phone": "7293104507",
+    "house": "Pulikken, Elthuruth",
+    "unit": "Fathima (in Mary Matha)",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0330",
+    "jgccNos": [
+      "JGCC 0330",
+      "JGCC 0331"
+    ],
+    "jgccDisplay": "JGCC 0330-JGCC 0331",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Prasad K K",
+    "phone": "9495963337",
+    "house": "Kotilinkal, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0332",
+    "jgccNos": [
+      "JGCC 0332"
+    ],
+    "jgccDisplay": "JGCC 0332",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Antony T P",
+    "phone": "9495527807",
+    "house": "Tharookkara, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2360.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0333",
+    "jgccNos": [
+      "JGCC 0333"
+    ],
+    "jgccDisplay": "JGCC 0333",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sini Antony",
+    "phone": "8590562325",
+    "house": "Tharookkara, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": []
+  },
+  {
+    "jgccFirst": "JGCC 0334",
+    "jgccNos": [
+      "JGCC 0334"
+    ],
+    "jgccDisplay": "JGCC 0334",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Santhosh E C",
+    "phone": "9656019504",
+    "house": "Eluvathingal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0335",
+    "jgccNos": [
+      "JGCC 0335"
+    ],
+    "jgccDisplay": "JGCC 0335",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ibin Santhosh",
+    "phone": "7306786151",
+    "house": "Eluvathingal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0336",
+    "jgccNos": [
+      "JGCC 0336"
+    ],
+    "jgccDisplay": "JGCC 0336",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Fiby jaison (Fijo C J",
+    "phone": "9605024926",
+    "house": "Thekkoodan, Chiyyaram",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0337",
+    "jgccNos": [
+      "JGCC 0337"
+    ],
+    "jgccDisplay": "JGCC 0337",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jaison T S (Fijo C J",
+    "phone": "9447966100",
+    "house": "Thekkoodan, Chiyyaram",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0338",
+    "jgccNos": [
+      "JGCC 0338"
+    ],
+    "jgccDisplay": "JGCC 0338",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sheejo V J",
+    "phone": "9526279296",
+    "house": "Vilayil , Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0339",
+    "jgccNos": [
+      "JGCC 0339"
+    ],
+    "jgccDisplay": "JGCC 0339",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joy V S",
+    "phone": "9496762034",
+    "house": "Vadakkethala, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0340",
+    "jgccNos": [
+      "JGCC 0340"
+    ],
+    "jgccDisplay": "JGCC 0340",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Aiden K N",
+    "phone": "9605273190",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0341",
+    "jgccNos": [
+      "JGCC 0341"
+    ],
+    "jgccDisplay": "JGCC 0341",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jaison V J",
+    "phone": "9387001049",
+    "house": "Vadakkethala, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0342",
+    "jgccNos": [
+      "JGCC 0342"
+    ],
+    "jgccDisplay": "JGCC 0342",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Leo Paul",
+    "phone": "8589839481",
+    "house": "Alappat House (Attokaren) Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0343",
+    "jgccNos": [
+      "JGCC 0343"
+    ],
+    "jgccDisplay": "JGCC 0343",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Omana Lawrence",
+    "phone": "9645146085",
+    "house": "Thattil, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0344",
+    "jgccNos": [
+      "JGCC 0344"
+    ],
+    "jgccDisplay": "JGCC 0344",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "John K M",
+    "phone": "8547139463",
+    "house": "Kunjappu, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0345",
+    "jgccNos": [
+      "JGCC 0345"
+    ],
+    "jgccDisplay": "JGCC 0345",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jaison A T",
+    "phone": "9446872597",
+    "house": "Alappat , Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0346",
+    "jgccNos": [
+      "JGCC 0346"
+    ],
+    "jgccDisplay": "JGCC 0346",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "George T  L",
+    "phone": "8547450901",
+    "house": "Ainikkal, Teachers Avenue",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0347",
+    "jgccNos": [
+      "JGCC 0347"
+    ],
+    "jgccDisplay": "JGCC 0347",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rosily Seby",
+    "phone": "9744021393",
+    "house": "Alappat House,    Ignus Garder, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0348",
+    "jgccNos": [
+      "JGCC 0348"
+    ],
+    "jgccDisplay": "JGCC 0348",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Soman K R",
+    "phone": "9051943871",
+    "house": "Kondrappassery, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0349",
+    "jgccNos": [
+      "JGCC 0349"
+    ],
+    "jgccDisplay": "JGCC 0349",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Bisna Puliken",
+    "phone": "8075318341",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0350",
+    "jgccNos": [
+      "JGCC 0350"
+    ],
+    "jgccDisplay": "JGCC 0350",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Albin J Alappat",
+    "phone": "7592863997",
+    "house": "Alappat House, Elthuruth",
+    "unit": "Vimala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0351",
+    "jgccNos": [
+      "JGCC 0351"
+    ],
+    "jgccDisplay": "JGCC 0351",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mary Antony",
+    "phone": "9400724288",
+    "house": "Meleth, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0352",
+    "jgccNos": [
+      "JGCC 0352"
+    ],
+    "jgccDisplay": "JGCC 0352",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ammini Jacob",
+    "phone": "9744910474",
+    "house": "Neelankavil, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0353",
+    "jgccNos": [
+      "JGCC 0353"
+    ],
+    "jgccDisplay": "JGCC 0353",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Benny Anto",
+    "phone": "9846287829",
+    "house": "Alappat, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0354",
+    "jgccNos": [
+      "JGCC 0354"
+    ],
+    "jgccDisplay": "JGCC 0354",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Alphonsa Jose",
+    "phone": "9048907763",
+    "house": "Alappat, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0355",
+    "jgccNos": [
+      "JGCC 0355"
+    ],
+    "jgccDisplay": "JGCC 0355",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ajosh A J",
+    "phone": "9947227763",
+    "house": "Alappat, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0356",
+    "jgccNos": [
+      "JGCC 0356"
+    ],
+    "jgccDisplay": "JGCC 0356",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Prince A J",
+    "phone": "9747467656",
+    "house": "Alappat, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0357",
+    "jgccNos": [
+      "JGCC 0357"
+    ],
+    "jgccDisplay": "JGCC 0357",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Symi Simon",
+    "phone": "7306907455",
+    "house": "Alappat, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0358",
+    "jgccNos": [
+      "JGCC 0358"
+    ],
+    "jgccDisplay": "JGCC 0358",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joshy",
+    "phone": "9847591728",
+    "house": "Arackal, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0359",
+    "jgccNos": [
+      "JGCC 0359"
+    ],
+    "jgccDisplay": "JGCC 0359",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jenson V J",
+    "phone": "9656641366",
+    "house": "Vazhappilly, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0360",
+    "jgccNos": [
+      "JGCC 0360"
+    ],
+    "jgccDisplay": "JGCC 0360",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joby Jose",
+    "phone": "9495463870",
+    "house": "Chirayath Tharayil, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0361",
+    "jgccNos": [
+      "JGCC 0361"
+    ],
+    "jgccDisplay": "JGCC 0361",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Santhosh Antony T G",
+    "phone": "9744861042",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0362",
+    "jgccNos": [
+      "JGCC 0362"
+    ],
+    "jgccDisplay": "JGCC 0362",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Praveen Davis",
+    "phone": "8129175927",
+    "house": "Brahmakulath Thekketh, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0363",
+    "jgccNos": [
+      "JGCC 0363"
+    ],
+    "jgccDisplay": "JGCC 0363",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lija C J",
+    "phone": "9349821926",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0364",
+    "jgccNos": [
+      "JGCC 0364"
+    ],
+    "jgccDisplay": "JGCC 0364",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jomon N J",
+    "phone": "9995048955",
+    "house": "Neelankavil, Kolengattukara, Choolissery 680541",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0365",
+    "jgccNos": [
+      "JGCC 0365"
+    ],
+    "jgccDisplay": "JGCC 0365",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mohan Thomas",
+    "phone": "8638580771",
+    "house": "Site No.43/2 Bethel House, Bidrahalli, Bangalore 560049",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0366",
+    "jgccNos": [
+      "JGCC 0366"
+    ],
+    "jgccDisplay": "JGCC 0366",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Daisy Joshy",
+    "phone": "9847591728",
+    "house": "Arackal, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0367",
+    "jgccNos": [
+      "JGCC 0367"
+    ],
+    "jgccDisplay": "JGCC 0367",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Isa John Shankith",
+    "phone": "6282622802",
+    "house": "Mullankuzhiyil , Alattil, Wayanad",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0368",
+    "jgccNos": [
+      "JGCC 0368"
+    ],
+    "jgccDisplay": "JGCC 0368",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Liam Lighil",
+    "phone": "8075192942",
+    "house": "Chiramel, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0369",
+    "jgccNos": [
+      "JGCC 0369"
+    ],
+    "jgccDisplay": "JGCC 0369",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Bhasi M L",
+    "phone": "9446979180",
+    "house": "Marottickal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0370",
+    "jgccNos": [
+      "JGCC 0370"
+    ],
+    "jgccDisplay": "JGCC 0370",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Gracy Jacob",
+    "phone": "9747437364",
+    "house": "Puthur, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0371",
+    "jgccNos": [
+      "JGCC 0371"
+    ],
+    "jgccDisplay": "JGCC 0371",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Stephen George",
+    "phone": "9486825830",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0372",
+    "jgccNos": [
+      "JGCC 0372"
+    ],
+    "jgccDisplay": "JGCC 0372",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Raphael T G (Fijo",
+    "phone": "9656331529",
+    "house": "Thattil, Pullazhi, 680012",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0373",
+    "jgccNos": [
+      "JGCC 0373"
+    ],
+    "jgccDisplay": "JGCC 0373",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Binda Bhasi",
+    "phone": "9446979180",
+    "house": "Marottickal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0374",
+    "jgccNos": [
+      "JGCC 0374"
+    ],
+    "jgccDisplay": "JGCC 0374",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shabu P K (Fijo C J)",
+    "phone": "9747547295",
+    "house": "Pandarathil, Thrikkumarakudam, Ayyanthole 680003",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0375",
+    "jgccNos": [
+      "JGCC 0375"
+    ],
+    "jgccDisplay": "JGCC 0375",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lijo T J  (Fijo C J)",
+    "phone": "8608853921",
+    "house": "Thattil, Olarikkara, Pullazhi 680012",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0376",
+    "jgccNos": [
+      "JGCC 0376"
+    ],
+    "jgccDisplay": "JGCC 0376",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sagheer T S",
+    "phone": "9447870701",
+    "house": "Unniyamppattil, Poothole, TSR-680004",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0377",
+    "jgccNos": [
+      "JGCC 0377"
+    ],
+    "jgccDisplay": "JGCC 0377",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Chittilappilly Kunnath Raphael",
+    "phone": "6238718880",
+    "house": "Chittilappilly Kunnath, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0378",
+    "jgccNos": [
+      "JGCC 0378"
+    ],
+    "jgccDisplay": "JGCC 0378",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Gracy Sunny",
+    "phone": "9287978847",
+    "house": "Kanjirathingal, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0379",
+    "jgccNos": [
+      "JGCC 0379"
+    ],
+    "jgccDisplay": "JGCC 0379",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Davis A O",
+    "phone": "9142162891",
+    "house": "Alappadat, Elthuruth",
+    "unit": "Carmel Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0380",
+    "jgccNos": [
+      "JGCC 0380"
+    ],
+    "jgccDisplay": "JGCC 0380",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Davis C L",
+    "phone": "9526758895",
+    "house": "Chettupuzhakkaren, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0381",
+    "jgccNos": [
+      "JGCC 0381"
+    ],
+    "jgccDisplay": "JGCC 0381",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shajan C T",
+    "phone": "9847136187",
+    "house": "Chittilappilly, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0382",
+    "jgccNos": [
+      "JGCC 0382"
+    ],
+    "jgccDisplay": "JGCC 0382",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Antony P D",
+    "phone": "7006000611",
+    "house": "Panikulam, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0383",
+    "jgccNos": [
+      "JGCC 0383"
+    ],
+    "jgccDisplay": "JGCC 0383",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jose K L",
+    "phone": "9961522816",
+    "house": "Kuruthukulangara, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0384",
+    "jgccNos": [
+      "JGCC 0384"
+    ],
+    "jgccDisplay": "JGCC 0384",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Chittilappilly Inasu Jacob",
+    "phone": "7034566177",
+    "house": "Chittilappilly, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0385",
+    "jgccNos": [
+      "JGCC 0385"
+    ],
+    "jgccDisplay": "JGCC 0385",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anoop E J",
+    "phone": "9605096297",
+    "house": "Edassery, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0386",
+    "jgccNos": [
+      "JGCC 0386"
+    ],
+    "jgccDisplay": "JGCC 0386",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joy C F",
+    "phone": "9847750851",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0387",
+    "jgccNos": [
+      "JGCC 0387"
+    ],
+    "jgccDisplay": "JGCC 0387",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Denny D Koyikkara",
+    "phone": "9847178736",
+    "house": "Koyikkara, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-09",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0388",
+    "jgccNos": [
+      "JGCC 0388"
+    ],
+    "jgccDisplay": "JGCC 0388",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Philip C J",
+    "phone": "9447476026",
+    "house": "Chiriayath Chukkiri",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0389",
+    "jgccNos": [
+      "JGCC 0389"
+    ],
+    "jgccDisplay": "JGCC 0389",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rahul Tharakan",
+    "phone": "9495969947",
+    "house": "Tharakan, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0390",
+    "jgccNos": [
+      "JGCC 0390"
+    ],
+    "jgccDisplay": "JGCC 0390",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sanesh Job",
+    "phone": "7902901515",
+    "house": "Edappully, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0391",
+    "jgccNos": [
+      "JGCC 0391"
+    ],
+    "jgccDisplay": "JGCC 0391",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Xavier Antony Kunjappu",
+    "phone": "9388811174",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0392",
+    "jgccNos": [
+      "JGCC 0392"
+    ],
+    "jgccDisplay": "JGCC 0392",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shon Anil",
+    "phone": "8714127165",
+    "house": "Chazoor, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0393",
+    "jgccNos": [
+      "JGCC 0393"
+    ],
+    "jgccDisplay": "JGCC 0393",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anathakukmar T P",
+    "phone": "9249792208",
+    "house": "Thoppil, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0394",
+    "jgccNos": [
+      "JGCC 0394"
+    ],
+    "jgccDisplay": "JGCC 0394",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sugeesh T S",
+    "phone": "9847549532",
+    "house": "Thattuparambil, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0395",
+    "jgccNos": [
+      "JGCC 0395"
+    ],
+    "jgccDisplay": "JGCC 0395",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jossy Paulson C",
+    "phone": "9446469975",
+    "house": "Chittilappilly Vaidyakaren, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0396",
+    "jgccNos": [
+      "JGCC 0396"
+    ],
+    "jgccDisplay": "JGCC 0396",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Chiramel Francis",
+    "phone": "9605648747",
+    "house": "Chiramel, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0397",
+    "jgccNos": [
+      "JGCC 0397"
+    ],
+    "jgccDisplay": "JGCC 0397",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shiju C G",
+    "phone": "9846409911",
+    "house": "Chungath, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0398",
+    "jgccNos": [
+      "JGCC 0398"
+    ],
+    "jgccDisplay": "JGCC 0398",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Deedi Shiju",
+    "phone": "9744246019",
+    "house": "Chirayath, Aranattukara",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0399",
+    "jgccNos": [
+      "JGCC 0399"
+    ],
+    "jgccDisplay": "JGCC 0399",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Michael Biju",
+    "phone": "9037499051",
+    "house": "Nilavareth, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0400",
+    "jgccNos": [
+      "JGCC 0400"
+    ],
+    "jgccDisplay": "JGCC 0400",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Midhun Michael",
+    "phone": "9947018456",
+    "house": "Vallully, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0401",
+    "jgccNos": [
+      "JGCC 0401"
+    ],
+    "jgccDisplay": "JGCC 0401",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jimmy Jose P",
+    "phone": "7025952006",
+    "house": "Pudukadan, Silent Street, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0402",
+    "jgccNos": [
+      "JGCC 0402"
+    ],
+    "jgccDisplay": "JGCC 0402",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Aibel Jees Joseph",
+    "phone": "8589012775",
+    "house": "Porathukaren, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0403",
+    "jgccNos": [
+      "JGCC 0403"
+    ],
+    "jgccDisplay": "JGCC 0403",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "A Jose Kunjappu",
+    "phone": "9387244195",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0404",
+    "jgccNos": [
+      "JGCC 0404"
+    ],
+    "jgccDisplay": "JGCC 0404",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Stella George",
+    "phone": "8547286265",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0405",
+    "jgccNos": [
+      "JGCC 0405"
+    ],
+    "jgccDisplay": "JGCC 0405",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Johny Antony",
+    "phone": "9961178615",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0406",
+    "jgccNos": [
+      "JGCC 0406"
+    ],
+    "jgccDisplay": "JGCC 0406",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anto E T",
+    "phone": "9744177539",
+    "house": "Erinjery, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0407",
+    "jgccNos": [
+      "JGCC 0407",
+      "JGCC 0490"
+    ],
+    "jgccDisplay": "JGCC 0407, JGCC 0490",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Johnson V D",
+    "phone": "9562636877",
+    "house": "Vadakkethala Thaivalappil, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0408",
+    "jgccNos": [
+      "JGCC 0408"
+    ],
+    "jgccDisplay": "JGCC 0408",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Antony K C",
+    "phone": "9495739462",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0409",
+    "jgccNos": [
+      "JGCC 0409"
+    ],
+    "jgccDisplay": "JGCC 0409",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jose M V",
+    "phone": "9447285303",
+    "house": "Meleth, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0410",
+    "jgccNos": [
+      "JGCC 0410"
+    ],
+    "jgccDisplay": "JGCC 0410",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sajeevan C A",
+    "phone": "8138057252",
+    "house": "Chirukandath, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0411",
+    "jgccNos": [
+      "JGCC 0411"
+    ],
+    "jgccDisplay": "JGCC 0411",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sino Thomas",
+    "phone": "9744342781",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0412",
+    "jgccNos": [
+      "JGCC 0412"
+    ],
+    "jgccDisplay": "JGCC 0412",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anosh Antony",
+    "phone": "9387508693",
+    "house": "Vadakkethala Thaivalappil, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0413",
+    "jgccNos": [
+      "JGCC 0413"
+    ],
+    "jgccDisplay": "JGCC 0413",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Geo Kurian",
+    "phone": "9946003516",
+    "house": "Kolengadan, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0414",
+    "jgccNos": [
+      "JGCC 0414"
+    ],
+    "jgccDisplay": "JGCC 0414",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Vinitha Jose",
+    "phone": "9656697575",
+    "house": "Chirayath, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0415",
+    "jgccNos": [
+      "JGCC 0415"
+    ],
+    "jgccDisplay": "JGCC 0415",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "George T P",
+    "phone": "9562628485",
+    "house": "Thalakkotukarakaren House, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0416",
+    "jgccNos": [
+      "JGCC 0416"
+    ],
+    "jgccDisplay": "JGCC 0416",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Thaikkattil Chakkunny Beena",
+    "phone": "8281195496",
+    "house": "Thaikkattil House, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0417",
+    "jgccNos": [
+      "JGCC 0417"
+    ],
+    "jgccDisplay": "JGCC 0417",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Baiju Chacko Ponmany",
+    "phone": "9387601668",
+    "house": "Ponmany, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0418",
+    "jgccNos": [
+      "JGCC 0418"
+    ],
+    "jgccDisplay": "JGCC 0418",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joy V U",
+    "phone": "9744585078",
+    "house": "Vazheparambil, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0419",
+    "jgccNos": [
+      "JGCC 0419"
+    ],
+    "jgccDisplay": "JGCC 0419",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lilly K M",
+    "phone": "7034340528",
+    "house": "Vazheaparambil, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0420",
+    "jgccNos": [
+      "JGCC 0420"
+    ],
+    "jgccDisplay": "JGCC 0420",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rappai.M.V.",
+    "phone": "8156968151",
+    "house": "Madathiparambil, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 11800.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0421",
+    "jgccNos": [
+      "JGCC 0421"
+    ],
+    "jgccDisplay": "JGCC 0421",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sherly Muringathery (Porathukaren Antony Sherly)",
+    "phone": "9605960998",
+    "house": "Porathukaren, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0422",
+    "jgccNos": [
+      "JGCC 0422"
+    ],
+    "jgccDisplay": "JGCC 0422",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Varghese K K",
+    "phone": "9037988234",
+    "house": "Kanjirathinkal, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0423",
+    "jgccNos": [
+      "JGCC 0423"
+    ],
+    "jgccDisplay": "JGCC 0423",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Roy P K",
+    "phone": "9495954988",
+    "house": "Plakkal, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0424",
+    "jgccNos": [
+      "JGCC 0424"
+    ],
+    "jgccDisplay": "JGCC 0424",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Babu Joseph",
+    "phone": "9562766025",
+    "house": "Kuttikadan House, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0425",
+    "jgccNos": [
+      "JGCC 0425"
+    ],
+    "jgccDisplay": "JGCC 0425",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sona Gypse",
+    "phone": "9624903001",
+    "house": "Therattil House, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0426",
+    "jgccNos": [
+      "JGCC 0426"
+    ],
+    "jgccDisplay": "JGCC 0426",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Unnikrishanan K",
+    "phone": "9495421297",
+    "house": "Pulari, Bougan Villa Residence, No.12, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0427",
+    "jgccNos": [
+      "JGCC 0427"
+    ],
+    "jgccDisplay": "JGCC 0427",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Satheesh K B",
+    "phone": "9847728268",
+    "house": "Kurishinkal, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0428",
+    "jgccNos": [
+      "JGCC 0428"
+    ],
+    "jgccDisplay": "JGCC 0428",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Varghese T F",
+    "phone": "0000000000",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0429",
+    "jgccNos": [
+      "JGCC 0429"
+    ],
+    "jgccDisplay": "JGCC 0429",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Tony M G",
+    "phone": "9605024693",
+    "house": "Mooken, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0430",
+    "jgccNos": [
+      "JGCC 0430"
+    ],
+    "jgccDisplay": "JGCC 0430",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sara V J",
+    "phone": "6282305159",
+    "house": "Thattil Mandy, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0431",
+    "jgccNos": [
+      "JGCC 0431"
+    ],
+    "jgccDisplay": "JGCC 0431",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jacob K M",
+    "phone": "9446317016",
+    "house": "Kidangan, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0432",
+    "jgccNos": [
+      "JGCC 0432"
+    ],
+    "jgccDisplay": "JGCC 0432",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lawrence T F",
+    "phone": "9495046604",
+    "house": "Thanikkal Chammanath, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0433",
+    "jgccNos": [
+      "JGCC 0433"
+    ],
+    "jgccDisplay": "JGCC 0433",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Johnson K T  (Kaliankara)",
+    "phone": "9961770218",
+    "house": "Kaliankkara, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0434",
+    "jgccNos": [
+      "JGCC 0434"
+    ],
+    "jgccDisplay": "JGCC 0434",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Angel Rose P V",
+    "phone": "9746316335",
+    "house": "Porathur, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0435",
+    "jgccNos": [
+      "JGCC 0435"
+    ],
+    "jgccDisplay": "JGCC 0435",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sency Varghese",
+    "phone": "7356009120",
+    "house": "Porathur, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0436",
+    "jgccNos": [
+      "JGCC 0436"
+    ],
+    "jgccDisplay": "JGCC 0436",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Manju Joseph",
+    "phone": "9605732817",
+    "house": "Therattil House, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0437",
+    "jgccNos": [
+      "JGCC 0437"
+    ],
+    "jgccDisplay": "JGCC 0437",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Seena C K",
+    "phone": "9497656316",
+    "house": "Kidangan, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0438",
+    "jgccNos": [
+      "JGCC 0438"
+    ],
+    "jgccDisplay": "JGCC 0438",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jeri Mary Joshy",
+    "phone": "9745522877",
+    "house": "Komban, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0439",
+    "jgccNos": [
+      "JGCC 0439"
+    ],
+    "jgccDisplay": "JGCC 0439",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Atul K Joshy",
+    "phone": "9745522877",
+    "house": "Komban, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0440",
+    "jgccNos": [
+      "JGCC 0440"
+    ],
+    "jgccDisplay": "JGCC 0440",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Deepa R",
+    "phone": "9074776281",
+    "house": "Nellikkal, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0441",
+    "jgccNos": [
+      "JGCC 0441",
+      "JGCC 0442",
+      "JGCC 0443"
+    ],
+    "jgccDisplay": "JGCC 0441-JGCC 0443",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Sunil N S",
+    "phone": "9526277110",
+    "house": "Nellikkal, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0444",
+    "jgccNos": [
+      "JGCC 0444"
+    ],
+    "jgccDisplay": "JGCC 0444",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sijo Antony",
+    "phone": "9809855338",
+    "house": "Komban, Arimbur",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0445",
+    "jgccNos": [
+      "JGCC 0445"
+    ],
+    "jgccDisplay": "JGCC 0445",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Aravindkshan Menon K ( Benny Alappat)",
+    "phone": "9847202930",
+    "house": "Vattekkattil, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0446",
+    "jgccNos": [
+      "JGCC 0446"
+    ],
+    "jgccDisplay": "JGCC 0446",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sarath                  (Benny Alappat)",
+    "phone": "9995741473",
+    "house": "Eacharath, Elthuruth",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0447",
+    "jgccNos": [
+      "JGCC 0447"
+    ],
+    "jgccDisplay": "JGCC 0447",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Nikitha Davis",
+    "phone": "9562223369",
+    "house": "Kattookaren, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0448",
+    "jgccNos": [
+      "JGCC 0448"
+    ],
+    "jgccDisplay": "JGCC 0448",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jijo M R",
+    "phone": "9655609860",
+    "house": "Mambully, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0449",
+    "jgccNos": [
+      "JGCC 0449"
+    ],
+    "jgccDisplay": "JGCC 0449",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anto P P",
+    "phone": "9388007048",
+    "house": "Puthenparmbil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0450",
+    "jgccNos": [
+      "JGCC 0450"
+    ],
+    "jgccDisplay": "JGCC 0450",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lintus Thomas",
+    "phone": "7034740985",
+    "house": "Panjikkaren, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0451",
+    "jgccNos": [
+      "JGCC 0451"
+    ],
+    "jgccDisplay": "JGCC 0451",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Babu P A",
+    "phone": "9847153429",
+    "house": "Parekkattil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0452",
+    "jgccNos": [
+      "JGCC 0452"
+    ],
+    "jgccDisplay": "JGCC 0452",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sejoson P J",
+    "phone": "9846900802",
+    "house": "Palatty, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0453",
+    "jgccNos": [
+      "JGCC 0453"
+    ],
+    "jgccDisplay": "JGCC 0453",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Thomas T V",
+    "phone": "9961354383",
+    "house": "Thettayil,Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0454",
+    "jgccNos": [
+      "JGCC 0454"
+    ],
+    "jgccDisplay": "JGCC 0454",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Iwin C I",
+    "phone": "9072111431",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0455",
+    "jgccNos": [
+      "JGCC 0455"
+    ],
+    "jgccDisplay": "JGCC 0455",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mary A A",
+    "phone": "9526174205",
+    "house": "Alappat Kattookaren, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0456",
+    "jgccNos": [
+      "JGCC 0456"
+    ],
+    "jgccDisplay": "JGCC 0456",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joy K M",
+    "phone": "9645853902",
+    "house": "Kattakathoott, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0457",
+    "jgccNos": [
+      "JGCC 0457"
+    ],
+    "jgccDisplay": "JGCC 0457",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Santo John C",
+    "phone": "9961047273",
+    "house": "Chungath, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0458",
+    "jgccNos": [
+      "JGCC 0458"
+    ],
+    "jgccDisplay": "JGCC 0458",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Vincent T V",
+    "phone": "9349024267",
+    "house": "Thettayil , Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0459",
+    "jgccNos": [
+      "JGCC 0459"
+    ],
+    "jgccDisplay": "JGCC 0459",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Viswambaran T K",
+    "phone": "9447991615",
+    "house": "Thoppil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0460",
+    "jgccNos": [
+      "JGCC 0460"
+    ],
+    "jgccDisplay": "JGCC 0460",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Justine T J",
+    "phone": "8921060234",
+    "house": "Therattil Kurian, Manakody",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0461",
+    "jgccNos": [
+      "JGCC 0461"
+    ],
+    "jgccDisplay": "JGCC 0461",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Santhosh T V",
+    "phone": "9745877100",
+    "house": "Thattuparmbil, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0462",
+    "jgccNos": [
+      "JGCC 0462"
+    ],
+    "jgccDisplay": "JGCC 0462",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sivasankaran A S (Anie Anto)",
+    "phone": "9847134606",
+    "house": "Alukkal, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0463",
+    "jgccNos": [
+      "JGCC 0463"
+    ],
+    "jgccDisplay": "JGCC 0463",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rajan T K",
+    "phone": "9747805277",
+    "house": "Thoppil, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0464",
+    "jgccNos": [
+      "JGCC 0464"
+    ],
+    "jgccDisplay": "JGCC 0464",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jibil",
+    "phone": "9562902977",
+    "house": "Madathumpadi, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0465",
+    "jgccNos": [
+      "JGCC 0465"
+    ],
+    "jgccDisplay": "JGCC 0465",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jeena Johny",
+    "phone": "9446247471",
+    "house": "Kuruthukulangara Vallookaren, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0466",
+    "jgccNos": [
+      "JGCC 0466"
+    ],
+    "jgccDisplay": "JGCC 0466",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Prinson K L",
+    "phone": "9945564210",
+    "house": "Kuruthukulangara Vallookaren, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0467",
+    "jgccNos": [
+      "JGCC 0467"
+    ],
+    "jgccDisplay": "JGCC 0467",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Radhakrishanan O R",
+    "phone": "9447991684",
+    "house": "Odayattil, Elthuruth",
+    "unit": "Deva Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0468",
+    "jgccNos": [
+      "JGCC 0468"
+    ],
+    "jgccDisplay": "JGCC 0468",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ruby C L",
+    "phone": "9656781197",
+    "house": "Chiriayath Chukkiri",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0469",
+    "jgccNos": [
+      "JGCC 0469"
+    ],
+    "jgccDisplay": "JGCC 0469",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Joy C V",
+    "phone": "7591959028",
+    "house": "Chalissery Valappila, Elthuruth",
+    "unit": "Karunya Matha         &    Shudheekarana Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 12980.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0470",
+    "jgccNos": [
+      "JGCC 0470",
+      "JGCC 0508",
+      "JGCC 0509"
+    ],
+    "jgccDisplay": "JGCC 0470, JGCC 0508-JGCC 0509",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Febin D Alappat",
+    "phone": "0000000000",
+    "house": "Alappat, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 4720.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0471",
+    "jgccNos": [
+      "JGCC 0471"
+    ],
+    "jgccDisplay": "JGCC 0471",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Johnson K T (Kanjiraparmabil)",
+    "phone": "9961770218",
+    "house": "Kanjiraparambil, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0472",
+    "jgccNos": [
+      "JGCC 0472"
+    ],
+    "jgccDisplay": "JGCC 0472",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mineesh Mathews",
+    "phone": "9495454279",
+    "house": "Kombara, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0473",
+    "jgccNos": [
+      "JGCC 0473"
+    ],
+    "jgccDisplay": "JGCC 0473",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Freddy C Dicruze",
+    "phone": "9961486262",
+    "house": "Chiriyankandath, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0474",
+    "jgccNos": [
+      "JGCC 0474"
+    ],
+    "jgccDisplay": "JGCC 0474",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Premanivasan K V",
+    "phone": "9447061249",
+    "house": "Kariattukara, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0475",
+    "jgccNos": [
+      "JGCC 0475"
+    ],
+    "jgccDisplay": "JGCC 0475",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Shaju K L",
+    "phone": "9249947227",
+    "house": "Kombara, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0476",
+    "jgccNos": [
+      "JGCC 0476"
+    ],
+    "jgccDisplay": "JGCC 0476",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sabu A S",
+    "phone": "9400986657",
+    "house": "Alappat, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0477",
+    "jgccNos": [
+      "JGCC 0477",
+      "JGCC 0478",
+      "JGCC 0479"
+    ],
+    "jgccDisplay": "JGCC 0477-JGCC 0479",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Ginu Raphael",
+    "phone": "7994816097",
+    "house": "Chittilappilly, Elthuruth",
+    "unit": "",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0480",
+    "jgccNos": [
+      "JGCC 0480"
+    ],
+    "jgccDisplay": "JGCC 0480",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Reji Francis",
+    "phone": "9744081699",
+    "house": "Chungath, Karuvanvalavu, Eravu.",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0481",
+    "jgccNos": [
+      "JGCC 0481"
+    ],
+    "jgccDisplay": "JGCC 0481",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Friji Francis (Benny)",
+    "phone": "9946610974",
+    "house": "Chungath, Karuvanvalavu, Eravu.",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0482",
+    "jgccNos": [
+      "JGCC 0482"
+    ],
+    "jgccDisplay": "JGCC 0482",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Enson K J",
+    "phone": "9847135872",
+    "house": "Kuruthukulangara Karippai, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0483",
+    "jgccNos": [
+      "JGCC 0483",
+      "JGCC 0512"
+    ],
+    "jgccDisplay": "JGCC 0483, JGCC 0512",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Elson Antony Arakkaparambil, Elthuruth",
+    "phone": "9496485192",
+    "house": "Arakkaparambil, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3540.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 2360.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0484",
+    "jgccNos": [
+      "JGCC 0484"
+    ],
+    "jgccDisplay": "JGCC 0484",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rosily Jose",
+    "phone": "9847177206",
+    "house": "Vazhappilly, Shanthi Nagar, Kunnathangadi",
+    "unit": "",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0485",
+    "jgccNos": [
+      "JGCC 0485"
+    ],
+    "jgccDisplay": "JGCC 0485",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rosy K M (Jacob K M)",
+    "phone": "8089191482",
+    "house": "Kalappura, Puthur",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0486",
+    "jgccNos": [
+      "JGCC 0486"
+    ],
+    "jgccDisplay": "JGCC 0486",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Mareena K M     (Jacob K M)",
+    "phone": "9446467016",
+    "house": "Vaidyakaren, Avinissery, Palakkal",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0487",
+    "jgccNos": [
+      "JGCC 0487"
+    ],
+    "jgccDisplay": "JGCC 0487",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Delly Sebastian",
+    "phone": "9447174935",
+    "house": "Thottappilly, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0488",
+    "jgccNos": [
+      "JGCC 0488"
+    ],
+    "jgccDisplay": "JGCC 0488",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jilshad  A N",
+    "phone": "8891888488",
+    "house": "Ambalath, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0489",
+    "jgccNos": [
+      "JGCC 0489"
+    ],
+    "jgccDisplay": "JGCC 0489",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Ajith Antony",
+    "phone": "9495739462",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0491",
+    "jgccNos": [
+      "JGCC 0491"
+    ],
+    "jgccDisplay": "JGCC 0491",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sojan Simon",
+    "phone": "9744393189",
+    "house": "Vadakken, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0492",
+    "jgccNos": [
+      "JGCC 0492"
+    ],
+    "jgccDisplay": "JGCC 0492",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Maria Agnish",
+    "phone": "9744210450",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0493",
+    "jgccNos": [
+      "JGCC 0493"
+    ],
+    "jgccDisplay": "JGCC 0493",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Jaison Peter (George C I )",
+    "phone": "7902259535",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0494",
+    "jgccNos": [
+      "JGCC 0494"
+    ],
+    "jgccDisplay": "JGCC 0494",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Stella George         ( George C I)",
+    "phone": "8547286265",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0495",
+    "jgccNos": [
+      "JGCC 0495"
+    ],
+    "jgccDisplay": "JGCC 0495",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Paul T J      (George C I)",
+    "phone": "8086410459",
+    "house": "Chittilappilly Kunjappu, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0496",
+    "jgccNos": [
+      "JGCC 0496"
+    ],
+    "jgccDisplay": "JGCC 0496",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Rose Maria    (Davis T A)",
+    "phone": "9526542742",
+    "house": "Pallissery, Kizhakkumpattukara",
+    "unit": "",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0497",
+    "jgccNos": [
+      "JGCC 0497"
+    ],
+    "jgccDisplay": "JGCC 0497",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Johnson Francis (Davis T A)",
+    "phone": "9400270727",
+    "house": "Pallissery, Kizhakkumpattukara",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0498",
+    "jgccNos": [
+      "JGCC 0498"
+    ],
+    "jgccDisplay": "JGCC 0498",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anto A O",
+    "phone": "8943478669",
+    "house": "Arakkal , Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0499",
+    "jgccNos": [
+      "JGCC 0499",
+      "JGCC 0500",
+      "JGCC 0501"
+    ],
+    "jgccDisplay": "JGCC 0499-JGCC 0501",
+    "totalSlots": 3,
+    "totalAmount": 3540,
+    "name": "Seethal Gladin",
+    "phone": "9526758895",
+    "house": "Chettupuzhakkaren, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 3000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 5000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0502",
+    "jgccNos": [
+      "JGCC 0502",
+      "JGCC 0503"
+    ],
+    "jgccDisplay": "JGCC 0502-JGCC 0503",
+    "totalSlots": 2,
+    "totalAmount": 2360,
+    "name": "Franco Davis",
+    "phone": "9526758895",
+    "house": "Chettupuzhakkaren, Elthuruth",
+    "unit": "Nirmala Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 2000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0505",
+    "jgccNos": [
+      "JGCC 0505"
+    ],
+    "jgccDisplay": "JGCC 0505",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lonakutty Jose",
+    "phone": "9495713076",
+    "house": "Edakkalathur, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0506",
+    "jgccNos": [
+      "JGCC 0506"
+    ],
+    "jgccDisplay": "JGCC 0506",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Irine Roy        (Davis T A )",
+    "phone": "0000000000",
+    "house": "Pulikkoden, Nellikunnu",
+    "unit": "",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0507",
+    "jgccNos": [
+      "JGCC 0507"
+    ],
+    "jgccDisplay": "JGCC 0507",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Elsy Varghese",
+    "phone": "9605553769",
+    "house": "Thachil, Elthuruth",
+    "unit": "Mary Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1000.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0510",
+    "jgccNos": [
+      "JGCC 0510"
+    ],
+    "jgccDisplay": "JGCC 0510",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Anish Kattukaren (Benny Alappat)",
+    "phone": "0000000000",
+    "house": "Kattukaren, Perngandoor, Thrissur",
+    "unit": "Amalolbhava Matha",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0511",
+    "jgccNos": [
+      "JGCC 0511"
+    ],
+    "jgccDisplay": "JGCC 0511",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Babu Thomas (Kapiar)",
+    "phone": "9847259537",
+    "house": "Chirackel, Elthuruth",
+    "unit": "Fathima",
+    "payments": [
+      {
+        "month": "2026-07",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0513",
+    "jgccNos": [
+      "JGCC 0513"
+    ],
+    "jgccDisplay": "JGCC 0513",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Salmon A P",
+    "phone": "9249239212",
+    "house": "Alappat Attokaren, Elthuruth",
+    "unit": "Nithyasahaya Matha",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-09",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0514",
+    "jgccNos": [
+      "JGCC 0514"
+    ],
+    "jgccDisplay": "JGCC 0514",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Lissy Thomas",
+    "phone": "9495855923",
+    "house": "Kattookaren, Elthuruth",
+    "unit": "Lourdhe",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0515",
+    "jgccNos": [
+      "JGCC 0515"
+    ],
+    "jgccDisplay": "JGCC 0515",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "George C A",
+    "phone": "8547589129",
+    "house": "Chittilappilly Kunjappu Elthuruth",
+    "unit": "Fatima",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1180.0
+      },
+      {
+        "month": "2026-09",
+        "amount": 1180.0
+      }
+    ]
+  },
+  {
+    "jgccFirst": "JGCC 0516",
+    "jgccNos": [
+      "JGCC 0516"
+    ],
+    "jgccDisplay": "JGCC 0516",
+    "totalSlots": 1,
+    "totalAmount": 1180,
+    "name": "Sajeevan P A",
+    "phone": "9744177112",
+    "house": "Panikkaparambil House, Elthuruth",
+    "unit": "Thirukudumbam",
+    "payments": [
+      {
+        "month": "2026-08",
+        "amount": 1000.0
+      }
+    ]
+  }
+]
