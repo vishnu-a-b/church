@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, Donor } from '@/types';
-import { ArrowLeft, Search, Trash, UserPlus } from 'lucide-react';
+import { ArrowLeft, Search, Trash, UserPlus, Pencil } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const planSchema = z
@@ -98,6 +98,9 @@ export default function MonthlySupportPlanFormPage() {
   const [newDonorEmail, setNewDonorEmail] = useState('');
   const [newDonorAddress, setNewDonorAddress] = useState('');
   const [creatingDonor, setCreatingDonor] = useState(false);
+
+  const [editingDonor, setEditingDonor] = useState<{ id: string; name: string; phone: string; address: string; notes: string } | null>(null);
+  const [savingDonor, setSavingDonor] = useState(false);
 
   useEffect(() => {
     fetchAllMembers();
@@ -246,6 +249,40 @@ export default function MonthlySupportPlanFormPage() {
 
   const updateMemberAmount = (id: string, amount: string) => {
     setPlanMembers(planMembers.map((m) => (entryId(m) === id ? { ...m, amount } : m)));
+  };
+
+  const openEditDonor = async (donorId: string) => {
+    try {
+      const res = await api.get(`/donors/${donorId}`);
+      const d = res.data?.data;
+      setEditingDonor({ id: donorId, name: d.name || '', phone: d.phone || '', address: d.address || '', notes: d.notes || '' });
+    } catch {
+      toast.error('Failed to load donor details');
+    }
+  };
+
+  const handleSaveDonor = async () => {
+    if (!editingDonor) return;
+    setSavingDonor(true);
+    try {
+      const res = await api.put(`/donors/${editingDonor.id}`, {
+        name: editingDonor.name,
+        phone: editingDonor.phone,
+        address: editingDonor.address,
+        notes: editingDonor.notes,
+      });
+      const updated: Donor = res.data?.data;
+      setPlanMembers(planMembers.map((m) =>
+        m.donorId === editingDonor.id ? { ...m, name: updated.name, donorNotes: updated.notes } : m
+      ));
+      setAllDonors(allDonors.map((d) => (d._id === editingDonor.id ? updated : d)));
+      setEditingDonor(null);
+      toast.success('Donor updated');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update donor');
+    } finally {
+      setSavingDonor(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -459,6 +496,16 @@ export default function MonthlySupportPlanFormPage() {
                         placeholder={`₹${formData.defaultAmount} (default)`}
                       />
                     </div>
+                    {m.donorId && (
+                      <button
+                        type="button"
+                        onClick={() => openEditDonor(entryId(m))}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit donor"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => removeMember(entryId(m))}
@@ -707,6 +754,71 @@ export default function MonthlySupportPlanFormPage() {
           </div>
         </form>
       </div>
+
+      {/* Edit Donor Modal */}
+      {editingDonor && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Outside Donor</h3>
+
+            {extractJgccNos(editingDonor.notes) && (
+              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">JGCC No</p>
+                <p className="text-sm text-blue-800 font-mono">{extractJgccNos(editingDonor.notes)}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  value={editingDonor.name}
+                  onChange={(e) => setEditingDonor({ ...editingDonor, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input
+                  type="text"
+                  value={editingDonor.phone}
+                  onChange={(e) => setEditingDonor({ ...editingDonor, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <input
+                  type="text"
+                  value={editingDonor.address}
+                  onChange={(e) => setEditingDonor({ ...editingDonor, address: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <button
+                type="button"
+                onClick={handleSaveDonor}
+                disabled={savingDonor}
+                className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm disabled:opacity-50"
+              >
+                {savingDonor ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingDonor(null)}
+                disabled={savingDonor}
+                className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
