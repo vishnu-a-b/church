@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import ChurchAdminApprovalsScreen from '../screens/church-admin/ApprovalsScreen';
+import ChurchAdminStothrakazhchaScreen from '../screens/church-admin/StothrakazhchaScreen';
 import ChurchAdminThirukkarmangalScreen from '../screens/church-admin/ThirukkarmangalScreen';
 import ChurchAdminPathavarmScreen from '../screens/church-admin/PathavarmScreen';
 import ChurchAdminMembersScreen from '../screens/church-admin/MembersScreen';
@@ -23,6 +24,8 @@ export default function ChurchAdminTabs() {
     >
       <Tab.Screen name="Approvals" component={ChurchAdminApprovalsScreen}
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'checkmark-circle' : 'checkmark-circle-outline'} size={size} color={color} /> }} />
+      <Tab.Screen name="Stothra" component={ChurchAdminStothrakazhchaScreen}
+        options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'cash' : 'cash-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Thirukkarmangal" component={ChurchAdminThirukkarmangalScreen}
         options={{ tabBarLabel: 'Rites', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'ribbon' : 'ribbon-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Pathavarm" component={ChurchAdminPathavarmScreen}

@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
-  Modal, Alert, ScrollView,
+  Modal, ScrollView, RefreshControl,
 } from 'react-native';
-import { DataList } from '../../components/DataList';
 import { createRoleApi } from '../../lib/api';
 import MarkContributionModal from './MarkContributionModal';
 
@@ -15,12 +14,13 @@ interface Contributor {
   approvalStatus: 'pending_approval' | 'approved' | 'rejected';
 }
 
-interface CurrentWeek {
+interface Week {
   _id: string;
   weekNumber: number;
   year: number;
   defaultAmount: number;
   amountType: 'per_member' | 'per_house';
+  status: 'active' | 'closed' | 'processed';
   contributors: Contributor[];
 }
 
@@ -34,57 +34,60 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
   rejected: { bg: '#fee2e2', color: '#991b1b', label: 'Rejected' },
 };
 
+const WEEK_STATUS_COLOR: Record<string, string> = {
+  active: '#059669',
+  closed: '#6b7280',
+  processed: '#2563eb',
+};
+
 export default function KutayimaAdminStothrakazhchaScreen() {
-  const [current, setCurrent] = useState<CurrentWeek | null>(null);
+  const [weeks, setWeeks] = useState<Week[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
+  const [entityIdSet, setEntityIdSet] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [submitModalVisible, setSubmitModalVisible] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [addTarget, setAddTarget] = useState<Week | null>(null);
+  const [submitTarget, setSubmitTarget] = useState<Week | null>(null);
 
-  const fetchCurrentWeek = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     try {
-      const response = await api.get('/stothrakazhcha/current/week');
-      const week: CurrentWeek = response.data?.data;
-      setCurrent(week);
+      const [weeksRes, membersRes, housesRes] = await Promise.all([
+        api.get('/stothrakazhcha'),
+        api.get('/members'),
+        api.get('/houses'),
+      ]);
 
-      const entityResponse = await api.get(week.amountType === 'per_member' ? '/members' : '/houses');
-      const list = entityResponse.data?.data || [];
-      setEntities(
-        list.map((e: any) => ({
-          _id: e._id,
-          label: week.amountType === 'per_member' ? `${e.firstName} ${e.lastName || ''}`.trim() : e.familyName,
-        }))
+      const allWeeks: Week[] = (weeksRes.data?.data || []).sort(
+        (a: Week, b: Week) => b.year - a.year || b.weekNumber - a.weekNumber
       );
+      setWeeks(allWeeks);
+
+      // Build entity list — use members or houses depending on first active week's amountType
+      const active = allWeeks.find((w) => w.status === 'active') || allWeeks[0];
+      const useMember = !active || active.amountType === 'per_member';
+      const list = useMember
+        ? (membersRes.data?.data || []).map((m: any) => ({ _id: m._id, label: `${m.firstName} ${m.lastName || ''}`.trim() }))
+        : (housesRes.data?.data || []).map((h: any) => ({ _id: h._id, label: h.familyName }));
+      setEntities(list);
+      setEntityIdSet(new Set(list.map((e: Entity) => e._id)));
+
+      // Auto-expand active week
+      if (active) setExpandedId((prev) => prev ?? active._id);
     } catch {
-      setCurrent(null);
+      setWeeks([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchCurrentWeek();
-  }, [fetchCurrentWeek]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Only show MY group's contributions (those whose contributorId is in my entities)
-  const entityIdSet = new Set(entities.map((e) => e._id));
-  const myContributions = (current?.contributors || []).filter(
-    (c) => entityIdSet.has(c.contributorId)
-  );
+  const entityLabel = (id: string) => entities.find((e) => e._id === id)?.label || id;
 
-  const entityLabel = (contributorId: string) =>
-    entities.find((e) => e._id === contributorId)?.label || contributorId;
-
-  const totalCollected = myContributions
-    .filter((c) => c.approvalStatus !== 'rejected')
-    .reduce((sum, c) => sum + c.amount, 0);
-
-  const pendingCount = myContributions.filter((c) => c.approvalStatus === 'pending_approval').length;
-  const approvedCount = myContributions.filter((c) => c.approvalStatus === 'approved').length;
-  const enteredCount = myContributions.filter((c) => c.approvalStatus !== 'rejected').length;
-  const totalEntities = entities.length;
+  const myContributions = (week: Week) =>
+    week.contributors.filter((c) => entityIdSet.has(c.contributorId));
 
   if (loading) {
     return (
@@ -94,117 +97,146 @@ export default function KutayimaAdminStothrakazhchaScreen() {
     );
   }
 
-  if (!current) {
+  if (weeks.length === 0) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>No active Sthothrakazhcha for the current week</Text>
+        <Text style={styles.emptyText}>No Sthothrakazhcha weeks found</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* Summary card */}
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryWeek}>Week {current.weekNumber}, {current.year}</Text>
-        <Text style={styles.summaryTotal}>₹{totalCollected.toLocaleString('en-IN')} collected</Text>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryBadge}>
-            <Text style={styles.summaryBadgeNum}>{enteredCount}/{totalEntities}</Text>
-            <Text style={styles.summaryBadgeLabel}>entered</Text>
-          </View>
-          <View style={[styles.summaryBadge, { backgroundColor: '#fef9c3' }]}>
-            <Text style={[styles.summaryBadgeNum, { color: '#854d0e' }]}>{pendingCount}</Text>
-            <Text style={[styles.summaryBadgeLabel, { color: '#92400e' }]}>pending</Text>
-          </View>
-          <View style={[styles.summaryBadge, { backgroundColor: '#dcfce7' }]}>
-            <Text style={[styles.summaryBadgeNum, { color: '#166534' }]}>{approvedCount}</Text>
-            <Text style={[styles.summaryBadgeLabel, { color: '#166534' }]}>approved</Text>
-          </View>
-        </View>
-      </View>
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAll(); }} />}
+        contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
+      >
+        {weeks.map((week) => {
+          const mine = myContributions(week);
+          const pending = mine.filter((c) => c.approvalStatus === 'pending_approval');
+          const approved = mine.filter((c) => c.approvalStatus === 'approved');
+          const entered = mine.filter((c) => c.approvalStatus !== 'rejected');
+          const total = entered.reduce((s, c) => s + c.amount, 0);
+          const isExpanded = expandedId === week._id;
+          const statusColor = WEEK_STATUS_COLOR[week.status] || '#6b7280';
 
-      <DataList
-        data={myContributions}
-        loading={false}
-        refreshing={refreshing}
-        onRefresh={() => { setRefreshing(true); fetchCurrentWeek(); }}
-        keyExtractor={(c) => c._id}
-        emptyText="No contributions marked yet — tap + to add"
-        renderItem={(c) => {
-          const status = STATUS_STYLE[c.approvalStatus] || STATUS_STYLE.approved;
           return (
-            <View style={styles.rowTop}>
-              <View style={styles.rowInfo}>
-                <Text style={styles.name}>{entityLabel(c.contributorId)}</Text>
-                <Text style={styles.meta}>₹{c.amount.toLocaleString('en-IN')}</Text>
-              </View>
-              <View style={[styles.badge, { backgroundColor: status.bg }]}>
-                <Text style={[styles.badgeText, { color: status.color }]}>{status.label}</Text>
-              </View>
+            <View key={week._id} style={styles.card}>
+              {/* Week header — tap to expand */}
+              <TouchableOpacity
+                style={styles.cardHeader}
+                onPress={() => setExpandedId(isExpanded ? null : week._id)}
+                activeOpacity={0.7}
+              >
+                <View style={{ flex: 1 }}>
+                  <View style={styles.headerRow}>
+                    <Text style={styles.weekLabel}>Week {week.weekNumber}, {week.year}</Text>
+                    <View style={[styles.statusPill, { backgroundColor: statusColor + '20' }]}>
+                      <Text style={[styles.statusText, { color: statusColor }]}>
+                        {week.status.charAt(0).toUpperCase() + week.status.slice(1)}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.totalText}>
+                    ₹{total.toLocaleString('en-IN')} · {entered.length} entered · {pending.length} pending · {approved.length} approved
+                  </Text>
+                </View>
+                <Text style={styles.chevron}>{isExpanded ? '▲' : '▼'}</Text>
+              </TouchableOpacity>
+
+              {isExpanded && (
+                <View style={styles.cardBody}>
+                  {mine.length === 0 ? (
+                    <Text style={styles.emptySmall}>No contributions marked yet</Text>
+                  ) : (
+                    mine.map((c) => {
+                      const s = STATUS_STYLE[c.approvalStatus] || STATUS_STYLE.approved;
+                      return (
+                        <View key={c._id} style={styles.entryRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.entryName}>{entityLabel(c.contributorId)}</Text>
+                            <Text style={styles.entryAmt}>₹{c.amount.toLocaleString('en-IN')}</Text>
+                          </View>
+                          <View style={[styles.badge, { backgroundColor: s.bg }]}>
+                            <Text style={[styles.badgeText, { color: s.color }]}>{s.label}</Text>
+                          </View>
+                        </View>
+                      );
+                    })
+                  )}
+
+                  <View style={styles.actionRow}>
+                    {pending.length > 0 && (
+                      <TouchableOpacity
+                        style={styles.submitBtn}
+                        onPress={() => setSubmitTarget(week)}
+                      >
+                        <Text style={styles.submitBtnText}>Submit Cash ({pending.length})</Text>
+                      </TouchableOpacity>
+                    )}
+                    {week.status === 'active' && (
+                      <TouchableOpacity
+                        style={styles.addBtn}
+                        onPress={() => setAddTarget(week)}
+                      >
+                        <Text style={styles.addBtnText}>+ Add</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              )}
             </View>
           );
-        }}
-      />
-
-      {/* Submit Cash button — shown only when there are pending entries */}
-      {pendingCount > 0 && (
-        <TouchableOpacity style={styles.submitButton} onPress={() => setSubmitModalVisible(true)}>
-          <Text style={styles.submitButtonText}>
-            Submit Cash to Church Admin ({pendingCount} pending)
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+        })}
+      </ScrollView>
 
       {/* Mark contribution modal */}
-      <MarkContributionModal
-        visible={modalVisible}
-        stothrakazhchaId={current._id}
-        amountType={current.amountType}
-        defaultAmount={current.defaultAmount}
-        entities={entities}
-        onClose={() => setModalVisible(false)}
-        onSaved={fetchCurrentWeek}
-      />
+      {addTarget && (
+        <MarkContributionModal
+          visible={true}
+          stothrakazhchaId={addTarget._id}
+          amountType={addTarget.amountType}
+          defaultAmount={addTarget.defaultAmount}
+          entities={entities}
+          onClose={() => setAddTarget(null)}
+          onSaved={() => { setAddTarget(null); fetchAll(); }}
+        />
+      )}
 
       {/* Submit cash confirmation modal */}
-      <Modal visible={submitModalVisible} animationType="fade" transparent onRequestClose={() => setSubmitModalVisible(false)}>
-        <View style={styles.overlay}>
-          <View style={styles.confirmSheet}>
-            <Text style={styles.confirmTitle}>Submit Cash to Church Admin</Text>
-            <Text style={styles.confirmBody}>
-              Please physically hand over{' '}
-              <Text style={styles.confirmAmount}>₹{totalCollected.toLocaleString('en-IN')}</Text>
-              {' '}to the Church Admin.
-            </Text>
-            <Text style={styles.confirmBody}>
-              Your {pendingCount} pending {pendingCount === 1 ? 'entry' : 'entries'} will be
-              counted only after the church admin reviews and approves them.
-            </Text>
-            <View style={styles.confirmMemberList}>
-              {myContributions
-                .filter((c) => c.approvalStatus === 'pending_approval')
-                .map((c) => (
-                  <View key={c._id} style={styles.confirmMemberRow}>
-                    <Text style={styles.confirmMemberName}>{entityLabel(c.contributorId)}</Text>
-                    <Text style={styles.confirmMemberAmt}>₹{c.amount.toLocaleString('en-IN')}</Text>
-                  </View>
-                ))}
+      {submitTarget && (() => {
+        const mine = myContributions(submitTarget);
+        const pending = mine.filter((c) => c.approvalStatus === 'pending_approval');
+        const pendingTotal = pending.reduce((s, c) => s + c.amount, 0);
+        return (
+          <Modal visible animationType="fade" transparent onRequestClose={() => setSubmitTarget(null)}>
+            <View style={styles.overlay}>
+              <View style={styles.confirmSheet}>
+                <Text style={styles.confirmTitle}>Submit Cash to Church Admin</Text>
+                <Text style={styles.confirmBody}>
+                  Week {submitTarget.weekNumber}, {submitTarget.year} — please hand over{' '}
+                  <Text style={styles.confirmAmount}>₹{pendingTotal.toLocaleString('en-IN')}</Text>
+                  {' '}to the Church Admin.
+                </Text>
+                <Text style={styles.confirmBody}>
+                  {pending.length} pending {pending.length === 1 ? 'entry' : 'entries'} will be counted only after approval.
+                </Text>
+                <View style={styles.confirmList}>
+                  {pending.map((c) => (
+                    <View key={c._id} style={styles.confirmRow}>
+                      <Text style={styles.confirmName}>{entityLabel(c.contributorId)}</Text>
+                      <Text style={styles.confirmAmt}>₹{c.amount.toLocaleString('en-IN')}</Text>
+                    </View>
+                  ))}
+                </View>
+                <TouchableOpacity style={styles.confirmClose} onPress={() => setSubmitTarget(null)}>
+                  <Text style={styles.confirmCloseText}>Got it</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <TouchableOpacity
-              style={styles.confirmClose}
-              onPress={() => setSubmitModalVisible(false)}
-            >
-              <Text style={styles.confirmCloseText}>Got it</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+          </Modal>
+        );
+      })()}
     </View>
   );
 }
@@ -214,47 +246,45 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   emptyText: { color: '#9ca3af', textAlign: 'center' },
 
-  summaryCard: {
-    backgroundColor: '#ea580c',
-    padding: 20,
-    margin: 12,
-    borderRadius: 14,
+  card: {
+    backgroundColor: '#fff', borderRadius: 14, marginBottom: 12,
+    borderWidth: 1, borderColor: '#e5e7eb', overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
-  summaryWeek: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginBottom: 4 },
-  summaryTotal: { color: '#fff', fontSize: 28, fontWeight: '800', marginBottom: 12 },
-  summaryRow: { flexDirection: 'row', gap: 8 },
-  summaryBadge: {
-    flex: 1, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8,
-    padding: 8, alignItems: 'center',
+  cardHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: 16, backgroundColor: '#fff',
   },
-  summaryBadgeNum: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  summaryBadgeLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 11, marginTop: 2 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  weekLabel: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  statusPill: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999 },
+  statusText: { fontSize: 11, fontWeight: '600' },
+  totalText: { fontSize: 12, color: '#6b7280' },
+  chevron: { fontSize: 12, color: '#9ca3af', marginLeft: 8 },
 
-  rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rowInfo: { flex: 1 },
-  name: { fontWeight: '600', color: '#111827' },
-  meta: { fontSize: 13, color: '#059669', fontWeight: '600', marginTop: 2 },
+  cardBody: { borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingHorizontal: 16, paddingBottom: 12 },
+  emptySmall: { color: '#9ca3af', fontSize: 13, paddingVertical: 12 },
+
+  entryRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f9fafb',
+  },
+  entryName: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  entryAmt: { fontSize: 13, color: '#059669', fontWeight: '600', marginTop: 1 },
   badge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999 },
   badgeText: { fontSize: 11, fontWeight: '600' },
 
-  submitButton: {
-    margin: 12,
-    marginBottom: 84,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#ea580c',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+  actionRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 12 },
+  submitBtn: {
+    borderWidth: 2, borderColor: '#ea580c', borderRadius: 8,
+    paddingVertical: 8, paddingHorizontal: 16,
   },
-  submitButtonText: { color: '#ea580c', fontWeight: '700', fontSize: 15 },
-
-  fab: {
-    position: 'absolute', right: 20, bottom: 24, width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#ea580c', justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4,
+  submitBtnText: { color: '#ea580c', fontWeight: '700', fontSize: 13 },
+  addBtn: {
+    backgroundColor: '#ea580c', borderRadius: 8,
+    paddingVertical: 8, paddingHorizontal: 16,
   },
-  fabText: { color: '#fff', fontSize: 28, lineHeight: 30 },
+  addBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
   confirmSheet: {
@@ -264,10 +294,10 @@ const styles = StyleSheet.create({
   confirmTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 12 },
   confirmBody: { fontSize: 14, color: '#374151', lineHeight: 20, marginBottom: 8 },
   confirmAmount: { fontWeight: '700', color: '#ea580c' },
-  confirmMemberList: { marginTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 },
-  confirmMemberRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  confirmMemberName: { fontSize: 14, color: '#374151' },
-  confirmMemberAmt: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  confirmList: { marginTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 },
+  confirmRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
+  confirmName: { fontSize: 14, color: '#374151' },
+  confirmAmt: { fontSize: 14, fontWeight: '600', color: '#111827' },
   confirmClose: {
     marginTop: 20, backgroundColor: '#ea580c', borderRadius: 10, padding: 14, alignItems: 'center',
   },

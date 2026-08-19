@@ -75,6 +75,7 @@ import {
   deleteStothrakazhcha,
   getCurrentWeekStothrakazhcha,
   addContribution,
+  getStothrakazhchaByBavanakutayima,
 } from '../controllers/stothrakazhchaController';
 import {
   getAllStothrakazhchaDues,
@@ -868,6 +869,7 @@ router.get('/events/active/list', getActiveEvents);
 // Stothrakazhcha Routes
 router.route('/stothrakazhcha').get(getAllStothrakazhcha).post(createStothrakazhcha);
 router.get('/stothrakazhcha/current/week', getCurrentWeekStothrakazhcha);
+router.get('/stothrakazhcha/:id/by-bavanakutayima', getStothrakazhchaByBavanakutayima);
 router.post('/stothrakazhcha/:id/contribute', addContribution);
 router.route('/stothrakazhcha/:id').get(getStothrakazhchaById).put(updateStothrakazhcha).delete(deleteStothrakazhcha);
 

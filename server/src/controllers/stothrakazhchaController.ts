@@ -3,6 +3,7 @@ import Stothrakazhcha from '../models/Stothrakazhcha';
 import Transaction from '../models/Transaction';
 import Member from '../models/Member';
 import House from '../models/House';
+import Bavanakutayima from '../models/Bavanakutayima';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../types';
 import { sendTransactionNotification, TransactionDetails } from '../services/emailService';
@@ -449,6 +450,102 @@ export const addContribution = async (req: AuthRequest, res: Response, next: Nex
     }
 
     res.json({ success: true, data: populated, message: 'Contribution added successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get a Stothrakazhcha week's contributors grouped by Bavanakutayima (church admin portal view)
+export const getStothrakazhchaByBavanakutayima = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const stothrakazhcha = await Stothrakazhcha.findById(req.params.id).lean();
+    if (!stothrakazhcha) {
+      res.status(404).json({ success: false, error: 'Stothrakazhcha not found' });
+      return;
+    }
+    if (req.user?.role === 'church_admin' && req.user.churchId) {
+      if (String(stothrakazhcha.churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Access denied' });
+        return;
+      }
+    }
+
+    const contributors = stothrakazhcha.contributors || [];
+    const memberIds = contributors.filter((c: any) => c.contributorType === 'Member').map((c: any) => c.contributorId);
+    const houseIds = contributors.filter((c: any) => c.contributorType === 'House').map((c: any) => c.contributorId);
+
+    const [membersList, housesList] = await Promise.all([
+      Member.find({ _id: { $in: memberIds } }).select('_id firstName lastName bavanakutayimaId').lean(),
+      House.find({ _id: { $in: houseIds } }).select('_id familyName bavanakutayimaId').lean(),
+    ]);
+
+    const membersMap: Record<string, any> = Object.fromEntries(membersList.map((m) => [String(m._id), m]));
+    const housesMap: Record<string, any> = Object.fromEntries(housesList.map((h) => [String(h._id), h]));
+
+    const bkIds = new Set<string>();
+    for (const m of membersList) { if (m.bavanakutayimaId) bkIds.add(String(m.bavanakutayimaId)); }
+    for (const h of housesList) { if (h.bavanakutayimaId) bkIds.add(String(h.bavanakutayimaId)); }
+
+    const bkList = await Bavanakutayima.find({ _id: { $in: Array.from(bkIds) } }).select('_id name').lean();
+    const bkMap: Record<string, any> = Object.fromEntries(bkList.map((b) => [String(b._id), b]));
+
+    const groups: Record<string, any> = {};
+    for (const c of contributors) {
+      const cAny = c as any;
+      const contributorId = String(cAny.contributorId);
+      let bkId: string | null = null;
+      let contributorName = contributorId;
+
+      if (cAny.contributorType === 'Member') {
+        const m = membersMap[contributorId];
+        if (m) {
+          contributorName = `${m.firstName} ${m.lastName || ''}`.trim();
+          bkId = m.bavanakutayimaId ? String(m.bavanakutayimaId) : null;
+        }
+      } else {
+        const h = housesMap[contributorId];
+        if (h) {
+          contributorName = h.familyName;
+          bkId = h.bavanakutayimaId ? String(h.bavanakutayimaId) : null;
+        }
+      }
+
+      const bkName = bkId && bkMap[bkId] ? bkMap[bkId].name : 'Unknown Group';
+      const key = bkId || 'unknown';
+
+      if (!groups[key]) {
+        groups[key] = {
+          bavanakutayimaId: bkId,
+          bavanakutayimaName: bkName,
+          entries: [],
+          totalAmount: 0,
+          pendingCount: 0,
+          approvedCount: 0,
+          rejectedCount: 0,
+        };
+      }
+
+      groups[key].entries.push({ ...cAny, contributorName });
+      if (cAny.approvalStatus !== 'rejected') groups[key].totalAmount += cAny.amount;
+      if (cAny.approvalStatus === 'pending_approval') groups[key].pendingCount++;
+      else if (cAny.approvalStatus === 'approved') groups[key].approvedCount++;
+      else if (cAny.approvalStatus === 'rejected') groups[key].rejectedCount++;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        _id: stothrakazhcha._id,
+        weekNumber: stothrakazhcha.weekNumber,
+        year: stothrakazhcha.year,
+        status: stothrakazhcha.status,
+        defaultAmount: stothrakazhcha.defaultAmount,
+        amountType: stothrakazhcha.amountType,
+        totalCollected: stothrakazhcha.totalCollected,
+        totalContributors: stothrakazhcha.totalContributors,
+        groups: Object.values(groups),
+      },
+    });
   } catch (error) {
     next(error);
   }
