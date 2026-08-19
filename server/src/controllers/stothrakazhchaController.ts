@@ -6,7 +6,7 @@ import House from '../models/House';
 import Bavanakutayima from '../models/Bavanakutayima';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../types';
-import { sendTransactionNotification, TransactionDetails } from '../services/emailService';
+import { notifyTransactionMember } from '../services/transactionNotifier';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
 
@@ -422,27 +422,7 @@ export const addContribution = async (req: AuthRequest, res: Response, next: Nex
       populated.contributors = populatedContributors;
     }
 
-    // Send email notification to member
-    if (member && member.email) {
-      try {
-        const transactionDetails: TransactionDetails = {
-          receiptNumber: transaction.receiptNumber,
-          transactionType: 'stothrakazhcha',
-          amount: amount,
-          paymentMethod: 'cash',
-          paymentDate: transaction.paymentDate,
-          campaignName: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`,
-        };
-
-        // Send email notification asynchronously (don't block response)
-        sendTransactionNotification(member, transactionDetails).catch(error => {
-          console.error('Failed to send Stothrakazhcha notification email:', error);
-        });
-      } catch (emailError) {
-        console.error('Error sending Stothrakazhcha notification:', emailError);
-        // Don't fail the contribution if email fails
-      }
-    }
+    notifyTransactionMember(transaction, `Stothrakazhcha — Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
 
     // Push into EDV asynchronously (don't block response)
     if (edvBridgeConfig.enabled) {

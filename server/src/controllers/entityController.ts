@@ -19,7 +19,8 @@ import MonthlySupportDue from '../models/MonthlySupportDue';
 import ThirukkarmangalRite from '../models/ThirukkarmangalRite';
 import { AuthRequest } from '../types';
 import { generateVerificationToken } from './emailVerificationController';
-import { sendWelcomeEmail, sendTransactionNotification, MemberHierarchyInfo, TransactionDetails } from '../services/emailService';
+import { sendWelcomeEmail, MemberHierarchyInfo } from '../services/emailService';
+import { notifyTransactionMember } from '../services/transactionNotifier';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
 import { computeSplitAmounts } from '../services/thirukkarmangalSplitService';
@@ -1439,30 +1440,10 @@ export const createTransaction = async (req: AuthRequest, res: Response, next: N
       pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
     }
 
-    // Send email notification to member if transaction is for a member
-    if (transaction.memberId) {
-      try {
-        const member = await Member.findById(transaction.memberId);
-        if (member && member.email) {
-          const transactionDetails: TransactionDetails = {
-            receiptNumber: transaction.receiptNumber,
-            transactionType: transaction.transactionType,
-            amount: transaction.totalAmount,
-            paymentMethod: transaction.paymentMethod,
-            paymentDate: transaction.paymentDate,
-            campaignName: transaction.campaignId && populated ? (populated.campaignId as any)?.name : undefined,
-          };
-
-          // Send email notification asynchronously (don't block response)
-          sendTransactionNotification(member, transactionDetails).catch(error => {
-            console.error('Failed to send transaction notification email:', error);
-          });
-        }
-      } catch (emailError) {
-        console.error('Error sending transaction notification:', emailError);
-        // Don't fail the transaction if email fails
-      }
-    }
+    notifyTransactionMember(
+      transaction,
+      transaction.campaignId && populated ? (populated.campaignId as any)?.name : undefined
+    );
 
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
@@ -2349,29 +2330,7 @@ export const addCampaignContribution = async (req: AuthRequest, res: Response, n
 
     await campaign.save();
 
-    // Send an email receipt to the member (house payments have no email to send to)
-    if (memberId) {
-      try {
-        const member = await Member.findById(memberId);
-        if (member?.email) {
-          const transactionDetails: TransactionDetails = {
-            receiptNumber: transaction.receiptNumber,
-            transactionType: transaction.transactionType,
-            amount,
-            paymentMethod: transaction.paymentMethod,
-            paymentDate: transaction.paymentDate,
-            campaignName: campaign.name,
-          };
-
-          sendTransactionNotification(member, transactionDetails).catch((error) => {
-            console.error('Failed to send campaign contribution receipt email:', error);
-          });
-        }
-      } catch (emailError) {
-        console.error('Error sending campaign contribution receipt email:', emailError);
-        // Don't fail the contribution if email fails
-      }
-    }
+    notifyTransactionMember(transaction, campaign.name);
 
     // Push into EDV asynchronously (don't block response)
     if (edvBridgeConfig.enabled) {
@@ -3451,38 +3410,13 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
       );
     }
 
-    // Send an email receipt to the payer (members and donors only — houses
-    // have no email address to send to).
-    if (contributorType === "member" || contributorType === "donor") {
-      try {
-        const recipient = contributorType === "member"
-          ? await Member.findById(due.dueForId)
-          : await Donor.findById(due.dueForId);
-
-        if (recipient?.email) {
-          const campaignName = dueType === "stothrakazhcha"
-            ? `Stothrakazhcha - Week ${(due as any).weekNumber}, ${(due as any).year}`
-            : dueType === "monthly_support"
-            ? (due as any).planName
-            : campaignNameForEmail;
-
-          const transactionDetails: TransactionDetails = {
-            receiptNumber: transaction.receiptNumber,
-            transactionType: transaction.transactionType,
-            amount: paymentAmount,
-            paymentMethod,
-            paymentDate: transaction.paymentDate,
-            campaignName,
-          };
-
-          sendTransactionNotification(recipient, transactionDetails).catch((error) => {
-            console.error('Failed to send due-payment receipt email:', error);
-          });
-        }
-      } catch (emailError) {
-        console.error('Error sending due-payment receipt email:', emailError);
-        // Don't fail the payment if email fails
-      }
+    {
+      const dueDescription = dueType === "stothrakazhcha"
+        ? `Stothrakazhcha — Week ${(due as any).weekNumber}, ${(due as any).year}`
+        : dueType === "monthly_support"
+        ? (due as any).planName
+        : campaignNameForEmail;
+      notifyTransactionMember(transaction, dueDescription);
     }
 
     // Push into EDV asynchronously (don't block response).

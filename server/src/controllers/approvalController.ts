@@ -8,7 +8,7 @@ import Bavanakutayima from '../models/Bavanakutayima';
 import { AuthRequest } from '../types';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
-import { sendTransactionNotification, TransactionDetails } from '../services/emailService';
+import { notifyTransactionMember } from '../services/transactionNotifier';
 
 // --- Step 1: Mark (kudumbakutayima_admin logs a new entry as pending) ---------------
 
@@ -385,6 +385,8 @@ export const approveStothrakazhchaContributor = async (req: AuthRequest, res: Re
       pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
     }
 
+    notifyTransactionMember(transaction, `Stothrakazhcha — Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
+
     res.json({ success: true, data: stothrakazhcha });
   } catch (error) {
     next(error);
@@ -562,37 +564,7 @@ export const approveStothrakazhchaByBavanakutayima = async (req: AuthRequest, re
         pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
       }
 
-      // Send email notification(s) asynchronously
-      const txDetails: TransactionDetails = {
-        receiptNumber,
-        transactionType: 'stothrakazhcha',
-        amount: contributor.amount,
-        paymentMethod: 'cash',
-        paymentDate: transaction.paymentDate,
-        campaignName: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`,
-      };
-
-      if (contributor.contributorType === 'Member') {
-        // Notify the member directly
-        Member.findById(contributor.contributorId)
-          .select('firstName email isEmailVerified emailNotificationsEnabled')
-          .lean()
-          .then((m) => {
-            if (m) sendTransactionNotification(m, txDetails).catch(() => {});
-          })
-          .catch(() => {});
-      } else {
-        // For a House contribution, notify all members of that house who have an email
-        Member.find({ houseId: contributor.contributorId })
-          .select('firstName email isEmailVerified emailNotificationsEnabled')
-          .lean()
-          .then((members) => {
-            for (const m of members) {
-              if (m.email) sendTransactionNotification(m, txDetails).catch(() => {});
-            }
-          })
-          .catch(() => {});
-      }
+      notifyTransactionMember(transaction, `Stothrakazhcha — Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
     }
 
     await stothrakazhcha.save();

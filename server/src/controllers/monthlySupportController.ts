@@ -8,7 +8,7 @@ import Transaction from '../models/Transaction';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../types';
 import { generateDuesForPlan, isPeriodSkippedForEntry, nextPeriodMonth } from '../jobs/monthlySupportProcessor';
-import { sendTransactionNotification, TransactionDetails } from '../services/emailService';
+import { notifyTransactionMember } from '../services/transactionNotifier';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
 
@@ -462,20 +462,7 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
         );
       }
 
-      if (recipient?.email) {
-        const transactionDetails: TransactionDetails = {
-          receiptNumber,
-          transactionType: 'monthly_support',
-          amount: paymentAmount,
-          paymentMethod,
-          paymentDate: effectivePaymentDate,
-          campaignName: `${plan.name} (${periodMonth})`,
-        };
-
-        sendTransactionNotification(recipient, transactionDetails).catch((error) => {
-          console.error('Failed to send monthly support payment receipt email:', error);
-        });
-      }
+      notifyTransactionMember(transaction, `${plan.name} (${periodMonth})`);
 
       if (edvBridgeConfig.enabled) {
         pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));

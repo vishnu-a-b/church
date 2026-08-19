@@ -4,6 +4,7 @@ import Member from '../models/Member';
 import { AuthRequest } from '../types';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
+import { notifyTransactionMember } from '../services/transactionNotifier';
 
 // Pathavarm (Tithe) is per-member, one-time, and optional — there is no due to
 // chase and no recurring schedule, so this is a thin self-service create-and-record
@@ -51,6 +52,8 @@ export const createMyPathavarmContribution = async (req: AuthRequest, res: Respo
     if (edvBridgeConfig.enabled) {
       pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
     }
+
+    notifyTransactionMember(transaction, 'Pathavarm (Tithe)');
 
     res.status(201).json({ success: true, data: transaction, message: 'Pathavarm contribution recorded successfully' });
   } catch (error) {
