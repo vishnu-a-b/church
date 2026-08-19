@@ -22,7 +22,7 @@ export const notifyTransactionMember = (transaction: any, description?: string):
     Member.findById(transaction.memberId)
       .select('firstName email isEmailVerified emailNotificationsEnabled')
       .lean()
-      .then((m) => { if (m) return sendTransactionNotification(m, txDetails); })
+      .then((m) => { if (m) sendTransactionNotification(m, txDetails).catch(() => {}); })
       .catch(() => {});
   } else if (transaction.houseId) {
     Member.find({ houseId: transaction.houseId })
