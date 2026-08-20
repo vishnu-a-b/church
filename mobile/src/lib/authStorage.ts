@@ -63,6 +63,14 @@ export const clearAuthData = async (role: string) => {
   await Storage.deleteItemAsync(keyFor(role, 'user'));
 };
 
+const ACTIVE_ROLE_KEY = 'activeRole';
+export const getStoredRole = async (): Promise<AppRole | null> => {
+  const r = await Storage.getItemAsync(ACTIVE_ROLE_KEY);
+  return (r as AppRole) || null;
+};
+export const setStoredRole = (role: AppRole) => Storage.setItemAsync(ACTIVE_ROLE_KEY, role);
+export const clearStoredRole = () => Storage.deleteItemAsync(ACTIVE_ROLE_KEY);
+
 export const isValidTokenFormat = (token: string | null): boolean => {
   if (!token) return false;
   if (token === 'undefined' || token === 'null') return false;

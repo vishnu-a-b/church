@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
+import { DatePickerField, formatDateISO } from '../../components/DatePickerField';
 
 const api = createRoleApi('kudumbakutayima_admin');
 
@@ -34,7 +35,7 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
   const [memberId, setMemberId] = useState('');
   const [memberPickerVisible, setMemberPickerVisible] = useState(false);
   const [activityType, setActivityType] = useState<(typeof ACTIVITY_TYPES)[number]>('mass');
-  const [massDate, setMassDate] = useState('');
+  const [massDate, setMassDate] = useState<Date | null>(null);
   const [fastingWeek, setFastingWeek] = useState('');
   const [fastingDays, setFastingDays] = useState<string[]>([]);
   const [prayerType, setPrayerType] = useState<(typeof PRAYER_TYPES)[number]>('rosary');
@@ -56,7 +57,7 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
   const reset = () => {
     setMemberId('');
     setActivityType('mass');
-    setMassDate('');
+    setMassDate(null);
     setFastingWeek('');
     setFastingDays([]);
     setPrayerType('rosary');
@@ -72,8 +73,8 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
 
     const body: any = { memberId, activityType };
     if (activityType === 'mass') {
-      if (!massDate) return setError('Enter the mass date (YYYY-MM-DD)');
-      body.massDate = massDate;
+      if (!massDate) return setError('Select the mass date');
+      body.massDate = formatDateISO(massDate);
       body.massAttended = true;
     } else if (activityType === 'fasting') {
       if (!fastingWeek) return setError('Enter the fasting week (e.g. 2026-W32)');
@@ -120,8 +121,13 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
 
             {activityType === 'mass' && (
               <>
-                <Text style={styles.label}>Mass Date (YYYY-MM-DD)</Text>
-                <TextInput style={styles.input} placeholder="2026-08-05" value={massDate} onChangeText={setMassDate} />
+                <Text style={styles.label}>Mass Date</Text>
+                <DatePickerField
+                  value={massDate}
+                  onChange={setMassDate}
+                  color="#ea580c"
+                  modalTitle="Mass Date"
+                />
               </>
             )}
 
@@ -182,7 +188,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '700', color: '#111827' },
   hint: { fontSize: 12, color: '#6b7280', marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', color: '#4b5563', marginTop: 12, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12 },
+  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, color: '#111827' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: '#f3f4f6' },
   chipActive: { backgroundColor: '#ea580c' },

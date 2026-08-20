@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
+import { DatePickerField, formatDateISO } from '../../components/DatePickerField';
 import { useAuth } from '../../context/AuthContext';
 
 interface Transaction {
@@ -50,7 +51,7 @@ export default function ChurchAdminTransactionsScreen() {
   const [totalAmount, setTotalAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [methodPickerVisible, setMethodPickerVisible] = useState(false);
-  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
   const [notes, setNotes] = useState('');
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -74,7 +75,7 @@ export default function ChurchAdminTransactionsScreen() {
     setTransactionType('');
     setTotalAmount('');
     setPaymentMethod('');
-    setPaymentDate('');
+    setPaymentDate(null);
     setNotes('');
     setFormError('');
     setModalVisible(true);
@@ -92,7 +93,7 @@ export default function ChurchAdminTransactionsScreen() {
     const amount = Number(totalAmount);
     if (!amount || amount <= 0) return setFormError('Enter a valid amount');
     if (!paymentMethod) return setFormError('Select a payment method');
-    if (!paymentDate.trim()) return setFormError('Enter a payment date');
+    if (!paymentDate) return setFormError('Select a payment date');
 
     setFormError('');
     setSubmitting(true);
@@ -103,7 +104,7 @@ export default function ChurchAdminTransactionsScreen() {
         transactionType,
         totalAmount: amount,
         paymentMethod,
-        paymentDate,
+        paymentDate: formatDateISO(paymentDate),
         notes: notes.trim() || undefined,
       });
       setModalVisible(false);
@@ -228,13 +229,12 @@ export default function ChurchAdminTransactionsScreen() {
               onPress={() => setMethodPickerVisible(true)}
             />
 
-            <Text style={styles.fieldLabel}>PAYMENT DATE (DD/MM/YYYY)</Text>
-            <TextInput
-              style={styles.input}
+            <Text style={styles.fieldLabel}>PAYMENT DATE</Text>
+            <DatePickerField
               value={paymentDate}
-              onChangeText={setPaymentDate}
-              placeholder="e.g. 18/08/2026"
-              placeholderTextColor="#9ca3af"
+              onChange={setPaymentDate}
+              color={COLOR}
+              modalTitle="Payment Date"
             />
 
             <Text style={styles.fieldLabel}>NOTES (OPTIONAL)</Text>

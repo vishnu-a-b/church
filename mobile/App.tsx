@@ -15,8 +15,7 @@ import UnitAdminTabs from './src/navigation/UnitAdminTabs';
 function RootGate() {
   const { activeRole, user, loading } = useAuth();
 
-  if (!activeRole) return <RolePickerScreen />;
-
+  // Show spinner while restoring session from storage on app start
   if (loading) {
     return (
       <View style={styles.center}>
@@ -24,6 +23,8 @@ function RootGate() {
       </View>
     );
   }
+
+  if (!activeRole) return <RolePickerScreen />;
 
   if (!user) return <LoginScreen />;
 

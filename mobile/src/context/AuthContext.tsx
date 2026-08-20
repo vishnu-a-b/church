@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { API_URL, registerForcedLogoutHandler } from '../lib/api';
-import { UserData, AppRole, getUserData, setAuthData, clearAuthData } from '../lib/authStorage';
+import { UserData, AppRole, getUserData, setAuthData, clearAuthData, getStoredRole, setStoredRole, clearStoredRole } from '../lib/authStorage';
 
 export type PortalRole = AppRole;
 
@@ -30,7 +30,22 @@ const LOGIN_ENDPOINT: Record<PortalRole, string> = {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [activeRole, setActiveRoleState] = useState<PortalRole | null>(null);
   const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // true until session restore completes
+
+  // Restore session on app start
+  useEffect(() => {
+    getStoredRole().then(async (role) => {
+      if (role) {
+        const userData = await getUserData(role);
+        if (userData) {
+          setActiveRoleState(role);
+          setUser(userData);
+          registerForcedLogoutHandler(role, () => setUser(null));
+        }
+      }
+      setLoading(false);
+    });
+  }, []);
 
   useEffect(() => {
     if (!activeRole) return;
@@ -41,8 +56,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setActiveRoleState(role);
     if (!role) {
       setUser(null);
+      clearStoredRole();
       return;
     }
+    setStoredRole(role);
     setLoading(true);
     getUserData(role)
       .then(setUser)
@@ -75,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     if (!activeRole) return;
     await clearAuthData(activeRole);
+    await clearStoredRole();
     setUser(null);
     setActiveRoleState(null);
   }, [activeRole]);
