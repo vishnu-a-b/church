@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
-  ScrollView, RefreshControl, Alert, TextInput, Modal,
+  ScrollView, RefreshControl, Alert, TextInput, Modal, Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
 
 interface Week {
@@ -39,11 +40,18 @@ interface WeekDetail extends Week {
 }
 
 const api = createRoleApi('church_admin');
+const COLOR = '#059669';
 
-const STATUS_COLOR: Record<string, string> = {
-  active: '#059669',
-  closed: '#6b7280',
-  processed: '#2563eb',
+const STATUS_CONFIG: Record<string, { color: string; bg: string; icon: React.ComponentProps<typeof Ionicons>['name'] }> = {
+  active:    { color: '#059669', bg: '#f0fdf4', icon: 'radio-button-on-outline' },
+  closed:    { color: '#6b7280', bg: '#f9fafb', icon: 'lock-closed-outline' },
+  processed: { color: '#2563eb', bg: '#eff6ff', icon: 'checkmark-circle-outline' },
+};
+
+const ENTRY_STATUS: Record<string, { color: string; bg: string; label: string }> = {
+  pending_approval: { color: '#d97706', bg: '#fffbeb', label: 'Pending' },
+  approved:         { color: '#059669', bg: '#f0fdf4', label: 'Approved' },
+  rejected:         { color: '#dc2626', bg: '#fef2f2', label: 'Rejected' },
 };
 
 export default function ChurchAdminStothrakazhchaScreen() {
@@ -54,11 +62,8 @@ export default function ChurchAdminStothrakazhchaScreen() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
 
-  // Edit amount modal
   const [editModal, setEditModal] = useState<{
-    stothrakazhchaId: string;
-    contributorSubId: string;
-    current: number;
+    stothrakazhchaId: string; contributorSubId: string; current: number;
   } | null>(null);
   const [editAmount, setEditAmount] = useState('');
 
@@ -108,10 +113,7 @@ export default function ChurchAdminStothrakazhchaScreen() {
   const saveAmount = async () => {
     if (!editModal) return;
     const value = Number(editAmount);
-    if (!value || value <= 0) {
-      Alert.alert('Error', 'Enter a valid amount');
-      return;
-    }
+    if (!value || value <= 0) { Alert.alert('Error', 'Enter a valid amount'); return; }
     try {
       await api.put(
         `/approvals/stothrakazhcha/${editModal.stothrakazhchaId}/contributors/${editModal.contributorSubId}`,
@@ -126,10 +128,9 @@ export default function ChurchAdminStothrakazhchaScreen() {
 
   const approveGroup = (group: BkGroup) => {
     if (!selectedWeek || !group.bavanakutayimaId) return;
-    const total = group.totalAmount;
     Alert.alert(
       'Approve All',
-      `Approve ${group.pendingCount} pending contribution(s) for ${group.bavanakutayimaName}?\n\nTotal: ₹${total.toLocaleString('en-IN')}`,
+      `Approve ${group.pendingCount} pending contribution(s) for ${group.bavanakutayimaName}?\n\nTotal: ₹${group.totalAmount.toLocaleString('en-IN')}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -137,10 +138,7 @@ export default function ChurchAdminStothrakazhchaScreen() {
           onPress: () => {
             setActingId(`group_${group.bavanakutayimaId}`);
             api
-              .post(
-                `/approvals/stothrakazhcha/${selectedWeek._id}/bavanakutayima/${group.bavanakutayimaId}/approve-all`,
-                {}
-              )
+              .post(`/approvals/stothrakazhcha/${selectedWeek._id}/bavanakutayima/${group.bavanakutayimaId}/approve-all`, {})
               .then(refreshDetail)
               .catch((e) => Alert.alert('Error', e.response?.data?.error || 'Failed to approve'))
               .finally(() => setActingId(null));
@@ -153,25 +151,37 @@ export default function ChurchAdminStothrakazhchaScreen() {
   // ---- Week list view ----
   if (!selectedWeek && !detailLoading) {
     if (loading) {
-      return (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#059669" />
-        </View>
-      );
+      return <View style={styles.center}><ActivityIndicator size="large" color={COLOR} /></View>;
     }
 
     return (
       <ScrollView
         style={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchWeeks(); }} />}
-        contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchWeeks(); }} tintColor={COLOR} />}
       >
-        <Text style={styles.pageTitle}>Sthothrakazhcha</Text>
+        {/* Banner */}
+        <View style={styles.banner}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bannerTitle}>Stothrakazhcha</Text>
+            <Text style={styles.bannerSub}>{weeks.length} week{weeks.length !== 1 ? 's' : ''} recorded</Text>
+          </View>
+          <View style={styles.bannerIcon}>
+            <Ionicons name="star-outline" size={28} color="#fff" />
+          </View>
+        </View>
+
         {weeks.length === 0 ? (
-          <Text style={styles.emptyText}>No weeks found</Text>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyCircle}>
+              <Ionicons name="star-outline" size={36} color={COLOR} />
+            </View>
+            <Text style={styles.emptyTitle}>No weeks yet</Text>
+            <Text style={styles.emptySub}>Stothrakazhcha weeks will appear here</Text>
+          </View>
         ) : (
           weeks.map((w) => {
-            const sc = STATUS_COLOR[w.status] || '#6b7280';
+            const sc = STATUS_CONFIG[w.status] || STATUS_CONFIG.closed;
             return (
               <TouchableOpacity
                 key={w._id}
@@ -179,20 +189,25 @@ export default function ChurchAdminStothrakazhchaScreen() {
                 onPress={() => openWeek(w)}
                 activeOpacity={0.7}
               >
-                <View style={{ flex: 1 }}>
-                  <View style={styles.weekRow}>
+                <View style={styles.weekLeft}>
+                  <Text style={styles.weekNum}>W{w.weekNumber}</Text>
+                  <Text style={styles.weekYear}>{w.year}</Text>
+                </View>
+                <View style={styles.weekBody}>
+                  <View style={styles.weekTopRow}>
                     <Text style={styles.weekTitle}>Week {w.weekNumber}, {w.year}</Text>
-                    <View style={[styles.statusPill, { backgroundColor: sc + '20' }]}>
-                      <Text style={[styles.statusText, { color: sc }]}>
+                    <View style={[styles.statusPill, { backgroundColor: sc.bg }]}>
+                      <Ionicons name={sc.icon} size={10} color={sc.color} />
+                      <Text style={[styles.statusText, { color: sc.color }]}>
                         {w.status.charAt(0).toUpperCase() + w.status.slice(1)}
                       </Text>
                     </View>
                   </View>
                   <Text style={styles.weekMeta}>
-                    ₹{w.totalCollected.toLocaleString('en-IN')} collected · {w.totalContributors} contributors
+                    ₹{w.totalCollected.toLocaleString('en-IN')} · {w.totalContributors} contributors
                   </Text>
                 </View>
-                <Text style={styles.chevron}>›</Text>
+                <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
               </TouchableOpacity>
             );
           })
@@ -205,7 +220,7 @@ export default function ChurchAdminStothrakazhchaScreen() {
   if (detailLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#059669" />
+        <ActivityIndicator size="large" color={COLOR} />
         <Text style={styles.loadingText}>Loading week details...</Text>
       </View>
     );
@@ -219,43 +234,57 @@ export default function ChurchAdminStothrakazhchaScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }}>
-        {/* Back + header */}
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Back */}
         <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedWeek(null)}>
-          <Text style={styles.backText}>‹ All Weeks</Text>
+          <Ionicons name="chevron-back" size={18} color={COLOR} />
+          <Text style={styles.backText}>All Weeks</Text>
         </TouchableOpacity>
 
         {/* Week summary banner */}
         <View style={styles.banner}>
-          <Text style={styles.bannerWeek}>Week {week.weekNumber}, {week.year}</Text>
-          <Text style={styles.bannerTotal}>₹{totalAmt.toLocaleString('en-IN')}</Text>
-          <View style={styles.bannerStats}>
-            <View style={styles.bannerStat}>
-              <Text style={styles.bannerStatNum}>{totalPending}</Text>
-              <Text style={styles.bannerStatLabel}>pending</Text>
-            </View>
-            <View style={styles.bannerStat}>
-              <Text style={styles.bannerStatNum}>{totalApproved}</Text>
-              <Text style={styles.bannerStatLabel}>approved</Text>
-            </View>
-            <View style={styles.bannerStat}>
-              <Text style={styles.bannerStatNum}>{week.groups.length}</Text>
-              <Text style={styles.bannerStatLabel}>groups</Text>
+          <View style={styles.bannerWeekBox}>
+            <Text style={styles.bannerWeekNum}>W{week.weekNumber}</Text>
+            <Text style={styles.bannerWeekYear}>{week.year}</Text>
+          </View>
+          <View style={styles.bannerDivider} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bannerTotal}>₹{totalAmt.toLocaleString('en-IN')}</Text>
+            <View style={styles.bannerStats}>
+              <View style={styles.bannerStat}>
+                <Text style={styles.bannerStatNum}>{totalPending}</Text>
+                <Text style={styles.bannerStatLabel}>pending</Text>
+              </View>
+              <View style={styles.bannerStat}>
+                <Text style={styles.bannerStatNum}>{totalApproved}</Text>
+                <Text style={styles.bannerStatLabel}>approved</Text>
+              </View>
+              <View style={styles.bannerStat}>
+                <Text style={styles.bannerStatNum}>{week.groups.length}</Text>
+                <Text style={styles.bannerStatLabel}>groups</Text>
+              </View>
             </View>
           </View>
         </View>
 
         {week.groups.length === 0 ? (
-          <Text style={styles.emptyText}>No contributions recorded yet</Text>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyCircle}>
+              <Ionicons name="people-outline" size={36} color={COLOR} />
+            </View>
+            <Text style={styles.emptyTitle}>No contributions yet</Text>
+            <Text style={styles.emptySub}>Contributions will appear here once submitted</Text>
+          </View>
         ) : (
           week.groups.map((group) => {
             const isActing = actingId === `group_${group.bavanakutayimaId}`;
             const hasPending = group.pendingCount > 0;
-
             return (
               <View key={group.bavanakutayimaId || 'unknown'} style={styles.groupCard}>
-                {/* Group header */}
                 <View style={styles.groupHeader}>
+                  <View style={styles.groupIconWrap}>
+                    <Ionicons name="people-outline" size={18} color={COLOR} />
+                  </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.groupName}>{group.bavanakutayimaName}</Text>
                     <Text style={styles.groupMeta}>
@@ -264,53 +293,45 @@ export default function ChurchAdminStothrakazhchaScreen() {
                   </View>
                   {hasPending && (
                     <TouchableOpacity
-                      style={[styles.approveAllBtn, isActing && styles.disabledBtn]}
+                      style={[styles.approveAllBtn, isActing && { opacity: 0.6 }]}
                       disabled={isActing || !group.bavanakutayimaId}
                       onPress={() => approveGroup(group)}
                     >
                       {isActing
                         ? <ActivityIndicator size="small" color="#fff" />
-                        : <Text style={styles.approveAllText}>Approve All</Text>
+                        : (
+                          <>
+                            <Ionicons name="checkmark-done" size={13} color="#fff" />
+                            <Text style={styles.approveAllText}>Approve All</Text>
+                          </>
+                        )
                       }
                     </TouchableOpacity>
                   )}
                 </View>
 
-                {/* Per-member rows */}
-                {group.entries.map((entry) => (
-                  <View key={entry._id} style={styles.entryRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.entryName}>{entry.contributorName}</Text>
-                      <View style={[
-                        styles.entryStatusPill,
-                        entry.approvalStatus === 'approved' && { backgroundColor: '#dcfce7' },
-                        entry.approvalStatus === 'rejected' && { backgroundColor: '#fee2e2' },
-                        entry.approvalStatus === 'pending_approval' && { backgroundColor: '#fef3c7' },
-                      ]}>
-                        <Text style={[
-                          styles.entryStatusText,
-                          entry.approvalStatus === 'approved' && { color: '#166534' },
-                          entry.approvalStatus === 'rejected' && { color: '#991b1b' },
-                          entry.approvalStatus === 'pending_approval' && { color: '#92400e' },
-                        ]}>
-                          {entry.approvalStatus === 'pending_approval' ? 'Pending' :
-                           entry.approvalStatus === 'approved' ? 'Approved' : 'Rejected'}
-                        </Text>
+                {group.entries.map((entry) => {
+                  const es = ENTRY_STATUS[entry.approvalStatus] || ENTRY_STATUS.approved;
+                  const isPending = entry.approvalStatus === 'pending_approval';
+                  return (
+                    <View key={entry._id} style={styles.entryRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.entryName}>{entry.contributorName}</Text>
+                        <View style={[styles.entryStatusPill, { backgroundColor: es.bg }]}>
+                          <Text style={[styles.entryStatusText, { color: es.color }]}>{es.label}</Text>
+                        </View>
                       </View>
+                      <TouchableOpacity
+                        style={[styles.amountPill, !isPending && { opacity: 0.6 }]}
+                        onPress={() => isPending && openEditModal(week._id, entry._id, entry.amount)}
+                        disabled={!isPending}
+                      >
+                        <Text style={styles.amountText}>₹{entry.amount.toLocaleString('en-IN')}</Text>
+                        {isPending && <Ionicons name="create-outline" size={12} color={COLOR} style={{ marginLeft: 4 }} />}
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                      style={styles.amountPill}
-                      onPress={() => entry.approvalStatus === 'pending_approval' &&
-                        openEditModal(week._id, entry._id, entry.amount)}
-                      disabled={entry.approvalStatus !== 'pending_approval'}
-                    >
-                      <Text style={styles.amountText}>₹{entry.amount.toLocaleString('en-IN')}</Text>
-                      {entry.approvalStatus === 'pending_approval' && (
-                        <Text style={styles.editIcon}> ✎</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             );
           })
@@ -321,21 +342,28 @@ export default function ChurchAdminStothrakazhchaScreen() {
       <Modal visible={!!editModal} animationType="fade" transparent onRequestClose={() => setEditModal(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Edit Amount</Text>
+            <View style={styles.modalHeader}>
+              <Ionicons name="create-outline" size={20} color={COLOR} />
+              <Text style={styles.modalTitle}>Edit Amount</Text>
+            </View>
             <Text style={styles.modalCurrent}>Current: ₹{editModal?.current.toLocaleString('en-IN')}</Text>
-            <TextInput
-              style={styles.modalInput}
-              keyboardType="numeric"
-              value={editAmount}
-              onChangeText={setEditAmount}
-              placeholder="New amount"
-              autoFocus
-            />
+            <View style={styles.modalInputRow}>
+              <Text style={styles.modalCurrency}>₹</Text>
+              <TextInput
+                style={styles.modalInput}
+                keyboardType="numeric"
+                value={editAmount}
+                onChangeText={setEditAmount}
+                placeholder="New amount"
+                autoFocus
+              />
+            </View>
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancel} onPress={() => setEditModal(null)}>
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalSave} onPress={saveAmount}>
+                <Ionicons name="checkmark" size={16} color="#fff" />
                 <Text style={styles.modalSaveText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -347,93 +375,124 @@ export default function ChurchAdminStothrakazhchaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  loadingText: { marginTop: 12, color: '#6b7280', fontSize: 14 },
-  emptyText: { color: '#9ca3af', textAlign: 'center', marginTop: 20 },
-  pageTitle: { fontSize: 20, fontWeight: '800', color: '#111827', marginBottom: 12 },
+  container: { flex: 1, backgroundColor: '#f3f4f6' },
+  content: { padding: 16, paddingBottom: 40 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, gap: 12 },
+  loadingText: { color: '#6b7280', fontSize: 14 },
 
-  // Week list
-  weekCard: {
-    backgroundColor: '#fff', borderRadius: 12, marginBottom: 10,
-    borderWidth: 1, borderColor: '#e5e7eb', padding: 16,
+  banner: {
     flexDirection: 'row', alignItems: 'center',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+    backgroundColor: '#059669', borderRadius: 20, padding: 20, marginBottom: 16,
+    ...Platform.select({
+      ios: { shadowColor: '#059669', shadowOpacity: 0.4, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } },
+      android: { elevation: 8 },
+    }),
   },
-  weekRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  bannerTitle: { fontSize: 20, fontWeight: '800', color: '#fff', marginBottom: 4 },
+  bannerSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  bannerIcon: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  bannerWeekBox: { alignItems: 'center', marginRight: 16 },
+  bannerWeekNum: { fontSize: 32, fontWeight: '800', color: '#fff' },
+  bannerWeekYear: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  bannerDivider: { width: 1, height: 50, backgroundColor: 'rgba(255,255,255,0.25)', marginRight: 16 },
+  bannerTotal: { fontSize: 26, fontWeight: '800', color: '#fff', marginBottom: 8 },
+  bannerStats: { flexDirection: 'row', gap: 8 },
+  bannerStat: { flex: 1, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8, padding: 6, alignItems: 'center' },
+  bannerStatNum: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  bannerStatLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 10, marginTop: 1 },
+
+  // Week list cards
+  weekCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#fff', borderRadius: 16, padding: 14, marginBottom: 10,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
+      android: { elevation: 2 },
+    }),
+  },
+  weekLeft: {
+    width: 52, height: 52, borderRadius: 14, backgroundColor: '#f0fdf4',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  weekNum: { fontSize: 14, fontWeight: '800', color: '#059669' },
+  weekYear: { fontSize: 10, color: '#6b7280' },
+  weekBody: { flex: 1 },
+  weekTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   weekTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  statusPill: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999 },
-  statusText: { fontSize: 11, fontWeight: '600' },
   weekMeta: { fontSize: 12, color: '#6b7280' },
-  chevron: { fontSize: 22, color: '#9ca3af', marginLeft: 8 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 999 },
+  statusText: { fontSize: 11, fontWeight: '600' },
 
   // Back button
-  backBtn: { marginBottom: 12 },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 14 },
   backText: { fontSize: 15, color: '#059669', fontWeight: '600' },
-
-  // Banner
-  banner: {
-    backgroundColor: '#059669', borderRadius: 14, padding: 20, marginBottom: 16,
-  },
-  bannerWeek: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginBottom: 4 },
-  bannerTotal: { color: '#fff', fontSize: 32, fontWeight: '800', marginBottom: 12 },
-  bannerStats: { flexDirection: 'row', gap: 8 },
-  bannerStat: {
-    flex: 1, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8,
-    padding: 8, alignItems: 'center',
-  },
-  bannerStatNum: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  bannerStatLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 11, marginTop: 2 },
 
   // BK group card
   groupCard: {
-    backgroundColor: '#fff', borderRadius: 12, marginBottom: 14,
-    borderWidth: 1, borderColor: '#e5e7eb', overflow: 'hidden',
+    backgroundColor: '#fff', borderRadius: 16, marginBottom: 14, overflow: 'hidden',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+      android: { elevation: 3 },
+    }),
   },
   groupHeader: {
-    flexDirection: 'row', alignItems: 'center', padding: 14,
-    backgroundColor: '#f0fdf4', borderBottomWidth: 1, borderBottomColor: '#dcfce7',
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, backgroundColor: '#f0fdf4',
+    borderBottomWidth: 1, borderBottomColor: '#dcfce7',
   },
-  groupName: { fontWeight: '700', color: '#111827', fontSize: 15 },
-  groupMeta: { fontSize: 12, color: '#6b7280', marginTop: 2 },
+  groupIconWrap: { width: 38, height: 38, borderRadius: 11, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  groupName: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 2 },
+  groupMeta: { fontSize: 11, color: '#6b7280' },
   approveAllBtn: {
-    backgroundColor: '#059669', paddingVertical: 10, paddingHorizontal: 14,
-    borderRadius: 8, minWidth: 96, alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#059669', paddingVertical: 9, paddingHorizontal: 13, borderRadius: 10,
   },
-  disabledBtn: { opacity: 0.6 },
-  approveAllText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  approveAllText: { color: '#fff', fontWeight: '700', fontSize: 12 },
 
-  // Entry row
   entryRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#f9fafb',
+    paddingVertical: 12, paddingHorizontal: 16,
+    borderBottomWidth: 1, borderBottomColor: '#f9fafb',
   },
-  entryName: { fontSize: 14, color: '#374151', flex: 1, marginBottom: 4 },
+  entryName: { fontSize: 14, color: '#374151', fontWeight: '500', marginBottom: 4 },
   entryStatusPill: { alignSelf: 'flex-start', paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999 },
-  entryStatusText: { fontSize: 11, fontWeight: '600' },
+  entryStatusText: { fontSize: 10, fontWeight: '600' },
   amountPill: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#f0fdf4', paddingVertical: 6, paddingHorizontal: 12,
     borderRadius: 20, borderWidth: 1, borderColor: '#bbf7d0',
   },
-  amountText: { fontSize: 14, fontWeight: '600', color: '#059669' },
-  editIcon: { fontSize: 13, color: '#059669' },
+  amountText: { fontSize: 14, fontWeight: '700', color: '#059669' },
+
+  // Empty state
+  emptyState: { alignItems: 'center', gap: 10, paddingVertical: 40 },
+  emptyCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#f0fdf4', borderWidth: 2, borderColor: '#bbf7d0', justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: '#374151' },
+  emptySub: { fontSize: 13, color: '#9ca3af', textAlign: 'center' },
 
   // Edit modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
   modalSheet: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 22,
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, elevation: 6,
+    backgroundColor: '#fff', borderRadius: 20, padding: 24,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 14, shadowOffset: { width: 0, height: 6 } },
+      android: { elevation: 8 },
+    }),
   },
-  modalTitle: { fontSize: 17, fontWeight: '700', color: '#111827', marginBottom: 4 },
-  modalCurrent: { fontSize: 13, color: '#6b7280', marginBottom: 14 },
-  modalInput: {
-    borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8,
-    padding: 12, fontSize: 16, marginBottom: 16,
+  modalHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  modalTitle: { fontSize: 17, fontWeight: '800', color: '#111827' },
+  modalCurrent: { fontSize: 13, color: '#6b7280', marginBottom: 16 },
+  modalInputRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#f9fafb', borderRadius: 14,
+    borderWidth: 1.5, borderColor: '#e5e7eb',
+    paddingHorizontal: 14, marginBottom: 20,
   },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
-  modalCancel: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db' },
+  modalCurrency: { fontSize: 20, fontWeight: '700', color: '#059669', marginRight: 6 },
+  modalInput: { flex: 1, fontSize: 20, fontWeight: '700', color: '#111827', paddingVertical: 12 },
+  modalActions: { flexDirection: 'row', gap: 10 },
+  modalCancel: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', alignItems: 'center' },
   modalCancelText: { color: '#374151', fontWeight: '600' },
-  modalSave: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#059669' },
-  modalSaveText: { color: '#fff', fontWeight: '600' },
+  modalSave: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 12, backgroundColor: '#059669' },
+  modalSaveText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });

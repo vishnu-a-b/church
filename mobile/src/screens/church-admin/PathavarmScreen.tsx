@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { DataList } from '../../components/DataList';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
 import RecordPathavarmModal from './RecordPathavarmModal';
 
@@ -14,6 +14,14 @@ interface Transaction {
 }
 
 const api = createRoleApi('church_admin');
+const COLOR = '#059669';
+
+const PAYMENT_ICON: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
+  cash: 'cash-outline',
+  bank_transfer: 'swap-horizontal-outline',
+  upi: 'phone-portrait-outline',
+  cheque: 'document-text-outline',
+};
 
 export default function ChurchAdminPathavarmScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -33,39 +41,69 @@ export default function ChurchAdminPathavarmScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+  useEffect(() => { fetchTransactions(); }, [fetchTransactions]);
 
   const total = transactions.reduce((sum, t) => sum + t.totalAmount, 0);
 
+  if (loading) {
+    return <View style={styles.center}><ActivityIndicator size="large" color={COLOR} /></View>;
+  }
+
   return (
     <View style={styles.container}>
-      <View style={styles.summary}>
-        <Text style={styles.summaryLabel}>Total Collected</Text>
-        <Text style={styles.summaryAmount}>₹{total.toLocaleString()}</Text>
-      </View>
-
-      <DataList
+      <FlatList
         data={transactions}
-        loading={loading}
-        refreshing={refreshing}
-        onRefresh={() => { setRefreshing(true); fetchTransactions(); }}
         keyExtractor={(t) => t._id}
-        emptyText="No Pathavarm contributions yet"
-        renderItem={(t) => (
-          <View style={styles.rowTop}>
-            <View>
-              <Text style={styles.name}>{t.memberId ? `${t.memberId.firstName} ${t.memberId.lastName}` : '-'}</Text>
-              <Text style={styles.meta}>{new Date(t.paymentDate).toLocaleDateString('en-IN')}</Text>
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchTransactions(); }} tintColor={COLOR} />}
+        ListHeaderComponent={
+          <View style={styles.banner}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerLabel}>Total Collected</Text>
+              <Text style={styles.bannerAmount}>₹{total.toLocaleString()}</Text>
             </View>
-            <Text style={styles.amount}>₹{t.totalAmount.toLocaleString()}</Text>
+            <View style={styles.bannerIcon}>
+              <Ionicons name="gift-outline" size={28} color="#fff" />
+            </View>
           </View>
-        )}
+        }
+        renderItem={({ item: t }) => {
+          const d = new Date(t.paymentDate);
+          const icon = PAYMENT_ICON[t.paymentMethod] ?? 'receipt-outline';
+          const memberName = t.memberId ? `${t.memberId.firstName} ${t.memberId.lastName}` : '-';
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardIconWrap}>
+                <Ionicons name="gift-outline" size={20} color={COLOR} />
+              </View>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardName}>{memberName}</Text>
+                <View style={styles.cardMeta}>
+                  <Ionicons name={icon} size={11} color="#9ca3af" />
+                  <Text style={styles.cardMethod}>{t.paymentMethod.replace(/_/g, ' ')}</Text>
+                  <Text style={styles.cardDot}>·</Text>
+                  <Text style={styles.cardDate}>
+                    {d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.cardAmount}>₹{t.totalAmount.toLocaleString()}</Text>
+            </View>
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <View style={styles.emptyCircle}>
+              <Ionicons name="gift-outline" size={36} color={COLOR} />
+            </View>
+            <Text style={styles.emptyTitle}>No contributions yet</Text>
+            <Text style={styles.emptySub}>Pathavarm contributions will appear here</Text>
+          </View>
+        }
       />
 
       <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
-        <Text style={styles.fabText}>+</Text>
+        <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
 
       <RecordPathavarmModal visible={modalVisible} onClose={() => setModalVisible(false)} onSaved={fetchTransactions} />
@@ -74,18 +112,51 @@ export default function ChurchAdminPathavarmScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  summary: { backgroundColor: '#fff', margin: 16, marginBottom: 0, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#f3f4f6' },
-  summaryLabel: { fontSize: 12, color: '#6b7280' },
-  summaryAmount: { fontSize: 22, fontWeight: '700', color: '#059669' },
-  rowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { fontWeight: '600', color: '#111827' },
-  meta: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-  amount: { fontWeight: '700', color: '#059669' },
-  fab: {
-    position: 'absolute', right: 20, bottom: 24, width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#059669', justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4,
+  container: { flex: 1, backgroundColor: '#f3f4f6' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  list: { padding: 16, paddingBottom: 100 },
+
+  banner: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#059669', borderRadius: 20, padding: 20, marginBottom: 16,
+    ...Platform.select({
+      ios: { shadowColor: '#059669', shadowOpacity: 0.4, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } },
+      android: { elevation: 8 },
+    }),
   },
-  fabText: { color: '#fff', fontSize: 28, lineHeight: 30 },
+  bannerLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 4 },
+  bannerAmount: { fontSize: 28, fontWeight: '800', color: '#fff' },
+  bannerIcon: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+
+  card: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#fff', borderRadius: 16, padding: 14, marginBottom: 10,
+    borderLeftWidth: 3, borderLeftColor: '#059669',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
+      android: { elevation: 2 },
+    }),
+  },
+  cardIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f0fdf4', justifyContent: 'center', alignItems: 'center' },
+  cardBody: { flex: 1 },
+  cardName: { fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 4 },
+  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  cardMethod: { fontSize: 11, color: '#9ca3af', textTransform: 'capitalize' },
+  cardDot: { fontSize: 11, color: '#d1d5db' },
+  cardDate: { fontSize: 11, color: '#9ca3af' },
+  cardAmount: { fontSize: 16, fontWeight: '800', color: '#059669' },
+
+  emptyState: { alignItems: 'center', gap: 10, paddingVertical: 50 },
+  emptyCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#f0fdf4', borderWidth: 2, borderColor: '#bbf7d0', justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: '#374151' },
+  emptySub: { fontSize: 13, color: '#9ca3af', textAlign: 'center' },
+
+  fab: {
+    position: 'absolute', right: 20, bottom: 24, width: 58, height: 58, borderRadius: 29,
+    backgroundColor: '#059669', justifyContent: 'center', alignItems: 'center',
+    ...Platform.select({
+      ios: { shadowColor: '#059669', shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
+      android: { elevation: 6 },
+    }),
+  },
 });
