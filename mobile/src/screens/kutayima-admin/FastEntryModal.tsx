@@ -257,6 +257,7 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
   };
 
   return (
+    <>
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView style={s.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={s.sheet}>
@@ -340,17 +341,18 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-
-      {!isEdit && (
-        <PickerModal
-          visible={pickerVisible}
-          title="Select Member"
-          options={members.map((m) => ({ value: m._id, label: `${m.firstName} ${m.lastName}` }))}
-          onSelect={setMemberId}
-          onClose={() => setPickerVisible(false)}
-        />
-      )}
     </Modal>
+
+    {!isEdit && (
+      <PickerModal
+        visible={pickerVisible}
+        title="Select Member"
+        options={members.map((m) => ({ value: m._id, label: `${m.firstName} ${m.lastName}` }))}
+        onSelect={setMemberId}
+        onClose={() => setPickerVisible(false)}
+      />
+    )}
+    </>
   );
 }
 

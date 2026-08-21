@@ -58,7 +58,7 @@ export default function KutayimaAdminMembersScreen() {
           </View>
         }
         renderItem={({ item: m }) => {
-          const initials = `${m.firstName[0] ?? ''}${m.lastName[0] ?? ''}`.toUpperCase();
+          const initials = `${m.firstName?.[0] ?? ''}${m.lastName?.[0] ?? ''}`.toUpperCase();
           const familyName = typeof m.houseId === 'object' ? m.houseId?.familyName : undefined;
           return (
             <View style={styles.card}>

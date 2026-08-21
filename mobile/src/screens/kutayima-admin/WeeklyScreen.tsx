@@ -5,9 +5,21 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
-import FastEntryModal, { Member, EditEntry } from './FastEntryModal';
+import FastEntryModal from './FastEntryModal';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
+
+interface Member { _id: string; firstName: string; lastName: string; }
+
+interface EditEntry {
+  memberId: string;
+  pendingActivityIds: string[];
+  hasContribution: boolean;
+  kurubana: number;
+  japamala: number;
+  sukruthajapam: number;
+  upavasam: number;
+}
 
 interface Contributor {
   _id: string;
@@ -154,14 +166,12 @@ const STATUS_CONTRIB: Record<string, { color: string; bg: string; label: string 
   rejected:         { color: '#dc2626', bg: '#fef2f2', label: 'Rejected' },
 };
 
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
-
-const ACT_PILLS: { key: keyof Pick<MemberWeekSummary, 'kurubana'|'japamala'|'sukruthajapam'|'upavasam'>; icon: IconName; label: string }[] = [
-  { key: 'kurubana',      icon: 'flame-outline',     label: 'Kurubana' },
-  { key: 'japamala',      icon: 'sync-outline',      label: 'Japamala' },
-  { key: 'sukruthajapam', icon: 'heart-outline',     label: 'Sukruthajapam' },
-  { key: 'upavasam',      icon: 'moon-outline',      label: 'Upavasam' },
-];
+const ACT_PILLS = [
+  { key: 'kurubana',      icon: 'flame-outline',  label: 'Kurubana' },
+  { key: 'japamala',      icon: 'sync-outline',   label: 'Japamala' },
+  { key: 'sukruthajapam', icon: 'heart-outline',  label: 'Sukruthajapam' },
+  { key: 'upavasam',      icon: 'moon-outline',   label: 'Upavasam' },
+] as const;
 
 function MemberCard({ item, weekActive, onEdit }: {
   item: MemberWeekSummary;
