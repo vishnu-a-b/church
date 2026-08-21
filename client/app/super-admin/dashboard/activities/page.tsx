@@ -12,6 +12,7 @@ interface SpiritualActivity {
   _id: string;
   memberId: { _id: string; firstName: string; lastName: string; churchId?: string; unitId?: string; bavanakutayimaId?: string; houseId?: string };
   activityType: string;
+  approvalStatus: 'pending_approval' | 'approved' | 'rejected';
   massDate?: string;
   massAttended?: boolean;
   fastingWeek?: string;
@@ -76,7 +77,7 @@ export default function SpiritualActivitiesPage() {
   const fetchActivities = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/spiritual-activities');
+      const response = await api.get('/spiritual-activities?includeAllStatuses=true');
       setActivities(response.data.data || []);
     } catch (error) {
       console.error('Error fetching activities:', error);
@@ -191,18 +192,13 @@ export default function SpiritualActivitiesPage() {
       ),
     },
     {
-      header: 'Verified',
-      cell: ({ row }) => (
-        row.original.verifiedBy ? (
-          <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-            ✓ Verified
-          </span>
-        ) : (
-          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
-            Pending
-          </span>
-        )
-      ),
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.original.approvalStatus;
+        if (status === 'approved') return <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">Approved</span>;
+        if (status === 'rejected') return <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">Rejected</span>;
+        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">Pending</span>;
+      },
     },
     {
       accessorKey: 'reportedAt',
