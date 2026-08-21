@@ -39,6 +39,80 @@ interface WeekDetail extends Week {
   groups: BkGroup[];
 }
 
+interface SpiritualActivity {
+  _id: string;
+  memberId: { _id: string; firstName: string; lastName: string } | null;
+  activityType: 'mass' | 'fasting' | 'prayer';
+  massDate?: string;
+  fastingWeek?: string;
+  fastingDays?: string[];
+  prayerType?: string;
+  prayerCount?: number;
+  prayerWeek?: string;
+  approvalStatus: 'pending_approval' | 'approved' | 'rejected';
+}
+
+interface MemberActivitySummary {
+  memberName: string;
+  kurubana: number;
+  japamala: number;
+  sukruthajapam: number;
+  upavasam: number;
+  hasPending: boolean;
+}
+
+function getWeekMonday(year: number, weekNumber: number): Date {
+  const jan4 = new Date(year, 0, 4);
+  const day = jan4.getDay() === 0 ? 7 : jan4.getDay();
+  const weekOneMonday = new Date(jan4.getTime() - (day - 1) * 86400000);
+  return new Date(weekOneMonday.getTime() + (weekNumber - 1) * 7 * 86400000);
+}
+
+function buildActivitySummaries(
+  activities: SpiritualActivity[],
+  weekStr: string,
+  weekStart: Date,
+  weekEnd: Date,
+): MemberActivitySummary[] {
+  const map = new Map<string, MemberActivitySummary>();
+  const ensure = (id: string, name: string) => {
+    if (!map.has(id)) map.set(id, { memberName: name, kurubana: 0, japamala: 0, sukruthajapam: 0, upavasam: 0, hasPending: false });
+    return map.get(id)!;
+  };
+  const weekStrAlt = `${weekStr.split('-W')[0]}-W${parseInt(weekStr.split('-W')[1], 10)}`;
+
+  for (const act of activities) {
+    if (!act.memberId) continue;
+    const mid = act.memberId._id;
+    const name = `${act.memberId.firstName} ${act.memberId.lastName}`.trim();
+
+    let inWeek = false;
+    if (act.activityType === 'mass' && act.massDate) {
+      const d = new Date(act.massDate);
+      inWeek = d >= weekStart && d <= weekEnd;
+    } else if (act.activityType === 'prayer') {
+      inWeek = act.prayerWeek === weekStr || act.prayerWeek === weekStrAlt;
+    } else if (act.activityType === 'fasting') {
+      inWeek = act.fastingWeek === weekStr || act.fastingWeek === weekStrAlt;
+    }
+    if (!inWeek) continue;
+
+    const s = ensure(mid, name);
+    if (act.approvalStatus === 'pending_approval') s.hasPending = true;
+
+    if (act.activityType === 'mass') {
+      s.kurubana += 1;
+    } else if (act.activityType === 'prayer') {
+      const count = act.prayerCount || 0;
+      if (act.prayerType === 'rosary') s.japamala += count;
+      else if (act.prayerType === 'divine_mercy') s.sukruthajapam += count;
+    } else if (act.activityType === 'fasting') {
+      s.upavasam += (act.fastingDays || []).length;
+    }
+  }
+  return Array.from(map.values());
+}
+
 const api = createRoleApi('church_admin');
 const COLOR = '#059669';
 
@@ -61,6 +135,7 @@ export default function ChurchAdminStothrakazhchaScreen() {
   const [selectedWeek, setSelectedWeek] = useState<WeekDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [weekActivities, setWeekActivities] = useState<SpiritualActivity[]>([]);
 
   const [editModal, setEditModal] = useState<{
     stothrakazhchaId: string; contributorSubId: string; current: number;
@@ -87,9 +162,14 @@ export default function ChurchAdminStothrakazhchaScreen() {
   const openWeek = async (week: Week) => {
     setDetailLoading(true);
     setSelectedWeek(null);
+    setWeekActivities([]);
     try {
-      const res = await api.get(`/stothrakazhcha/${week._id}/by-bavanakutayima`);
-      setSelectedWeek(res.data?.data || null);
+      const [detailRes, activitiesRes] = await Promise.all([
+        api.get(`/stothrakazhcha/${week._id}/by-bavanakutayima`),
+        api.get('/spiritual-activities?includeAllStatuses=true'),
+      ]);
+      setSelectedWeek(detailRes.data?.data || null);
+      setWeekActivities(activitiesRes.data?.data || []);
     } catch {
       Alert.alert('Error', 'Failed to load week details');
     } finally {
@@ -232,6 +312,11 @@ export default function ChurchAdminStothrakazhchaScreen() {
   const totalApproved = week.groups.reduce((s, g) => s + g.approvedCount, 0);
   const totalAmt = week.groups.reduce((s, g) => s + g.totalAmount, 0);
 
+  const actWeekStr = `${week.year}-W${String(week.weekNumber).padStart(2, '0')}`;
+  const actWeekStart = getWeekMonday(week.year, week.weekNumber);
+  const actWeekEnd = new Date(actWeekStart.getTime() + 6 * 86400000 + 86399999);
+  const activitySummaries = buildActivitySummaries(weekActivities, actWeekStr, actWeekStart, actWeekEnd);
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -335,6 +420,38 @@ export default function ChurchAdminStothrakazhchaScreen() {
               </View>
             );
           })
+        )}
+
+        {/* ── Spiritual Activities ── */}
+        <Text style={[styles.sectionLabel2, { marginTop: 24 }]}>
+          SPIRITUAL ACTIVITIES{activitySummaries.length > 0 ? ` (${activitySummaries.length} members)` : ''}
+        </Text>
+        {activitySummaries.length === 0 ? (
+          <View style={styles.emptyAct}>
+            <Ionicons name="leaf-outline" size={20} color="#d1d5db" />
+            <Text style={styles.emptyActText}>No activities recorded for this week</Text>
+          </View>
+        ) : (
+          <View style={styles.actCard}>
+            {activitySummaries.map((m, i) => (
+              <View key={`${m.memberName}_${i}`} style={[styles.actRow, i < activitySummaries.length - 1 && styles.actRowBorder]}>
+                <View style={styles.actLeft}>
+                  <Text style={styles.actMemberName}>{m.memberName}</Text>
+                  {m.hasPending && (
+                    <View style={styles.pendingPill}>
+                      <Text style={styles.pendingPillText}>Pending</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.actPills}>
+                  {m.kurubana > 0 && <View style={styles.actPill}><Ionicons name="flame-outline" size={11} color="#ea580c" /><Text style={styles.actPillText}>{m.kurubana}</Text></View>}
+                  {m.japamala > 0 && <View style={styles.actPill}><Ionicons name="sync-outline" size={11} color="#ea580c" /><Text style={styles.actPillText}>{m.japamala}</Text></View>}
+                  {m.sukruthajapam > 0 && <View style={styles.actPill}><Ionicons name="heart-outline" size={11} color="#ea580c" /><Text style={styles.actPillText}>{m.sukruthajapam}</Text></View>}
+                  {m.upavasam > 0 && <View style={styles.actPill}><Ionicons name="moon-outline" size={11} color="#ea580c" /><Text style={styles.actPillText}>{m.upavasam}d</Text></View>}
+                </View>
+              </View>
+            ))}
+          </View>
         )}
       </ScrollView>
 
@@ -469,6 +586,39 @@ const styles = StyleSheet.create({
   emptyCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#f0fdf4', borderWidth: 2, borderColor: '#bbf7d0', justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
   emptyTitle: { fontSize: 16, fontWeight: '700', color: '#374151' },
   emptySub: { fontSize: 13, color: '#9ca3af', textAlign: 'center' },
+
+  // Section label (detail view)
+  sectionLabel2: {
+    fontSize: 11, fontWeight: '700', color: '#6b7280',
+    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10,
+  },
+
+  // Activity summary card
+  emptyAct: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 8,
+  },
+  emptyActText: { color: '#9ca3af', fontSize: 13 },
+  actCard: {
+    backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', marginBottom: 14,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+      android: { elevation: 3 },
+    }),
+  },
+  actRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
+  actRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f9fafb' },
+  actLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  actMemberName: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  pendingPill: { backgroundColor: '#fffbeb', paddingVertical: 2, paddingHorizontal: 7, borderRadius: 999 },
+  pendingPillText: { fontSize: 10, fontWeight: '700', color: '#d97706' },
+  actPills: { flexDirection: 'row', gap: 4 },
+  actPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 2,
+    backgroundColor: '#fff7ed', borderRadius: 20,
+    paddingVertical: 3, paddingHorizontal: 7,
+  },
+  actPillText: { fontSize: 12, fontWeight: '700', color: '#111827' },
 
   // Edit modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
