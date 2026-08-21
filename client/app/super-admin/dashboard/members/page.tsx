@@ -221,11 +221,15 @@ export default function SuperAdminMembersPage() {
   const openEditModal = (member: Member) => {
     setEditingMember(member);
     setFormErrors({});
+    const churchId = typeof member.churchId === 'object' && member.churchId ? member.churchId._id : (member.churchId as string) || '';
+    const unitId = typeof member.unitId === 'object' && member.unitId ? member.unitId._id : (member.unitId as string) || '';
+    const bavanakutayimaId = typeof member.bavanakutayimaId === 'object' && member.bavanakutayimaId ? member.bavanakutayimaId._id : (member.bavanakutayimaId as string) || '';
+    const houseId = typeof member.houseId === 'object' && member.houseId ? member.houseId._id : (member.houseId as string) || '';
     setFormData({
-      church: typeof member.churchId === 'object' && member.churchId ? member.churchId._id : (member.churchId as string) || '',
-      unitId: typeof member.unitId === 'object' && member.unitId ? member.unitId._id : (member.unitId as string) || '',
-      bavanakutayimaId: typeof member.bavanakutayimaId === 'object' && member.bavanakutayimaId ? member.bavanakutayimaId._id : (member.bavanakutayimaId as string) || '',
-      houseId: typeof member.houseId === 'object' && member.houseId ? member.houseId._id : (member.houseId as string) || '',
+      church: churchId,
+      unitId,
+      bavanakutayimaId,
+      houseId,
       firstName: member.firstName || '',
       lastName: member.lastName || '',
       gender: (member as any).gender || 'male',
@@ -239,6 +243,9 @@ export default function SuperAdminMembersPage() {
       role: member.role || 'member',
       isActive: member.isActive,
     });
+    if (churchId) fetchFormUnits(churchId);
+    if (unitId) fetchFormBavanakutayimas(unitId);
+    if (bavanakutayimaId) fetchFormHouses(bavanakutayimaId);
     setShowAddModal(true);
   };
 
