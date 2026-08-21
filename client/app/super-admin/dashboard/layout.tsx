@@ -7,6 +7,7 @@ import { Sidebar, MenuItem } from '@/components/Sidebar';
 import { FiHome, FiUsers, FiActivity, FiDollarSign, FiSettings, FiUserCheck, FiAlertCircle, FiRepeat, FiRefreshCw } from 'react-icons/fi';
 import { BsBuilding, BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
 import { MdOutlineAccountTree, MdPayment } from 'react-icons/md';
+import { GiCandleFlame } from 'react-icons/gi';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -39,6 +40,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'Monthly Support', href: '/super-admin/dashboard/monthly-support', icon: FiRepeat },
     { name: 'EDV Sync', href: '/super-admin/dashboard/edv-sync', icon: FiRefreshCw },
     { name: 'Stothrakazhcha', href: '/super-admin/dashboard/stothrakazhcha', icon: MdPayment },
+    { name: 'Thirukkarmangal', href: '/super-admin/dashboard/thirukkarmangal', icon: GiCandleFlame },
     { name: 'Spiritual Activities', href: '/super-admin/dashboard/activities', icon: FiActivity },
     { name: 'News', href: '/super-admin/dashboard/news', icon: BsNewspaper },
     { name: 'Events', href: '/super-admin/dashboard/events', icon: BsCalendarEvent },
