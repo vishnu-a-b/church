@@ -31,9 +31,6 @@ const addMemberSchema = z
     isActive: z.boolean(),
   })
   .superRefine((data, ctx) => {
-    if ((data.username || data.password) && !data.email) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['email'], message: 'Email is required when adding login credentials' });
-    }
     if (data.password && data.password.length > 0 && data.password.length < 6) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['password'], message: 'Password must be at least 6 characters' });
     }
@@ -277,14 +274,20 @@ export default function SuperAdminMembersPage() {
     setSubmitting(true);
     try {
       if (editingMember) {
-        const { church, password, ...rest } = result.data;
+        const { church, password, username, email, ...rest } = result.data;
         const payload: any = { ...rest, churchId: church };
+        if (username) payload.username = username;
         if (password) payload.password = password;
+        if (email) payload.email = email;
         await api.put(`/members/${editingMember._id}`, payload);
         toast.success('Member updated successfully!');
       } else {
-        const { church, ...rest } = result.data;
-        await api.post('/members', { ...rest, churchId: church });
+        const { church, password, username, email, ...rest } = result.data;
+        const payload: any = { ...rest, churchId: church };
+        if (username) payload.username = username;
+        if (password) payload.password = password;
+        if (email) payload.email = email;
+        await api.post('/members', payload);
         toast.success('Member added successfully!');
       }
       setShowAddModal(false);
