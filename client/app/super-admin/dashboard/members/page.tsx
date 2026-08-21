@@ -221,10 +221,23 @@ export default function SuperAdminMembersPage() {
   const openEditModal = (member: Member) => {
     setEditingMember(member);
     setFormErrors({});
-    const churchId = typeof member.churchId === 'object' && member.churchId ? member.churchId._id : (member.churchId as string) || '';
-    const unitId = typeof member.unitId === 'object' && member.unitId ? member.unitId._id : (member.unitId as string) || '';
-    const bavanakutayimaId = typeof member.bavanakutayimaId === 'object' && member.bavanakutayimaId ? member.bavanakutayimaId._id : (member.bavanakutayimaId as string) || '';
-    const houseId = typeof member.houseId === 'object' && member.houseId ? member.houseId._id : (member.houseId as string) || '';
+
+    // houseId is deeply populated: houseId.bavanakutayimaId.unitId.churchId
+    const houseObj = typeof member.houseId === 'object' && member.houseId ? (member.houseId as any) : null;
+    const bkObj = houseObj?.bavanakutayimaId && typeof houseObj.bavanakutayimaId === 'object' ? houseObj.bavanakutayimaId : null;
+    const unitObj = bkObj?.unitId && typeof bkObj.unitId === 'object' ? bkObj.unitId : null;
+    const churchObj = unitObj?.churchId && typeof unitObj.churchId === 'object' ? unitObj.churchId : null;
+
+    const houseId = houseObj?._id || (member.houseId as string) || '';
+    const bavanakutayimaId = bkObj?._id || (typeof member.bavanakutayimaId === 'object' && member.bavanakutayimaId ? (member.bavanakutayimaId as any)._id : (member.bavanakutayimaId as string)) || '';
+    const unitId = unitObj?._id || (typeof member.unitId === 'object' && member.unitId ? (member.unitId as any)._id : (member.unitId as string)) || '';
+    const churchId = churchObj?._id || (typeof member.churchId === 'object' && member.churchId ? (member.churchId as any)._id : (member.churchId as string)) || '';
+
+    // Pre-populate dropdown options immediately from nested data so selection shows before async fetches complete
+    if (unitObj) setFormUnits([{ _id: unitObj._id, name: unitObj.name }]);
+    if (bkObj) setFormBavanakutayimas([{ _id: bkObj._id, name: bkObj.name }]);
+    if (houseObj) setFormHouses([{ _id: houseObj._id, familyName: houseObj.familyName }]);
+
     setFormData({
       church: churchId,
       unitId,
@@ -243,6 +256,8 @@ export default function SuperAdminMembersPage() {
       role: member.role || 'member',
       isActive: member.isActive,
     });
+
+    // Fetch full lists in background for complete dropdowns
     if (churchId) fetchFormUnits(churchId);
     if (unitId) fetchFormBavanakutayimas(unitId);
     if (bavanakutayimaId) fetchFormHouses(bavanakutayimaId);
