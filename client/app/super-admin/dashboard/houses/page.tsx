@@ -40,6 +40,7 @@ export default function HousesPage() {
     unit: '',
     bavanakutayima: '',
   });
+  const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingHouse, setEditingHouse] = useState<House | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -188,19 +189,21 @@ export default function HousesPage() {
   };
 
   const filteredHouses = houses.filter((house) => {
-    // Filter by unit
     if (filters.unit) {
       const bkId = resolveId(house.bavanakutayimaId);
       const bavanakutayima = allBavanakutayimas.find(bk => bk._id === bkId);
       if (!bavanakutayima || resolveId(bavanakutayima.unitId) !== filters.unit) return false;
     }
-    // Filter by bavanakutayima
     if (filters.bavanakutayima && resolveId(house.bavanakutayimaId) !== filters.bavanakutayima) return false;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      const matchesName = house.familyName.toLowerCase().includes(q);
+      const matchesId = (house.hierarchicalNumber || (house as any).uniqueId || '').toLowerCase().includes(q);
+      const matchesHead = (house.headOfFamily || '').toLowerCase().includes(q);
+      if (!matchesName && !matchesId && !matchesHead) return false;
+    }
     return true;
-  }).filter((house) =>
-    house.familyName.toLowerCase().includes('') ||
-    (house.hierarchicalNumber && house.hierarchicalNumber.toLowerCase().includes(''))
-  );
+  });
 
   return (
     <div className="space-y-6">
@@ -241,6 +244,18 @@ export default function HousesPage() {
           <Plus className="w-5 h-5 mr-2" />
           Add House
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <input
+          type="text"
+          placeholder="Search by family name, unique ID, head of family..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+        />
       </div>
 
       {/* Filters */}

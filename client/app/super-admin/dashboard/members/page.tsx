@@ -47,6 +47,8 @@ interface Member {
   email?: string;
   role: string;
   isActive: boolean;
+  uniqueId?: string;
+  hierarchicalNumber?: string;
   churchId?: { _id: string; name: string } | string;
   unitId?: { _id: string; name: string } | string;
   bavanakutayimaId?: { _id: string; name: string } | string;
@@ -318,6 +320,15 @@ export default function SuperAdminMembersPage() {
 
   const columns: ColumnDef<Member>[] = [
     {
+      accessorKey: 'uniqueId',
+      header: 'Unique ID',
+      cell: ({ row }) => (
+        <span className="text-xs font-mono font-semibold text-blue-600">
+          {row.original.uniqueId || row.original.hierarchicalNumber || '-'}
+        </span>
+      ),
+    },
+    {
       accessorKey: 'firstName',
       header: 'Name',
       cell: ({ row }) => (
@@ -528,7 +539,7 @@ export default function SuperAdminMembersPage() {
       <DataTable
         data={filteredMembers}
         columns={columns}
-        searchPlaceholder="Search members..."
+        searchPlaceholder="Search by name, unique ID, username..."
       />
 
       {/* Add Member Modal */}
