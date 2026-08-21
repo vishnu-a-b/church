@@ -61,7 +61,7 @@ function CountRow({ label, icon, value, onChange, max }: CountRowProps) {
         <View style={s.countIcon}>
           <Ionicons name={icon} size={16} color="#ea580c" />
         </View>
-        <Text style={s.countLabel}>{label}</Text>
+        <Text style={s.countLabel} numberOfLines={1}>{label}</Text>
       </View>
       <View style={s.stepper}>
         <TouchableOpacity style={s.stepBtn} activeOpacity={0.7}
@@ -75,6 +75,7 @@ function CountRow({ label, icon, value, onChange, max }: CountRowProps) {
           onBlur={handleBlur}
           keyboardType="number-pad"
           selectTextOnFocus
+          underlineColorAndroid="transparent"
         />
         <TouchableOpacity style={s.stepBtn} activeOpacity={0.7}
           onPress={() => commit(value + 1)}>
@@ -363,7 +364,7 @@ const s = StyleSheet.create({
   sheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, paddingBottom: 8, maxHeight: '92%',
+    padding: 20, paddingBottom: 8, maxHeight: '96%',
   },
 
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 },
@@ -400,36 +401,39 @@ const s = StyleSheet.create({
 
   activitiesCard: {
     borderRadius: 14, borderWidth: 1, borderColor: '#f3f4f6',
-    overflow: 'hidden', backgroundColor: '#fff',
+    backgroundColor: '#fff',
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
-      android: { elevation: 2 },
+      android: { elevation: 2, overflow: 'hidden' },
     }),
   },
   divider: { height: 1, backgroundColor: '#f3f4f6', marginHorizontal: 16 },
 
   countRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 10,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, paddingVertical: 10,
   },
-  countLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  countLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 },
   countIcon: {
     width: 32, height: 32, borderRadius: 8,
     backgroundColor: '#fff7ed', justifyContent: 'center', alignItems: 'center',
+    flexShrink: 0,
   },
-  countLabel: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  countLabel: { fontSize: 13, fontWeight: '600', color: '#111827', flexShrink: 1 },
 
-  stepper: { flexDirection: 'row', alignItems: 'center' },
+  stepper: { flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
   stepBtn: {
-    width: 34, height: 34, borderRadius: 8,
+    width: 36, height: 36, borderRadius: 8,
     backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center',
   },
-  stepBtnText: { fontSize: 20, fontWeight: '700', color: '#374151', lineHeight: 24 },
+  stepBtnText: { fontSize: 22, fontWeight: '700', color: '#374151', lineHeight: 26 },
   stepInput: {
-    width: 46, height: 34,
-    textAlign: 'center', fontSize: 16, fontWeight: '700', color: '#111827',
+    width: 52, height: 36,
+    textAlign: 'center', textAlignVertical: 'center',
+    fontSize: 16, fontWeight: '700', color: '#111827',
     borderBottomWidth: 1.5, borderBottomColor: '#ea580c',
-    marginHorizontal: 2,
+    marginHorizontal: 4,
+    padding: 0,
   },
 
   error: { color: '#dc2626', marginTop: 12, fontSize: 13 },
