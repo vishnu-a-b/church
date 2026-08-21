@@ -7,7 +7,7 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { ColumnDef } from '@tanstack/react-table';
-import { FiTrash, FiUserCheck, FiShield, FiPlus, FiX } from 'react-icons/fi';
+import { FiTrash, FiEdit2, FiUserCheck, FiShield, FiPlus, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
 
@@ -52,6 +52,9 @@ export default function UsersPage() {
     role: '',
   });
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ username: '', password: '', role: 'member', isActive: true });
   const [addUserForm, setAddUserForm] = useState(emptyAddUserForm);
   const [addUserErrors, setAddUserErrors] = useState<FieldErrors>({});
   const [membersWithoutLogin, setMembersWithoutLogin] = useState<any[]>([]);
@@ -100,6 +103,28 @@ export default function UsersPage() {
       console.error('Error fetching members:', error);
     } finally {
       setLoadingCandidates(false);
+    }
+  };
+
+  const openEditUserModal = (user: User) => {
+    setEditingUser(user);
+    setEditForm({ username: user.username, password: '', role: user.role, isActive: user.isActive });
+    setShowEditModal(true);
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    const payload: any = { username: editForm.username, role: editForm.role, isActive: editForm.isActive };
+    if (editForm.password) payload.password = editForm.password;
+    try {
+      await api.put(`/members/${editingUser._id}`, payload);
+      toast.success('User updated successfully!');
+      setShowEditModal(false);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update user');
     }
   };
 
@@ -250,6 +275,9 @@ export default function UsersPage() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
+          <button onClick={() => openEditUserModal(row.original)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit user">
+            <FiEdit2 />
+          </button>
           <button
             onClick={() => handleDeleteUser(row.original._id)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
@@ -369,6 +397,66 @@ export default function UsersPage() {
         columns={columns}
         searchPlaceholder="Search users by username or name..."
       />
+
+      {/* Edit User Modal */}
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="border-b px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">Edit User</h2>
+              <button onClick={() => setShowEditModal(false)} className="text-gray-500 hover:text-gray-700"><FiX size={24} /></button>
+            </div>
+            <form onSubmit={handleEditUser} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                <input
+                  type="text"
+                  value={editForm.username}
+                  onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Password <span className="text-gray-400 font-normal">(leave blank to keep unchanged)</span></label>
+                <input
+                  type="password"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  placeholder="min 6 characters"
+                />
+              </div>
+              <SearchableSelect
+                label="Role"
+                options={[
+                  { value: 'member', label: 'Member' },
+                  { value: 'kudumbakutayima_admin', label: 'Kudumbakutayima Admin' },
+                  { value: 'unit_admin', label: 'Unit Admin' },
+                  { value: 'church_admin', label: 'Church Admin' },
+                ]}
+                value={editForm.role}
+                onChange={(value) => setEditForm({ ...editForm, role: value })}
+                placeholder="Select role..."
+              />
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="editIsActive"
+                  checked={editForm.isActive}
+                  onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+                  className="h-4 w-4 text-purple-600 border-gray-300 rounded"
+                />
+                <label htmlFor="editIsActive" className="ml-2 text-sm text-gray-700">Active</label>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Update User</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add User Modal */}
       {showAddUserModal && (

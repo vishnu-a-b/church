@@ -7,7 +7,7 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { ColumnDef } from '@tanstack/react-table';
-import { FiTrash, FiUsers, FiPlus, FiX } from 'react-icons/fi';
+import { FiTrash, FiEdit2, FiUsers, FiPlus, FiX } from 'react-icons/fi';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
 
@@ -89,6 +89,7 @@ export default function SuperAdminMembersPage() {
     hasLogin: '',
   });
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(emptyMemberForm);
   const [formErrors, setFormErrors] = useState<FieldErrors>({});
@@ -210,7 +211,32 @@ export default function SuperAdminMembersPage() {
   };
 
   const openAddModal = () => {
+    setEditingMember(null);
     resetMemberForm();
+    setShowAddModal(true);
+  };
+
+  const openEditModal = (member: Member) => {
+    setEditingMember(member);
+    setFormErrors({});
+    setFormData({
+      church: typeof member.churchId === 'object' && member.churchId ? member.churchId._id : (member.churchId as string) || '',
+      unitId: typeof member.unitId === 'object' && member.unitId ? member.unitId._id : (member.unitId as string) || '',
+      bavanakutayimaId: typeof member.bavanakutayimaId === 'object' && member.bavanakutayimaId ? member.bavanakutayimaId._id : (member.bavanakutayimaId as string) || '',
+      houseId: typeof member.houseId === 'object' && member.houseId ? member.houseId._id : (member.houseId as string) || '',
+      firstName: member.firstName || '',
+      lastName: member.lastName || '',
+      gender: (member as any).gender || 'male',
+      dateOfBirth: (member as any).dateOfBirth ? new Date((member as any).dateOfBirth).toISOString().split('T')[0] : '',
+      phone: member.phone || '',
+      email: member.email || '',
+      baptismName: (member as any).baptismName || '',
+      relationToHead: (member as any).relationToHead || 'head',
+      username: member.username || '',
+      password: '',
+      role: member.role || 'member',
+      isActive: member.isActive,
+    });
     setShowAddModal(true);
   };
 
@@ -226,10 +252,19 @@ export default function SuperAdminMembersPage() {
 
     setSubmitting(true);
     try {
-      const { church, ...rest } = result.data;
-      await api.post('/members', { ...rest, churchId: church });
-      toast.success('Member added successfully!');
+      if (editingMember) {
+        const { church, password, ...rest } = result.data;
+        const payload: any = { ...rest, churchId: church };
+        if (password) payload.password = password;
+        await api.put(`/members/${editingMember._id}`, payload);
+        toast.success('Member updated successfully!');
+      } else {
+        const { church, ...rest } = result.data;
+        await api.post('/members', { ...rest, churchId: church });
+        toast.success('Member added successfully!');
+      }
       setShowAddModal(false);
+      setEditingMember(null);
       resetMemberForm();
       fetchMembers();
     } catch (error: any) {
@@ -349,6 +384,7 @@ export default function SuperAdminMembersPage() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-2">
+          <button onClick={() => openEditModal(row.original)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit member"><FiEdit2 /></button>
           <button onClick={() => handleDeleteMember(row.original._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Delete member"><FiTrash /></button>
         </div>
       ),
@@ -500,7 +536,7 @@ export default function SuperAdminMembersPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">Add New Member</h2>
+              <h2 className="text-xl font-bold text-gray-800">{editingMember ? 'Edit Member' : 'Add New Member'}</h2>
               <button
                 onClick={() => { setShowAddModal(false); resetMemberForm(); }}
                 className="text-gray-500 hover:text-gray-700"
@@ -692,7 +728,7 @@ export default function SuperAdminMembersPage() {
 
               {/* Login Credentials (Optional) */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Login Credentials (Optional)</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Login Credentials {editingMember ? '(leave password blank to keep unchanged)' : '(Optional)'}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
@@ -755,7 +791,7 @@ export default function SuperAdminMembersPage() {
                   disabled={submitting}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Adding...' : 'Add Member'}
+                  {submitting ? (editingMember ? 'Updating...' : 'Adding...') : (editingMember ? 'Update Member' : 'Add Member')}
                 </button>
               </div>
             </form>
