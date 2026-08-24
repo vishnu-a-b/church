@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, SectionList, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, SectionList, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
 import SplitEditorModal from './SplitEditorModal';
@@ -38,6 +38,7 @@ const COLOR = '#059669';
 export default function ChurchAdminThirukkarmangalScreen() {
   const [rites, setRites] = useState<Rite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [splitTarget, setSplitTarget] = useState<Rite | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<Rite | null>(null);
@@ -50,6 +51,7 @@ export default function ChurchAdminThirukkarmangalScreen() {
       console.error(error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -101,6 +103,7 @@ export default function ChurchAdminThirukkarmangalScreen() {
         sections={sections}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchRites(); }} tintColor={COLOR} />}
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
             <Ionicons name={section.icon as any} size={14} color={COLOR} />
@@ -142,8 +145,8 @@ export default function ChurchAdminThirukkarmangalScreen() {
         )}
       />
 
-      <SplitEditorModal visible={!!splitTarget} rite={splitTarget} onClose={() => setSplitTarget(null)} onSaved={fetchRites} />
-      <RecordRitePaymentModal visible={!!paymentTarget} rite={paymentTarget} onClose={() => setPaymentTarget(null)} onSaved={fetchRites} />
+      <SplitEditorModal visible={!!splitTarget} rite={splitTarget} onClose={() => setSplitTarget(null)} onSaved={() => { setSplitTarget(null); setRefreshing(true); fetchRites(); }} />
+      <RecordRitePaymentModal visible={!!paymentTarget} rite={paymentTarget} onClose={() => setPaymentTarget(null)} onSaved={() => { setPaymentTarget(null); setRefreshing(true); fetchRites(); }} />
     </View>
   );
 }

@@ -106,7 +106,7 @@ export default function ChurchAdminPathavarmScreen() {
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
 
-      <RecordPathavarmModal visible={modalVisible} onClose={() => setModalVisible(false)} onSaved={fetchTransactions} />
+      <RecordPathavarmModal visible={modalVisible} onClose={() => setModalVisible(false)} onSaved={() => { setModalVisible(false); setRefreshing(true); fetchTransactions(); }} />
     </View>
   );
 }

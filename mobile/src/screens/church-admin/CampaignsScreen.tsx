@@ -78,6 +78,7 @@ export default function ChurchAdminCampaignsScreen() {
     try {
       await api.post(`/campaigns/${selectedCampaign._id}/contribute`, { memberId, amount: value, paymentMethod });
       setSelectedCampaign(null);
+      setRefreshing(true);
       fetchCampaigns();
     } catch (e: any) {
       setFormError(e.response?.data?.error || 'Failed to record contribution');

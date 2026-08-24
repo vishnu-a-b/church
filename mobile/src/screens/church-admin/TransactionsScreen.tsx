@@ -110,6 +110,7 @@ export default function ChurchAdminTransactionsScreen() {
         notes: notes.trim() || undefined,
       });
       setModalVisible(false);
+      setRefreshing(true);
       fetchTransactions();
     } catch (e: any) {
       setFormError(e.response?.data?.error || 'Failed to record transaction');
