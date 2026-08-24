@@ -77,6 +77,7 @@ export default function MemberPathavarmScreen() {
     try {
       await api.post('/members/me/pathavarm', { amount: value, paymentMethod });
       setAmount('');
+      setRefreshing(true);
       fetchHistory();
     } catch (e: any) {
       setError(e.response?.data?.error || 'Failed to record contribution');

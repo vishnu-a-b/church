@@ -298,7 +298,7 @@ export default function MemberSpiritualActivitiesScreen() {
       <AddActivityModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onSaved={fetchActivities}
+        onSaved={() => { setModalVisible(false); setRefreshing(true); fetchActivities(); }}
       />
     </View>
   );
