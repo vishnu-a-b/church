@@ -40,7 +40,7 @@ const processDues = async () => {
         // counted as "already contributed" — a due must still be generated for them
         // until church management approves the entry.
         const contributorIds = (stothrakazhcha.contributors || [])
-          .filter(c => (c as any).approvalStatus === 'approved')
+          .filter(c => (c as any).approvalStatus === 'approved' && (c as any).entryType !== 'absent')
           .map(c => String(c.contributorId));
 
         if (stothrakazhcha.amountType === 'per_member') {

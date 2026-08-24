@@ -884,6 +884,8 @@ export const createMember = async (req: AuthRequest, res: Response, next: NextFu
       gender,
       phone,
       email,
+      isEmailVerified: email ? true : false,
+      emailNotificationsEnabled: email ? true : undefined,
       baptismName,
       relationToHead,
       isActive,
@@ -999,6 +1001,11 @@ export const updateMember = async (req: AuthRequest, res: Response, next: NextFu
     // If password is empty, remove it from update
     if (req.body.password === '') {
       delete req.body.password;
+    }
+    // Admin-set emails are trusted — mark verified and enable notifications automatically
+    if (req.body.email) {
+      req.body.isEmailVerified = true;
+      req.body.emailNotificationsEnabled = true;
     }
     // findByIdAndUpdate bypasses the model's pre('save') hashing hook, so a plaintext
     // password here would be stored as-is and could never match on login — hash it

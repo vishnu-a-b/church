@@ -255,6 +255,7 @@ export interface IStothrakazhcha extends Document {
     contributorId: Types.ObjectId;
     contributorType: 'Member' | 'House';
     amount: number;
+    entryType?: 'normal' | 'absent' | 'offering';
     transactionId?: Types.ObjectId;
     contributedAt: Date;
     approvalStatus?: ApprovalStatus;

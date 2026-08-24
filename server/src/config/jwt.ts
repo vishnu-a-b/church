@@ -13,7 +13,7 @@ export const generateAccessToken = (userId: string): string => {
 
 export const generateRefreshToken = (userId: string): string => {
   const secret = process.env.REFRESH_TOKEN_SECRET || 'default-refresh-secret-change-in-production';
-  const expiresIn = process.env.JWT_REFRESH_TOKEN_EXPIRE || '7d';
+  const expiresIn = process.env.JWT_REFRESH_TOKEN_EXPIRE || '90d';
 
   return jwt.sign({ id: userId }, secret, { expiresIn } as any);
 };

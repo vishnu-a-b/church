@@ -41,6 +41,17 @@ export interface MemberHierarchyInfo {
   hierarchicalNumber: string;
 }
 
+export interface SpiritualActivitySummary {
+  activityType: string;
+  approvalStatus: string;
+  massDate?: Date;
+  fastingWeek?: string;
+  fastingDays?: string[];
+  prayerType?: string;
+  prayerCount?: number;
+  prayerWeek?: string;
+}
+
 export interface TransactionDetails {
   receiptNumber: string;
   transactionType: string;
@@ -48,6 +59,7 @@ export interface TransactionDetails {
   paymentMethod: string;
   paymentDate: Date;
   campaignName?: string;
+  spiritualActivities?: SpiritualActivitySummary[];
 }
 
 // Common shape covering both Member and Donor recipients. Donors have no
@@ -470,6 +482,26 @@ export const sendTransactionNotification = async (
         </tr>
       </table>
     </div>
+
+    ${transactionDetails.spiritualActivities && transactionDetails.spiritualActivities.length > 0 ? `
+    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9333ea;">
+      <h3 style="margin-top: 0; color: #9333ea;">Spiritual Activities</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        ${transactionDetails.spiritualActivities.map((a) => {
+          const label = a.activityType === 'mass'
+            ? `Mass${a.massDate ? ' — ' + new Date(a.massDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}`
+            : a.activityType === 'fasting'
+            ? `Fasting${a.fastingWeek ? ' — ' + a.fastingWeek : ''}${a.fastingDays && a.fastingDays.length ? ' (' + a.fastingDays.join(', ') + ')' : ''}`
+            : `Prayer (${a.prayerType || 'other'})${a.prayerCount ? ' × ' + a.prayerCount : ''}${a.prayerWeek ? ' — ' + a.prayerWeek : ''}`;
+          const statusColor = a.approvalStatus === 'approved' ? '#16a34a' : a.approvalStatus === 'rejected' ? '#dc2626' : '#d97706';
+          return `<tr>
+            <td style="padding: 6px 0; font-size: 14px;">${label}</td>
+            <td style="padding: 6px 0; text-align: right; font-size: 12px; color: ${statusColor}; font-weight: bold; text-transform: capitalize;">${a.approvalStatus.replace('_', ' ')}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>
+    ` : ''}
 
     <p style="color: #666; font-size: 14px;">
       Thank you for your contribution to the church!

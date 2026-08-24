@@ -62,6 +62,11 @@ const stothrakazhchaSchema = new Schema<IStothrakazhcha>(
         required: true,
         min: 0,
       },
+      entryType: {
+        type: String,
+        enum: ['normal', 'absent', 'offering'],
+        default: 'normal',
+      },
       transactionId: {
         type: Schema.Types.ObjectId,
         ref: 'Transaction',
