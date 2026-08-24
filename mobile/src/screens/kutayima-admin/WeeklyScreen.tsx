@@ -589,7 +589,7 @@ export default function KutayimaAdminWeeklyScreen() {
                 .filter((c) => c.contributorType === 'Member' && c.approvalStatus !== 'rejected')
                 .map((c) => c.contributorId)}
               onClose={() => { setShowAddModal(false); setEditEntry(null); }}
-              onSaved={() => { setShowAddModal(false); setEditEntry(null); fetchAll(); }}
+              onSaved={() => { setShowAddModal(false); setEditEntry(null); setRefreshing(true); fetchAll(); }}
             />
           )}
 
