@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 
 const api = createRoleApi('church_admin');
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function SplitEditorModal({ visible, rite, onClose, onSaved }: Props) {
+  const insets = useSafeAreaInsets();
   const [entries, setEntries] = useState<SplitEntry[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -75,7 +77,7 @@ export default function SplitEditorModal({ visible, rite, onClose, onSaved }: Pr
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
           <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>{rite.nameEnglish}</Text>
             <Text style={styles.hint}>₹{rite.amount.toLocaleString()} — recipient split</Text>
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '700', color: '#111827' },
   hint: { fontSize: 12, color: '#6b7280', marginBottom: 16 },
   entryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 10 },
+  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 10, color: '#111827' },
   removeButton: { marginLeft: 8, padding: 8 },
   removeText: { color: '#dc2626', fontSize: 16 },
   addRow: { paddingVertical: 8 },

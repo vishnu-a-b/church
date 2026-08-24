@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Modal,
-  ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform,
+  ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 
@@ -88,12 +89,17 @@ function CountRow({ label, icon, value, onChange, max }: CountRowProps) {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export interface Member { _id: string; firstName: string; lastName: string; }
+export interface Member { _id: string; firstName: string; lastName: string; uniqueId?: string; }
+
+const shortId = (uid?: string) => uid ? uid.split('-').slice(1).map(s => String(+s.replace(/\D/g, ''))).join('-') : '';
 
 export interface EditEntry {
   memberId: string;
-  pendingActivityIds: string[];  // pending activity IDs to delete before re-saving
-  hasContribution: boolean;      // true = amount field disabled (already submitted)
+  pendingActivityIds: string[];
+  contributionId?: string;
+  existingAmount?: number;
+  existingEntryType?: 'normal' | 'absent' | 'offering';
+  hasApprovedContribution?: boolean;
   kurubana: number;
   japamala: number;
   sukruthajapam: number;
@@ -113,16 +119,20 @@ interface Props {
   week: Week;
   members: Member[];
   editEntry?: EditEntry | null;
+  enteredMemberIds?: string[];
   onClose: () => void;
   onSaved: () => void;
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
-export default function FastEntryModal({ visible, week, members, editEntry, onClose, onSaved }: Props) {
+export default function FastEntryModal({ visible, week, members, editEntry, enteredMemberIds, onClose, onSaved }: Props) {
+  const insets = useSafeAreaInsets();
   const [memberId, setMemberId] = useState('');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [amount, setAmount] = useState('');
+  const [isAbsent, setIsAbsent] = useState(false);
+  const [isOffering, setIsOffering] = useState(false);
   const [kurubana, setKurubana] = useState(0);
   const [japamala, setJapamala] = useState(0);
   const [sukruthajapam, setSukruthajapam] = useState(0);
@@ -141,7 +151,16 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
       setJapamala(editEntry.japamala);
       setSukruthajapam(editEntry.sukruthajapam);
       setUpavasam(editEntry.upavasam);
-      setAmount('');
+      if (editEntry.contributionId !== undefined) {
+        const et = editEntry.existingEntryType;
+        setIsAbsent(et === 'absent');
+        setIsOffering(et === 'offering');
+        setAmount(et === 'normal' || et === undefined ? String(editEntry.existingAmount ?? '') : '');
+      } else {
+        setAmount('');
+        setIsAbsent(false);
+        setIsOffering(false);
+      }
       setError('');
     }
   }, [visible, editEntry]);
@@ -151,6 +170,8 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
   const reset = () => {
     setMemberId('');
     setAmount('');
+    setIsAbsent(false);
+    setIsOffering(false);
     setKurubana(0);
     setJapamala(0);
     setSukruthajapam(0);
@@ -161,10 +182,12 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
   const handleSubmit = async () => {
     if (!memberId) return setError('Select a member');
 
-    const amt = amount.trim() ? Number(amount) : 0;
-    if (amount.trim() && amt <= 0) return setError('Enter a valid amount');
+    const amt = amount.trim() ? Number(amount) : -1;
+    if (amount.trim() && amt < 0) return setError('Enter a valid amount');
+    const effectiveAmt = amt < 0 ? 0 : amt;
 
-    const hasAny = amt > 0 || kurubana > 0 || japamala > 0 || sukruthajapam > 0 || upavasam > 0;
+    const hasStothra = !!editEntry?.contributionId || isOffering || isAbsent || effectiveAmt > 0 || (amount.trim() !== '' && effectiveAmt === 0);
+    const hasAny = hasStothra || kurubana > 0 || japamala > 0 || sukruthajapam > 0 || upavasam > 0;
     if (!hasAny) return setError('Enter at least one value');
 
     setError('');
@@ -174,27 +197,45 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
       // In edit mode, delete existing pending activities first
       if (isEdit && editEntry.pendingActivityIds.length > 0) {
         await Promise.all(
-          editEntry.pendingActivityIds.map((id) => api.delete(`/spiritual-activities/${id}`))
+          editEntry.pendingActivityIds.map((id) =>
+            api.delete(`/spiritual-activities/${id}`).catch((e: any) => {
+              if (e?.response?.status !== 404) throw e;
+            })
+          )
         );
       }
 
       const calls: Promise<any>[] = [];
 
-      // Stothrakazhcha contribution (skip if editing and already has contribution)
-      if (amt > 0 && (!isEdit || !editEntry?.hasContribution)) {
-        calls.push(
-          api.post(`/approvals/stothrakazhcha/${week._id}/mark-pending`, {
-            contributorId: memberId,
-            contributorType: 'Member',
-            amount: amt,
-          }),
-        );
+      // Stothrakazhcha contribution
+      if (editEntry?.contributionId) {
+        // Update existing pending contribution via PUT (kudumbakutayima_admin can edit pending amounts)
+        const entryType: 'normal' | 'absent' | 'offering' = isOffering ? 'offering' : isAbsent ? 'absent' : 'normal';
+        const newAmt = (isOffering || isAbsent) ? 0 : effectiveAmt;
+        calls.push(api.put(`/approvals/stothrakazhcha/${week._id}/contributors/${editEntry.contributionId}`, {
+          amount: newAmt, entryType,
+        }));
+      } else if (!editEntry?.hasApprovedContribution) {
+        // Create new contribution (add mode or edit mode with no existing contribution)
+        if (isOffering) {
+          calls.push(api.post(`/approvals/stothrakazhcha/${week._id}/mark-pending`, {
+            contributorId: memberId, contributorType: 'Member', amount: 0, entryType: 'offering',
+          }));
+        } else if (isAbsent || (amount.trim() !== '' && effectiveAmt === 0)) {
+          calls.push(api.post(`/approvals/stothrakazhcha/${week._id}/mark-pending`, {
+            contributorId: memberId, contributorType: 'Member', amount: 0, entryType: 'absent',
+          }));
+        } else if (effectiveAmt > 0) {
+          calls.push(api.post(`/approvals/stothrakazhcha/${week._id}/mark-pending`, {
+            contributorId: memberId, contributorType: 'Member', amount: effectiveAmt, entryType: 'normal',
+          }));
+        }
       }
 
       // Vishudha Kurubana (mass) — one record per attendance day
       if (kurubana > 0) {
         const monday = getWeekMonday(week.year, week.weekNumber);
-        for (let i = 0; i < Math.min(kurubana, 7); i++) {
+        for (let i = 0; i < kurubana; i++) {
           const massDate = new Date(monday.getTime() + i * 86400000);
           calls.push(
             api.post('/approvals/spiritual-activities/mark-pending', {
@@ -261,7 +302,7 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
     <>
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView style={s.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={s.sheet}>
+        <View style={[s.sheet, { paddingBottom: 20 + insets.bottom }]}>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
             {/* Header */}
@@ -281,43 +322,74 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
               <View style={s.lockedMember}>
                 <Ionicons name="person-outline" size={16} color="#6b7280" />
                 <Text style={s.lockedMemberText}>
-                  {selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : memberId}
+                  {selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}${shortId(selectedMember.uniqueId) ? ` (${shortId(selectedMember.uniqueId)})` : ''}` : memberId}
                 </Text>
               </View>
             ) : (
               <PickerField
-                label={selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : ''}
+                label={selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}${shortId(selectedMember.uniqueId) ? ` (${shortId(selectedMember.uniqueId)})` : ''}` : ''}
                 placeholder="Select member..."
                 onPress={() => setPickerVisible(true)}
               />
             )}
 
-            {/* Stothrakazhcha amount — hidden in edit when contribution already exists */}
-            {(!isEdit || !editEntry?.hasContribution) && (
+            {/* Stothrakazhcha amount */}
+            {!editEntry?.hasApprovedContribution ? (
               <>
                 <Text style={s.label}>
                   Stothrakazhcha Amount{week.defaultAmount > 0 ? ` (default ₹${week.defaultAmount})` : ''}
                 </Text>
                 <TextInput
-                  style={s.input}
-                  placeholder={week.defaultAmount > 0 ? `₹${week.defaultAmount}` : 'Amount'}
+                  style={[s.input, (isAbsent || isOffering) && s.inputDisabled]}
+                  placeholder={isAbsent ? '₹0 — Absent (due calculated)' : isOffering ? '₹0 — Offerings (no due)' : (week.defaultAmount > 0 ? `₹${week.defaultAmount}` : 'Amount (0 = due calculated)')}
                   keyboardType="numeric"
-                  value={amount}
+                  value={isAbsent || isOffering ? '' : amount}
                   onChangeText={setAmount}
+                  editable={!isAbsent && !isOffering}
                 />
+
+                {/* Absent / Offerings checkboxes */}
+                <View style={s.checkboxRow}>
+                  <TouchableOpacity
+                    style={s.checkboxItem}
+                    onPress={() => { setIsAbsent(!isAbsent); setIsOffering(false); setAmount(''); }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[s.checkbox, isAbsent && s.checkboxChecked]}>
+                      {isAbsent && <Ionicons name="checkmark" size={14} color="#fff" />}
+                    </View>
+                    <View>
+                      <Text style={s.checkboxLabel}>Absent</Text>
+                      <Text style={s.checkboxHint}>Due will be calculated</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={s.checkboxItem}
+                    onPress={() => { setIsOffering(!isOffering); setIsAbsent(false); setAmount(''); }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[s.checkbox, isOffering && s.checkboxCheckedGreen]}>
+                      {isOffering && <Ionicons name="checkmark" size={14} color="#fff" />}
+                    </View>
+                    <View>
+                      <Text style={s.checkboxLabel}>Offerings</Text>
+                      <Text style={s.checkboxHint}>No due calculation</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </>
-            )}
-            {isEdit && editEntry?.hasContribution && (
+            ) : (
               <View style={s.infoRow}>
-                <Ionicons name="information-circle-outline" size={15} color="#6b7280" />
-                <Text style={s.infoText}>Stothrakazhcha contribution already submitted</Text>
+                <Ionicons name="checkmark-circle-outline" size={15} color="#059669" />
+                <Text style={[s.infoText, { color: '#059669' }]}>Contribution already approved</Text>
               </View>
             )}
 
             {/* Activity counts */}
             <Text style={s.sectionLabel}>Spiritual Activities</Text>
             <View style={s.activitiesCard}>
-              <CountRow label="Vishudha Kurubana" icon="flame-outline" value={kurubana} onChange={setKurubana} max={7} />
+              <CountRow label="Vishudha Kurubana" icon="flame-outline" value={kurubana} onChange={setKurubana} />
               <View style={s.divider} />
               <CountRow label="Japamala" icon="sync-outline" value={japamala} onChange={setJapamala} />
               <View style={s.divider} />
@@ -348,8 +420,17 @@ export default function FastEntryModal({ visible, week, members, editEntry, onCl
       <PickerModal
         visible={pickerVisible}
         title="Select Member"
-        options={members.map((m) => ({ value: m._id, label: `${m.firstName} ${m.lastName}` }))}
-        onSelect={setMemberId}
+        options={members.map((m) => ({ value: m._id, label: `${m.firstName} ${m.lastName}${shortId(m.uniqueId) ? ` (${shortId(m.uniqueId)})` : ''}` }))}
+        onSelect={(id) => {
+          setMemberId(id);
+          if (enteredMemberIds?.includes(id)) {
+            const m = members.find((x) => x._id === id);
+            Alert.alert(
+              'Already Entered',
+              `${m?.firstName ?? 'This member'} already has an entry for this week.`,
+            );
+          }
+        }}
         onClose={() => setPickerVisible(false)}
       />
     )}
@@ -364,7 +445,7 @@ const s = StyleSheet.create({
   sheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, paddingBottom: 8, maxHeight: '96%',
+    padding: 20, maxHeight: '96%',
   },
 
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 },
@@ -377,6 +458,31 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10,
     padding: 13, color: '#111827', fontSize: 15,
   },
+  inputDisabled: {
+    backgroundColor: '#f9fafb', color: '#9ca3af',
+  },
+  checkboxRow: {
+    flexDirection: 'row', gap: 12, marginTop: 10,
+  },
+  checkboxItem: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#f9fafb', borderRadius: 10,
+    borderWidth: 1, borderColor: '#e5e7eb', padding: 10,
+  },
+  checkbox: {
+    width: 20, height: 20, borderRadius: 5,
+    borderWidth: 2, borderColor: '#d1d5db',
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#ef4444', borderColor: '#ef4444',
+  },
+  checkboxCheckedGreen: {
+    backgroundColor: '#059669', borderColor: '#059669',
+  },
+  checkboxLabel: { fontSize: 13, fontWeight: '700', color: '#111827' },
+  checkboxHint: { fontSize: 10, color: '#6b7280', marginTop: 1 },
 
   lockedMember: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

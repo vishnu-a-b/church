@@ -5,6 +5,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 
@@ -22,6 +23,7 @@ const COLOR = '#059669';
 const PAYMENT_METHODS = ['cash', 'bank_transfer', 'upi', 'cheque'];
 
 export default function ChurchAdminCampaignsScreen() {
+  const insets = useSafeAreaInsets();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,7 +144,7 @@ export default function ChurchAdminCampaignsScreen() {
 
       <Modal visible={!!selectedCampaign} animationType="slide" transparent onRequestClose={() => setSelectedCampaign(null)}>
         <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeaderRow}>
               <View style={styles.sheetHeaderIcon}>
@@ -262,7 +264,7 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 13, color: '#9ca3af', textAlign: 'center' },
 
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 36 },
+  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20 },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginBottom: 18 },
   sheetHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
   sheetHeaderIcon: { width: 44, height: 44, borderRadius: 13, backgroundColor: '#f0fdf4', justifyContent: 'center', alignItems: 'center' },

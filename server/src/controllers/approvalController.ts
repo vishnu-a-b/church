@@ -8,7 +8,7 @@ import Bavanakutayima from '../models/Bavanakutayima';
 import { AuthRequest } from '../types';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
-import { notifyTransactionMember } from '../services/transactionNotifier';
+import { notifyTransactionMember, notifyStothrakazhchaApproval } from '../services/transactionNotifier';
 
 // --- Step 1: Mark (kudumbakutayima_admin logs a new entry as pending) ---------------
 
@@ -68,8 +68,13 @@ export const markStothrakazhchaContributorPending = async (req: AuthRequest, res
 
     const { stothrakazhchaId } = req.params;
     const { contributorId, contributorType, amount } = req.body;
+    const entryType: 'normal' | 'absent' | 'offering' = req.body.entryType || 'normal';
 
-    if (!amount || amount <= 0) {
+    if (!['normal', 'absent', 'offering'].includes(entryType)) {
+      res.status(400).json({ success: false, error: 'entryType must be normal, absent, or offering' });
+      return;
+    }
+    if (entryType === 'normal' && (!amount || amount <= 0)) {
       res.status(400).json({ success: false, error: 'Valid amount is required' });
       return;
     }
@@ -114,7 +119,8 @@ export const markStothrakazhchaContributorPending = async (req: AuthRequest, res
     stothrakazhcha.contributors.push({
       contributorId,
       contributorType,
-      amount,
+      amount: entryType !== 'normal' ? 0 : amount,
+      entryType,
       contributedAt: new Date(),
       approvalStatus: 'pending_approval',
       markedBy: req.user._id,
@@ -348,44 +354,53 @@ export const approveStothrakazhchaContributor = async (req: AuthRequest, res: Re
 
     // Only now — on approval — does the contribution create a Transaction and count
     // toward totals, so a rejected/still-pending entry can never reach EDV or reports.
-    let member: any = null;
-    if (contributor.contributorType === 'Member') {
-      member = await Member.findById(contributor.contributorId);
-    }
-
-    const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const transaction = await Transaction.create({
-      receiptNumber,
-      transactionType: 'stothrakazhcha',
-      contributionMode: 'variable',
-      distribution: contributor.contributorType === 'Member' ? 'member_only' : 'house_only',
-      memberAmount: contributor.contributorType === 'Member' ? contributor.amount : 0,
-      houseAmount: contributor.contributorType === 'House' ? contributor.amount : 0,
-      totalAmount: contributor.amount,
-      churchId: stothrakazhcha.churchId,
-      unitId: member?.unitId,
-      houseId: contributor.contributorType === 'House' ? contributor.contributorId : member?.houseId,
-      memberId: contributor.contributorType === 'Member' ? contributor.contributorId : undefined,
-      paymentDate: new Date(),
-      paymentMethod: 'cash',
-      notes: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year} (approved)`,
-      createdBy: req.user._id,
-    });
+    // Absent/offering entries have amount=0 so no Transaction is created.
+    const entryType = (contributor as any).entryType || 'normal';
 
     contributor.approvalStatus = 'approved';
     contributor.approvedBy = req.user._id;
     contributor.approvedAt = new Date();
-    contributor.transactionId = transaction._id;
 
-    stothrakazhcha.totalCollected = (stothrakazhcha.totalCollected || 0) + contributor.amount;
-    stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
-    await stothrakazhcha.save();
+    if (contributor.amount > 0) {
+      let member: any = null;
+      if (contributor.contributorType === 'Member') {
+        member = await Member.findById(contributor.contributorId);
+      }
 
-    if (edvBridgeConfig.enabled) {
-      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+      const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const transaction = await Transaction.create({
+        receiptNumber,
+        transactionType: 'stothrakazhcha',
+        contributionMode: 'variable',
+        distribution: contributor.contributorType === 'Member' ? 'member_only' : 'house_only',
+        memberAmount: contributor.contributorType === 'Member' ? contributor.amount : 0,
+        houseAmount: contributor.contributorType === 'House' ? contributor.amount : 0,
+        totalAmount: contributor.amount,
+        churchId: stothrakazhcha.churchId,
+        unitId: member?.unitId,
+        houseId: contributor.contributorType === 'House' ? contributor.contributorId : member?.houseId,
+        memberId: contributor.contributorType === 'Member' ? contributor.contributorId : undefined,
+        paymentDate: new Date(),
+        paymentMethod: 'cash',
+        notes: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year} (approved)`,
+        createdBy: req.user._id,
+      });
+
+      contributor.transactionId = transaction._id;
+      stothrakazhcha.totalCollected = (stothrakazhcha.totalCollected || 0) + contributor.amount;
+      stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
+
+      if (edvBridgeConfig.enabled) {
+        pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+      }
+      notifyStothrakazhchaApproval(transaction, stothrakazhcha.weekNumber, stothrakazhcha.year);
+    } else if (entryType === 'offering') {
+      // Offering with 0 amount: counts as contributed (no due), but no financial transaction
+      stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
     }
+    // absent: no transaction, no totalContributors increment — dues processor will generate due
 
-    notifyTransactionMember(transaction, `Stothrakazhcha — Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
+    await stothrakazhcha.save();
 
     res.json({ success: true, data: stothrakazhcha });
   } catch (error) {
@@ -433,19 +448,21 @@ export const rejectStothrakazhchaContributor = async (req: AuthRequest, res: Res
   }
 };
 
-// Church admin edits the amount of a pending contribution before approving
+// Church admin or kudumbakutayima admin edits the amount of a pending contribution
 export const updateStothrakazhchaContributorAmount = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
-      res.status(403).json({ success: false, error: 'Only church admins can edit contributor amounts' });
+    const role = req.user?.role;
+    if (role !== 'church_admin' && role !== 'super_admin' && role !== 'kudumbakutayima_admin') {
+      res.status(403).json({ success: false, error: 'Not authorised to edit contributor amounts' });
       return;
     }
 
     const { stothrakazhchaId, contributorId } = req.params;
-    const { amount } = req.body;
+    const { amount, entryType } = req.body;
+    const newAmount = Number(amount);
 
-    if (!amount || Number(amount) <= 0) {
-      res.status(400).json({ success: false, error: 'Valid amount is required' });
+    if (isNaN(newAmount) || newAmount < 0) {
+      res.status(400).json({ success: false, error: 'Amount cannot be negative' });
       return;
     }
 
@@ -454,7 +471,7 @@ export const updateStothrakazhchaContributorAmount = async (req: AuthRequest, re
       res.status(404).json({ success: false, error: 'Stothrakazhcha not found' });
       return;
     }
-    if (req.user.role === 'church_admin' && (!req.user.churchId || String(stothrakazhcha.churchId) !== String(req.user.churchId))) {
+    if (role === 'church_admin' && (!req.user!.churchId || String(stothrakazhcha.churchId) !== String(req.user!.churchId))) {
       res.status(403).json({ success: false, error: 'Church admins can only edit entries from their own church' });
       return;
     }
@@ -469,7 +486,33 @@ export const updateStothrakazhchaContributorAmount = async (req: AuthRequest, re
       return;
     }
 
-    contributor.amount = Number(amount);
+    // kudumbakutayima_admin can only edit contributors from their own bavanakutayima
+    if (role === 'kudumbakutayima_admin') {
+      if (!req.user!.bavanakutayimaId) {
+        res.status(403).json({ success: false, error: 'Kudumbakutayima admin must have a bavanakutayima assigned' });
+        return;
+      }
+      if (contributor.contributorType === 'Member') {
+        const member = await Member.findById(contributor.contributorId).select('bavanakutayimaId');
+        if (!member || String(member.bavanakutayimaId) !== String(req.user!.bavanakutayimaId)) {
+          res.status(403).json({ success: false, error: 'Can only edit contributors from your own bavanakutayima' });
+          return;
+        }
+      } else {
+        const house = await House.findById(contributor.contributorId).select('bavanakutayimaId');
+        if (!house || String(house.bavanakutayimaId) !== String(req.user!.bavanakutayimaId)) {
+          res.status(403).json({ success: false, error: 'Can only edit contributors from your own bavanakutayima' });
+          return;
+        }
+      }
+    }
+
+    contributor.amount = newAmount;
+    if (entryType && ['normal', 'absent', 'offering'].includes(entryType)) {
+      contributor.entryType = entryType;
+    } else {
+      contributor.entryType = newAmount === 0 ? 'absent' : 'normal';
+    }
     await stothrakazhcha.save();
 
     res.json({ success: true, data: stothrakazhcha, message: 'Amount updated' });
@@ -530,41 +573,46 @@ export const approveStothrakazhchaByBavanakutayima = async (req: AuthRequest, re
 
     let totalApproved = 0;
     for (const contributor of toApprove) {
-      const member = contributor.contributorType === 'Member' ? membersById[String(contributor.contributorId)] : null;
-      const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-      const transaction = await Transaction.create({
-        receiptNumber,
-        transactionType: 'stothrakazhcha',
-        contributionMode: 'variable',
-        distribution: contributor.contributorType === 'Member' ? 'member_only' : 'house_only',
-        memberAmount: contributor.contributorType === 'Member' ? contributor.amount : 0,
-        houseAmount: contributor.contributorType === 'House' ? contributor.amount : 0,
-        totalAmount: contributor.amount,
-        churchId: stothrakazhcha.churchId,
-        unitId: member?.unitId,
-        houseId: contributor.contributorType === 'House' ? contributor.contributorId : member?.houseId,
-        memberId: contributor.contributorType === 'Member' ? contributor.contributorId : undefined,
-        paymentDate: new Date(),
-        paymentMethod: 'cash',
-        notes: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year} (batch approved)`,
-        createdBy: req.user._id,
-      });
+      const bkEntryType = contributor.entryType || 'normal';
 
       contributor.approvalStatus = 'approved';
       contributor.approvedBy = req.user._id;
       contributor.approvedAt = new Date();
-      contributor.transactionId = transaction._id;
-
-      stothrakazhcha.totalCollected = (stothrakazhcha.totalCollected || 0) + contributor.amount;
-      stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
       totalApproved++;
 
-      if (edvBridgeConfig.enabled) {
-        pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
-      }
+      if (contributor.amount > 0) {
+        const member = contributor.contributorType === 'Member' ? membersById[String(contributor.contributorId)] : null;
+        const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-      notifyTransactionMember(transaction, `Stothrakazhcha — Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
+        const transaction = await Transaction.create({
+          receiptNumber,
+          transactionType: 'stothrakazhcha',
+          contributionMode: 'variable',
+          distribution: contributor.contributorType === 'Member' ? 'member_only' : 'house_only',
+          memberAmount: contributor.contributorType === 'Member' ? contributor.amount : 0,
+          houseAmount: contributor.contributorType === 'House' ? contributor.amount : 0,
+          totalAmount: contributor.amount,
+          churchId: stothrakazhcha.churchId,
+          unitId: member?.unitId,
+          houseId: contributor.contributorType === 'House' ? contributor.contributorId : member?.houseId,
+          memberId: contributor.contributorType === 'Member' ? contributor.contributorId : undefined,
+          paymentDate: new Date(),
+          paymentMethod: 'cash',
+          notes: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year} (batch approved)`,
+          createdBy: req.user._id,
+        });
+
+        contributor.transactionId = transaction._id;
+        stothrakazhcha.totalCollected = (stothrakazhcha.totalCollected || 0) + contributor.amount;
+        stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
+
+        if (edvBridgeConfig.enabled) {
+          pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
+        }
+        notifyStothrakazhchaApproval(transaction, stothrakazhcha.weekNumber, stothrakazhcha.year);
+      } else if (bkEntryType === 'offering') {
+        stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
+      }
     }
 
     await stothrakazhcha.save();

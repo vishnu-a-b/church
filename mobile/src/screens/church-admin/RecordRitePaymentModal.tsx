@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 import { useAuth } from '../../context/AuthContext';
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved }: Props) {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [memberId, setMemberId] = useState('');
@@ -79,7 +81,7 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
           <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>Record Payment</Text>
             <Text style={styles.hint}>{rite.nameEnglish}</Text>
@@ -136,7 +138,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '700', color: '#111827' },
   hint: { fontSize: 13, color: '#6b7280', marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', color: '#4b5563', marginTop: 12, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12 },
+  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, color: '#111827' },
   previewBox: { backgroundColor: '#f9fafb', borderRadius: 8, padding: 12, marginTop: 12 },
   previewTitle: { fontWeight: '600', color: '#374151', marginBottom: 4, fontSize: 12 },
   previewLine: { fontSize: 12, color: '#6b7280' },

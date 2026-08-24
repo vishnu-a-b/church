@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function MarkContributionModal({ visible, stothrakazhchaId, amountType, defaultAmount, entities, onClose, onSaved }: Props) {
+  const insets = useSafeAreaInsets();
   const [entityId, setEntityId] = useState('');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [amount, setAmount] = useState('');
@@ -35,7 +37,7 @@ export default function MarkContributionModal({ visible, stothrakazhchaId, amoun
   const handleSubmit = async () => {
     const value = Number(amount);
     if (!entityId) return setError(`Select a ${amountType === 'per_member' ? 'member' : 'house'}`);
-    if (!value || value <= 0) return setError('Enter a valid amount');
+    if (isNaN(value) || value < 0) return setError('Amount cannot be negative');
 
     setError('');
     setSubmitting(true);
@@ -58,7 +60,7 @@ export default function MarkContributionModal({ visible, stothrakazhchaId, amoun
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Mark Sthothrakazhcha Contribution</Text>
           <Text style={styles.hint}>Counted only once church management approves</Text>
@@ -104,7 +106,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '700', color: '#111827' },
   hint: { fontSize: 12, color: '#6b7280', marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', color: '#4b5563', marginTop: 12, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12 },
+  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, color: '#111827' },
   error: { color: '#dc2626', marginTop: 12 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 20, marginBottom: 8 },
   cancelButton: { paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db' },

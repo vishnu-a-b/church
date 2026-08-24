@@ -4,6 +4,7 @@ import {
   ScrollView, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 
 const api = createRoleApi('member');
@@ -288,6 +289,7 @@ interface Props {
 }
 
 export default function AddActivityModal({ visible, onClose, onSaved }: Props) {
+  const insets = useSafeAreaInsets();
   const [activityType, setActivityType] = useState<ActivityType>('mass');
   const [massDate, setMassDate] = useState<Date | null>(null);
   const [fastingWeek, setFastingWeek] = useState<WeekValue | null>(null);
@@ -480,7 +482,7 @@ export default function AddActivityModal({ visible, onClose, onSaved }: Props) {
             )}
 
             {/* Actions */}
-            <View style={styles.actions}>
+            <View style={[styles.actions, { marginBottom: 20 + insets.bottom }]}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => { reset(); onClose(); }}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
@@ -562,7 +564,7 @@ const styles = StyleSheet.create({
   },
   errorText: { color: '#dc2626', fontSize: 13, flex: 1 },
 
-  actions: { flexDirection: 'row', gap: 10, marginTop: 20, marginBottom: 30 },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 20 },
   cancelBtn: {
     flex: 1, paddingVertical: 14, borderRadius: 14,
     borderWidth: 1.5, borderColor: '#e5e7eb', alignItems: 'center',

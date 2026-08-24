@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function RecordPathavarmModal({ visible, onClose, onSaved }: Props) {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [memberId, setMemberId] = useState('');
@@ -68,7 +70,7 @@ export default function RecordPathavarmModal({ visible, onClose, onSaved }: Prop
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Record Pathavarm Contribution</Text>
 
@@ -121,7 +123,7 @@ const styles = StyleSheet.create({
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
   title: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', color: '#4b5563', marginTop: 4, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12 },
+  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, color: '#111827' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: '#f3f4f6' },
   chipActive: { backgroundColor: '#059669' },

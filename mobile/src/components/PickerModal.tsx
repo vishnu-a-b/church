@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Option {
   value: string;
@@ -15,10 +16,11 @@ interface Props {
 }
 
 export function PickerModal({ visible, title, options, onSelect, onClose }: Props) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]}>
           <Text style={styles.title}>{title}</Text>
           <FlatList
             data={options}
