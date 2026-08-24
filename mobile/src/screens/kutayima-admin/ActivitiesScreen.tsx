@@ -110,7 +110,7 @@ export default function KutayimaAdminActivitiesScreen() {
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
 
-      <MarkActivityModal visible={modalVisible} onClose={() => setModalVisible(false)} onSaved={fetchActivities} />
+      <MarkActivityModal visible={modalVisible} onClose={() => setModalVisible(false)} onSaved={() => { setModalVisible(false); setRefreshing(true); fetchActivities(); }} />
     </View>
   );
 }
