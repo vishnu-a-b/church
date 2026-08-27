@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Modal,
-  ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
+  ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -420,17 +420,10 @@ export default function FastEntryModal({ visible, week, members, editEntry, ente
       <PickerModal
         visible={pickerVisible}
         title="Select Member"
-        options={members.map((m) => ({ value: m._id, label: `${m.firstName} ${m.lastName}${shortId(m.uniqueId) ? ` (${shortId(m.uniqueId)})` : ''}` }))}
-        onSelect={(id) => {
-          setMemberId(id);
-          if (enteredMemberIds?.includes(id)) {
-            const m = members.find((x) => x._id === id);
-            Alert.alert(
-              'Already Entered',
-              `${m?.firstName ?? 'This member'} already has an entry for this week.`,
-            );
-          }
-        }}
+        options={members
+          .filter((m) => !enteredMemberIds?.includes(m._id))
+          .map((m) => ({ value: m._id, label: `${m.firstName} ${m.lastName}${shortId(m.uniqueId) ? ` (${shortId(m.uniqueId)})` : ''}` }))}
+        onSelect={(id) => setMemberId(id)}
         onClose={() => setPickerVisible(false)}
       />
     )}

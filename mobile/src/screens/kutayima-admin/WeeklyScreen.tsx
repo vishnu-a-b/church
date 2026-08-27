@@ -153,6 +153,10 @@ export default function KutayimaAdminWeeklyScreen() {
   const [editEntry, setEditEntry] = useState<EditEntry | null>(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
+  // Submit all absent
+  const [submittingAbsent, setSubmittingAbsent] = useState(false);
+  const [allSubmitted, setAllSubmitted] = useState(false);
+
   // ── Data ──────────────────────────────────────────────────────────────────────
 
   const fetchAll = useCallback(async () => {
@@ -370,6 +374,32 @@ export default function KutayimaAdminWeeklyScreen() {
       uniqueId: m.uniqueId,
     }));
 
+    const enteredIds = new Set(entered.map((c) => c.contributorId));
+    const noEntryMembers = rawMembers.filter((m) => entityIdSet.has(m._id) && !enteredIds.has(m._id));
+
+    const handleSubmitAll = async () => {
+      setSubmittingAbsent(true);
+      try {
+        await Promise.all(
+          noEntryMembers.map((m) =>
+            api.post(`/approvals/stothrakazhcha/${week._id}/mark-pending`, {
+              contributorId: m._id,
+              contributorType: 'Member',
+              amount: 0,
+              entryType: 'absent',
+            })
+          )
+        );
+        setAllSubmitted(true);
+        setRefreshing(true);
+        fetchAll();
+      } catch {
+        // silent — individual failures won't block UI
+      } finally {
+        setSubmittingAbsent(false);
+      }
+    };
+
     return (
       <SafeAreaView style={[s.safeArea, { backgroundColor: COLOR }]} edges={['top']}>
         <View style={s.container}>
@@ -547,6 +577,32 @@ export default function KutayimaAdminWeeklyScreen() {
                   </View>
                 );
               })
+            )}
+
+            {/* Submit week — mark remaining members absent */}
+            {week.status === 'active' && (
+              allSubmitted ? (
+                <View style={s.submitAllBtn}>
+                  <Ionicons name="checkmark-circle" size={16} color="#fff" />
+                  <Text style={s.submitAllText}>Submitted</Text>
+                </View>
+              ) : noEntryMembers.length > 0 ? (
+                <TouchableOpacity
+                  style={[s.submitAllBtn, submittingAbsent && { opacity: 0.7 }]}
+                  onPress={handleSubmitAll}
+                  disabled={submittingAbsent}
+                  activeOpacity={0.85}
+                >
+                  {submittingAbsent ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done-outline" size={16} color="#fff" />
+                      <Text style={s.submitAllText}>Submit — Mark {noEntryMembers.length} as Absent</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : null
             )}
 
             {/* Submit cash CTA */}
@@ -754,7 +810,7 @@ export default function KutayimaAdminWeeklyScreen() {
                 {/* Action */}
                 <TouchableOpacity
                   style={s.viewBtn}
-                  onPress={() => setSelectedWeek(week)}
+                  onPress={() => { setAllSubmitted(false); setSelectedWeek(week); }}
                   activeOpacity={0.7}
                 >
                   <View style={s.viewBtnLeft}>
@@ -1002,6 +1058,20 @@ const s = StyleSheet.create({
   },
   pillNum: { fontSize: 12, fontWeight: '800', color: '#111827' },
   pillLbl: { fontSize: 11, color: '#6b7280' },
+
+  // Submit all absent
+  submitAllBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#059669', borderRadius: 16, padding: 16, marginTop: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000', shadowOpacity: 0.12,
+        shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+      },
+      android: { elevation: 5 },
+    }),
+  },
+  submitAllText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 
   // Submit cash
   submitCashBtn: {
