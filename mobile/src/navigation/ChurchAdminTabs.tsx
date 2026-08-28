@@ -8,6 +8,7 @@ import ChurchAdminPathavarmScreen from '../screens/church-admin/PathavarmScreen'
 import ChurchAdminMembersScreen from '../screens/church-admin/MembersScreen';
 import ChurchAdminTransactionsScreen from '../screens/church-admin/TransactionsScreen';
 import ChurchAdminCampaignsScreen from '../screens/church-admin/CampaignsScreen';
+import ChurchAdminHierarchyScreen from '../screens/church-admin/HierarchyScreen';
 import LogoutScreen from '../screens/LogoutScreen';
 
 const Tab = createBottomTabNavigator();
@@ -30,6 +31,8 @@ export default function ChurchAdminTabs() {
         options={{ tabBarLabel: 'Rites', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'ribbon' : 'ribbon-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Pathavarm" component={ChurchAdminPathavarmScreen}
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'gift' : 'gift-outline'} size={size} color={color} /> }} />
+      <Tab.Screen name="Groups" component={ChurchAdminHierarchyScreen}
+        options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'layers' : 'layers-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Members" component={ChurchAdminMembersScreen}
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'people' : 'people-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Transactions" component={ChurchAdminTransactionsScreen}

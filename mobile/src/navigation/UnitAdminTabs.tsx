@@ -1,8 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import UnitAdminBavanakutayimasScreen from '../screens/unit-admin/BavanakutayimasScreen';
-import UnitAdminHousesScreen from '../screens/unit-admin/HousesScreen';
+import UnitAdminHierarchyScreen from '../screens/unit-admin/HierarchyScreen';
 import UnitAdminMembersScreen from '../screens/unit-admin/MembersScreen';
 import UnitAdminTransactionsScreen from '../screens/unit-admin/TransactionsScreen';
 import UnitAdminActivitiesScreen from '../screens/unit-admin/ActivitiesScreen';
@@ -20,10 +19,8 @@ export default function UnitAdminTabs() {
         tabBarStyle: { borderTopColor: '#f3f4f6', borderTopWidth: 1 },
       }}
     >
-      <Tab.Screen name="Bavanakutayimas" component={UnitAdminBavanakutayimasScreen}
-        options={{ tabBarLabel: 'Kutayimas', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'grid' : 'grid-outline'} size={size} color={color} /> }} />
-      <Tab.Screen name="Houses" component={UnitAdminHousesScreen}
-        options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} /> }} />
+      <Tab.Screen name="Groups" component={UnitAdminHierarchyScreen}
+        options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'layers' : 'layers-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Members" component={UnitAdminMembersScreen}
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'people' : 'people-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Transactions" component={UnitAdminTransactionsScreen}
