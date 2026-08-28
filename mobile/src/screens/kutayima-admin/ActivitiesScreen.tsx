@@ -8,18 +8,11 @@ interface Activity {
   _id: string;
   memberId: { firstName: string; lastName: string } | null;
   activityType: string;
-  approvalStatus: 'pending_approval' | 'approved' | 'rejected';
   createdAt: string;
 }
 
 const api = createRoleApi('kudumbakutayima_admin');
 const COLOR = '#ea580c';
-
-const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  pending_approval: { color: '#d97706', bg: '#fffbeb', label: 'Pending' },
-  approved:         { color: '#059669', bg: '#f0fdf4', label: 'Approved' },
-  rejected:         { color: '#dc2626', bg: '#fef2f2', label: 'Rejected' },
-};
 
 const ACTIVITY_ICON: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
   holy_mass:     'flame-outline',
@@ -71,7 +64,6 @@ export default function KutayimaAdminActivitiesScreen() {
           </View>
         }
         renderItem={({ item: a }) => {
-          const status = STATUS_CONFIG[a.approvalStatus] || STATUS_CONFIG.approved;
           const icon = ACTIVITY_ICON[a.activityType] ?? 'leaf-outline';
           const d = new Date(a.createdAt);
           return (
@@ -88,9 +80,6 @@ export default function KutayimaAdminActivitiesScreen() {
                 <Text style={styles.cardDate}>
                   {d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </Text>
-              </View>
-              <View style={[styles.statusPill, { backgroundColor: status.bg }]}>
-                <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
               </View>
             </View>
           );
@@ -146,9 +135,6 @@ const styles = StyleSheet.create({
   cardName: { fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 2 },
   cardType: { fontSize: 12, color: '#6b7280', textTransform: 'capitalize', marginBottom: 2 },
   cardDate: { fontSize: 11, color: '#9ca3af' },
-  statusPill: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, marginRight: 12 },
-  statusText: { fontSize: 11, fontWeight: '700' },
-
   emptyState: { alignItems: 'center', gap: 10, paddingVertical: 50 },
   emptyCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#fff7ed', borderWidth: 2, borderColor: '#fed7aa', justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
   emptyTitle: { fontSize: 16, fontWeight: '700', color: '#374151' },

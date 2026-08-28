@@ -107,7 +107,6 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
         <View style={styles.sheet}>
           <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>Mark Spiritual Activity</Text>
-            <Text style={styles.hint}>Counted only once church management approves</Text>
 
             <Text style={styles.label}>Member</Text>
             <PickerField
@@ -164,7 +163,7 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveButton} onPress={handleSubmit} disabled={submitting}>
-                {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Mark as Pending</Text>}
+                {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save</Text>}
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -185,8 +184,7 @@ export default function MarkActivityModal({ visible, onClose, onSaved }: Props) 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
-  title: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  hint: { fontSize: 12, color: '#6b7280', marginBottom: 16 },
+  title: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 },
   label: { fontSize: 13, fontWeight: '600', color: '#4b5563', marginTop: 12, marginBottom: 6 },
   input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, color: '#111827' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

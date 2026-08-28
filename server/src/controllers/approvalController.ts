@@ -10,11 +10,10 @@ import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
 import { notifyTransactionMember, notifyStothrakazhchaApproval } from '../services/transactionNotifier';
 
-// --- Step 1: Mark (kudumbakutayima_admin logs a new entry as pending) ---------------
+// --- Step 1: Mark (kudumbakutayima_admin logs a new activity — auto-approved) --------
 
 // Kudumbakutayima Admin logs a new spiritual activity for a member in their group.
-// The entry starts as 'pending_approval' and does not count toward anything until
-// church management approves it — see approveSpiritualActivity below.
+// Activities are saved as 'approved' immediately — no church admin sign-off required.
 export const markSpiritualActivityPending = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     if (req.user?.role !== 'kudumbakutayima_admin') {
@@ -40,8 +39,9 @@ export const markSpiritualActivityPending = async (req: AuthRequest, res: Respon
     const activity = await SpiritualActivity.create({
       ...req.body,
       selfReported: false,
-      approvalStatus: 'pending_approval',
+      approvalStatus: 'approved',
       markedBy: req.user._id,
+      approvedAt: new Date(),
     });
 
     const populated = await SpiritualActivity.findById(activity._id).populate('memberId', 'firstName lastName');

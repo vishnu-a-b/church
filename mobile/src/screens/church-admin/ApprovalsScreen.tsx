@@ -6,14 +6,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
 
-interface SpiritualActivity {
-  _id: string;
-  activityType: string;
-  memberId: { firstName: string; lastName: string } | null;
-  markedBy: { username: string; email: string } | null;
-  createdAt: string;
-}
-
 interface PendingContribution {
   stothrakazhchaId: string;
   weekNumber: number;
@@ -25,6 +17,7 @@ interface PendingContribution {
     _id: string;
     contributorType: 'Member' | 'House';
     amount: number;
+    entryType?: 'normal' | 'absent' | 'offering';
     contributedAt: string;
   };
 }
@@ -42,7 +35,6 @@ const api = createRoleApi('church_admin');
 const COLOR = '#059669';
 
 export default function ChurchAdminApprovalsScreen() {
-  const [activities, setActivities] = useState<SpiritualActivity[]>([]);
   const [bkGroups, setBkGroups] = useState<BkGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,7 +46,6 @@ export default function ChurchAdminApprovalsScreen() {
   const fetchPending = useCallback(async () => {
     try {
       const response = await api.get('/approvals/pending');
-      setActivities(response.data?.data?.spiritualActivities || []);
       const contributions: PendingContribution[] = response.data?.data?.stothrakazhchaContributions || [];
       const grouped: Record<string, BkGroup> = {};
       for (const c of contributions) {
@@ -81,15 +72,6 @@ export default function ChurchAdminApprovalsScreen() {
   }, []);
 
   useEffect(() => { fetchPending(); }, [fetchPending]);
-
-  const decideActivity = (id: string, decision: 'approve' | 'reject') => {
-    setActingId(id);
-    api
-      .post(`/approvals/spiritual-activities/${id}/${decision}`, {})
-      .then(fetchPending)
-      .catch((e) => Alert.alert('Error', e.response?.data?.error || `Failed to ${decision}`))
-      .finally(() => setActingId(null));
-  };
 
   const openEditModal = (stothrakazhchaId: string, contributorSubId: string, current: number) => {
     setEditModal({ contributorSubId, stothrakazhchaId, current });
@@ -139,7 +121,7 @@ export default function ChurchAdminApprovalsScreen() {
     return <View style={styles.center}><ActivityIndicator size="large" color={COLOR} /></View>;
   }
 
-  const totalPending = activities.length + bkGroups.reduce((s, g) => s + g.entries.length, 0);
+  const totalPending = bkGroups.reduce((s, g) => s + g.entries.length, 0);
 
   return (
     <ScrollView
@@ -160,58 +142,8 @@ export default function ChurchAdminApprovalsScreen() {
         </View>
       </View>
 
-      {/* Spiritual Activities */}
-      <Text style={styles.sectionLabel}>SPIRITUAL ACTIVITIES ({activities.length})</Text>
-      {activities.length === 0 ? (
-        <View style={styles.emptySection}>
-          <Ionicons name="leaf-outline" size={22} color="#d1d5db" />
-          <Text style={styles.emptyText}>No pending activities</Text>
-        </View>
-      ) : (
-        activities.map((a) => (
-          <View key={a._id} style={styles.actCard}>
-            <View style={styles.actIconWrap}>
-              <Ionicons name="leaf-outline" size={18} color={COLOR} />
-            </View>
-            <View style={styles.actBody}>
-              <Text style={styles.actName}>
-                {a.memberId ? `${a.memberId.firstName} ${a.memberId.lastName}` : 'Unknown'}
-              </Text>
-              <Text style={styles.actType}>{a.activityType.replace(/_/g, ' ')}</Text>
-              <Text style={styles.actMeta}>
-                Marked by {a.markedBy?.username || a.markedBy?.email || 'unknown'}
-              </Text>
-            </View>
-            <View style={styles.actActions}>
-              <TouchableOpacity
-                style={styles.rejectBtn}
-                disabled={actingId === a._id}
-                onPress={() => decideActivity(a._id, 'reject')}
-              >
-                <Ionicons name="close" size={16} color="#dc2626" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.approveBtn, actingId === a._id && { opacity: 0.6 }]}
-                disabled={actingId === a._id}
-                onPress={() => decideActivity(a._id, 'approve')}
-              >
-                {actingId === a._id
-                  ? <ActivityIndicator size="small" color="#fff" />
-                  : (
-                    <>
-                      <Ionicons name="checkmark" size={14} color="#fff" />
-                      <Text style={styles.approveBtnText}>Approve</Text>
-                    </>
-                  )
-                }
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))
-      )}
-
       {/* Stothrakazhcha by BK group */}
-      <Text style={[styles.sectionLabel, { marginTop: 20 }]}>
+      <Text style={styles.sectionLabel}>
         STOTHRAKAZHCHA ({bkGroups.reduce((s, g) => s + g.entries.length, 0)})
       </Text>
       {bkGroups.length === 0 ? (
@@ -251,18 +183,35 @@ export default function ChurchAdminApprovalsScreen() {
                   }
                 </TouchableOpacity>
               </View>
-              {group.entries.map((entry) => (
-                <View key={entry.contributor._id} style={styles.entryRow}>
-                  <Text style={styles.entryName}>{entry.contributorName}</Text>
-                  <TouchableOpacity
-                    style={styles.amountPill}
-                    onPress={() => openEditModal(entry.stothrakazhchaId, entry.contributor._id, entry.contributor.amount)}
-                  >
-                    <Text style={styles.amountText}>₹{entry.contributor.amount.toLocaleString('en-IN')}</Text>
-                    <Ionicons name="create-outline" size={12} color={COLOR} style={{ marginLeft: 4 }} />
-                  </TouchableOpacity>
-                </View>
-              ))}
+              {group.entries.map((entry) => {
+                const et = entry.contributor.entryType;
+                const isNonNormal = et === 'absent' || et === 'offering';
+                return (
+                  <View key={entry.contributor._id} style={styles.entryRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.entryName}>{entry.contributorName}</Text>
+                      {isNonNormal && (
+                        <View style={[styles.entryTypeBadge, et === 'absent' ? styles.badgeAbsent : styles.badgeOffering]}>
+                          <Text style={[styles.entryTypeBadgeText, et === 'absent' ? styles.badgeAbsentText : styles.badgeOfferingText]}>
+                            {et === 'absent' ? 'Absent · Due calculated' : 'Offerings · No due'}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    {isNonNormal ? (
+                      <Text style={styles.amountZero}>₹0</Text>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.amountPill}
+                        onPress={() => openEditModal(entry.stothrakazhchaId, entry.contributor._id, entry.contributor.amount)}
+                      >
+                        <Text style={styles.amountText}>₹{entry.contributor.amount.toLocaleString('en-IN')}</Text>
+                        <Ionicons name="create-outline" size={12} color={COLOR} style={{ marginLeft: 4 }} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
             </View>
           );
         })
@@ -334,34 +283,6 @@ const styles = StyleSheet.create({
   },
   emptyText: { color: '#9ca3af', fontSize: 13 },
 
-  // Activity card
-  actCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#fff', borderRadius: 16, padding: 14, marginBottom: 10,
-    borderLeftWidth: 3, borderLeftColor: '#059669',
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
-      android: { elevation: 2 },
-    }),
-  },
-  actIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f0fdf4', justifyContent: 'center', alignItems: 'center' },
-  actBody: { flex: 1 },
-  actName: { fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 2 },
-  actType: { fontSize: 12, color: '#059669', fontWeight: '600', textTransform: 'capitalize', marginBottom: 2 },
-  actMeta: { fontSize: 11, color: '#9ca3af' },
-  actActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rejectBtn: {
-    width: 34, height: 34, borderRadius: 10,
-    backgroundColor: '#fef2f2', borderWidth: 1.5, borderColor: '#fecaca',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  approveBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#059669', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10,
-    minWidth: 80, justifyContent: 'center',
-  },
-  approveBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-
   // BK group card
   groupCard: {
     backgroundColor: '#fff', borderRadius: 16, marginBottom: 14, overflow: 'hidden',
@@ -396,6 +317,17 @@ const styles = StyleSheet.create({
     borderRadius: 20, borderWidth: 1, borderColor: '#bbf7d0',
   },
   amountText: { fontSize: 14, fontWeight: '700', color: '#059669' },
+  amountZero: { fontSize: 14, fontWeight: '700', color: '#9ca3af' },
+
+  entryTypeBadge: {
+    alignSelf: 'flex-start', paddingVertical: 2, paddingHorizontal: 8,
+    borderRadius: 10, marginTop: 3,
+  },
+  badgeAbsent: { backgroundColor: '#fee2e2' },
+  badgeOffering: { backgroundColor: '#dcfce7' },
+  entryTypeBadgeText: { fontSize: 11, fontWeight: '600' },
+  badgeAbsentText: { color: '#b91c1c' },
+  badgeOfferingText: { color: '#15803d' },
 
   // Edit modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
