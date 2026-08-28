@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { Heart, Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Heart, Plus } from 'lucide-react';
 
 interface Member {
   _id: string;
@@ -15,7 +15,6 @@ interface Activity {
   _id: string;
   memberId: { firstName: string; lastName: string } | null;
   activityType: string;
-  approvalStatus: 'pending_approval' | 'approved' | 'rejected';
   createdAt: string;
 }
 
@@ -104,7 +103,7 @@ export default function KutayimaAdminActivitiesPage() {
     setSubmitting(true);
     try {
       await api.post('/approvals/spiritual-activities/mark-pending', body);
-      toast.success('Marked as pending approval');
+      toast.success('Activity marked successfully');
       setShowModal(false);
       resetForm();
       fetchMyMarkedActivities();
@@ -115,18 +114,12 @@ export default function KutayimaAdminActivitiesPage() {
     }
   };
 
-  const statusBadge = (status: string) => {
-    if (status === 'approved') return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle className="w-3 h-3" /> Approved</span>;
-    if (status === 'rejected') return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"><XCircle className="w-3 h-3" /> Rejected</span>;
-    return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800"><Clock className="w-3 h-3" /> Pending</span>;
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Spiritual Activities</h2>
-          <p className="text-gray-600">Mark entries for your group — counted only once church management approves</p>
+          <p className="text-gray-600">Mark spiritual activities for members in your group</p>
         </div>
         <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
           <Plus className="w-5 h-5" /> Mark Activity
@@ -139,21 +132,19 @@ export default function KutayimaAdminActivitiesPage() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marked</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
-              <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={3} className="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
             ) : activities.length === 0 ? (
-              <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-500">No activities marked yet</td></tr>
+              <tr><td colSpan={3} className="px-6 py-4 text-center text-gray-500">No activities marked yet</td></tr>
             ) : (
               activities.map((a) => (
                 <tr key={a._id}>
                   <td className="px-6 py-4 text-sm text-gray-900">{a.memberId ? `${a.memberId.firstName} ${a.memberId.lastName}` : '-'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600 capitalize">{a.activityType}</td>
-                  <td className="px-6 py-4">{statusBadge(a.approvalStatus)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{new Date(a.createdAt).toLocaleDateString('en-IN')}</td>
                 </tr>
               ))
@@ -219,7 +210,7 @@ export default function KutayimaAdminActivitiesPage() {
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => { setShowModal(false); resetForm(); }} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
               <button onClick={handleSubmit} disabled={submitting} className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50">
-                {submitting ? 'Marking...' : 'Mark as Pending'}
+                {submitting ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>
