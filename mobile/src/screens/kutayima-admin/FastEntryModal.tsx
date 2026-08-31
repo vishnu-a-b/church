@@ -139,9 +139,16 @@ export default function FastEntryModal({ visible, week, members, editEntry, ente
   const [upavasam, setUpavasam] = useState(0);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // tracks members handled in this session (saved or skipped) for auto-navigation
+  const [localDoneIds, setLocalDoneIds] = useState<string[]>([]);
 
   const isEdit = !!editEntry;
   const weekStr = `${week.year}-W${String(week.weekNumber).padStart(2, '0')}`;
+
+  // Reset session tracking when modal opens/closes
+  useEffect(() => {
+    if (!visible) setLocalDoneIds([]);
+  }, [visible]);
 
   // Pre-fill when entering edit mode
   useEffect(() => {
@@ -167,8 +174,20 @@ export default function FastEntryModal({ visible, week, members, editEntry, ente
 
   const selectedMember = members.find((m) => m._id === memberId);
 
-  const reset = () => {
-    setMemberId('');
+  // Returns the next unentered member after currentId, or null if all done
+  const getNextMember = (currentId: string, extraDoneIds: string[]): Member | null => {
+    const allDone = new Set([...(enteredMemberIds || []), ...localDoneIds, ...extraDoneIds]);
+    const idx = members.findIndex((m) => m._id === currentId);
+    for (let i = idx + 1; i < members.length; i++) {
+      if (!allDone.has(members[i]._id)) return members[i];
+    }
+    for (let i = 0; i < idx; i++) {
+      if (!allDone.has(members[i]._id)) return members[i];
+    }
+    return null;
+  };
+
+  const resetFields = () => {
     setAmount('');
     setIsAbsent(false);
     setIsOffering(false);
@@ -178,6 +197,26 @@ export default function FastEntryModal({ visible, week, members, editEntry, ente
     setUpavasam(0);
     setError('');
   };
+
+  const reset = () => {
+    setMemberId('');
+    resetFields();
+  };
+
+  // Advance to next member or close if all done
+  const advanceTo = (next: Member | null) => {
+    resetFields();
+    if (next) {
+      setMemberId(next._id);
+    } else {
+      reset();
+      onClose();
+    }
+  };
+
+  // Remaining count for display
+  const allDoneSet = new Set([...(enteredMemberIds || []), ...localDoneIds]);
+  const remainingCount = members.filter((m) => !allDoneSet.has(m._id)).length;
 
   const handleSubmit = async () => {
     if (!memberId) return setError('Select a member');
@@ -288,14 +327,28 @@ export default function FastEntryModal({ visible, week, members, editEntry, ente
 
       if (calls.length > 0) await Promise.all(calls);
 
-      reset();
       onSaved();
-      onClose();
+
+      if (isEdit) {
+        reset();
+        onClose();
+      } else {
+        const next = getNextMember(memberId, [memberId]);
+        setLocalDoneIds((prev) => [...prev, memberId]);
+        advanceTo(next);
+      }
     } catch (e: any) {
       setError(e.response?.data?.error || 'Failed to save entry');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSkip = () => {
+    if (!memberId) { onClose(); return; }
+    const next = getNextMember(memberId, [memberId]);
+    setLocalDoneIds((prev) => [...prev, memberId]);
+    advanceTo(next);
   };
 
   return (
@@ -309,7 +362,10 @@ export default function FastEntryModal({ visible, week, members, editEntry, ente
             <View style={s.header}>
               <View>
                 <Text style={s.title}>{isEdit ? 'Edit Entry' : 'Weekly Entry'}</Text>
-                <Text style={s.subtitle}>Week {week.weekNumber}, {week.year}</Text>
+                <Text style={s.subtitle}>
+                  Week {week.weekNumber}, {week.year}
+                  {!isEdit && remainingCount > 0 ? `  ·  ${remainingCount} remaining` : ''}
+                </Text>
               </View>
               <TouchableOpacity style={s.closeBtn} onPress={() => { reset(); onClose(); }}>
                 <Ionicons name="close" size={20} color="#6b7280" />
@@ -404,10 +460,16 @@ export default function FastEntryModal({ visible, week, members, editEntry, ente
               <TouchableOpacity style={s.cancelBtn} onPress={() => { reset(); onClose(); }}>
                 <Text style={s.cancelText}>Cancel</Text>
               </TouchableOpacity>
+              {!isEdit && memberId ? (
+                <TouchableOpacity style={s.skipBtn} onPress={handleSkip} disabled={submitting}>
+                  <Ionicons name="play-skip-forward-outline" size={15} color="#6b7280" />
+                  <Text style={s.skipText}>Skip</Text>
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity style={s.saveBtn} onPress={handleSubmit} disabled={submitting}>
                 {submitting
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={s.saveText}>{isEdit ? 'Update Entry' : 'Save Entry'}</Text>}
+                  : <Text style={s.saveText}>{isEdit ? 'Update Entry' : 'Save & Next'}</Text>}
               </TouchableOpacity>
             </View>
 
@@ -537,16 +599,23 @@ const s = StyleSheet.create({
 
   error: { color: '#dc2626', marginTop: 12, fontSize: 13 },
 
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 20, marginBottom: 16 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 20, marginBottom: 16 },
   cancelBtn: {
-    paddingVertical: 12, paddingHorizontal: 20,
+    paddingVertical: 12, paddingHorizontal: 16,
     borderRadius: 10, borderWidth: 1, borderColor: '#d1d5db',
   },
   cancelText: { color: '#374151', fontWeight: '600', fontSize: 14 },
+  skipBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingVertical: 12, paddingHorizontal: 14,
+    borderRadius: 10, borderWidth: 1, borderColor: '#d1d5db',
+    backgroundColor: '#f9fafb',
+  },
+  skipText: { color: '#6b7280', fontWeight: '600', fontSize: 14 },
   saveBtn: {
-    paddingVertical: 12, paddingHorizontal: 28,
+    paddingVertical: 12, paddingHorizontal: 22,
     borderRadius: 10, backgroundColor: '#ea580c',
-    minWidth: 120, alignItems: 'center',
+    minWidth: 110, alignItems: 'center',
   },
   saveText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
