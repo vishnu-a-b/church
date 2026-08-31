@@ -15,8 +15,8 @@ export const getAllStothrakazhcha = async (req: AuthRequest, res: Response, next
   try {
     const filter: any = {};
 
-    // Church admin restriction
-    if (req.user?.role === 'church_admin' && req.user.churchId) {
+    // Scope to the user's own church for all non-super-admin roles
+    if (req.user?.role !== 'super_admin' && req.user?.churchId) {
       filter.churchId = req.user.churchId;
     }
 
