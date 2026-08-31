@@ -1272,6 +1272,7 @@ export const getAllTransactions = async (req: AuthRequest, res: Response, next: 
       .populate('unitId', 'name')
       .populate('churchId', 'name')
       .populate('campaignId', 'name')
+      .populate({ path: 'createdBy', select: 'firstName lastName', model: 'Member' })
       .sort({ paymentDate: -1 })
       .limit(1000);
 

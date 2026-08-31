@@ -97,13 +97,19 @@ export const getStothrakazhchaById = async (req: AuthRequest, res: Response, nex
               }
             }
 
+            const enteredById = contributor.recordedBy || contributor.markedBy;
+            const recordedBy = enteredById
+              ? await Member.findById(enteredById).select('firstName lastName').lean()
+              : null;
+
             return {
               ...contributor,
               member: {
                 ...member,
                 hierarchicalNumber
               },
-              house: member?.houseId
+              house: member?.houseId,
+              recordedBy
             };
           } else {
             // It's a House contributor
@@ -136,12 +142,18 @@ export const getStothrakazhchaById = async (req: AuthRequest, res: Response, nex
               }
             }
 
+            const enteredById2 = contributor.recordedBy || contributor.markedBy;
+            const recordedBy = enteredById2
+              ? await Member.findById(enteredById2).select('firstName lastName').lean()
+              : null;
+
             return {
               ...contributor,
               house: {
                 ...house,
                 hierarchicalNumber
-              }
+              },
+              recordedBy
             };
           }
         })
@@ -359,7 +371,8 @@ export const addContribution = async (req: AuthRequest, res: Response, next: Nex
       contributorType: 'Member',
       amount: amount,
       transactionId: transaction._id,
-      contributedAt: new Date()
+      contributedAt: new Date(),
+      recordedBy: req.user?._id
     } as any);
 
     stothrakazhcha.totalCollected = (stothrakazhcha.totalCollected || 0) + amount;
@@ -469,6 +482,18 @@ export const getStothrakazhchaByBavanakutayima = async (req: AuthRequest, res: R
     const bkList = await Bavanakutayima.find({ _id: { $in: Array.from(bkIds) } }).select('_id name').lean();
     const bkMap: Record<string, any> = Object.fromEntries(bkList.map((b) => [String(b._id), b]));
 
+    // Batch-resolve enteredBy: recordedBy (direct church-admin entry) or markedBy (kutayima admin entry)
+    const enteredByIds = [...new Set(
+      contributors
+        .map((c: any) => c.recordedBy || c.markedBy)
+        .filter(Boolean)
+        .map((id: any) => String(id))
+    )];
+    const enteredByMembers = await Member.find({ _id: { $in: enteredByIds } }).select('_id firstName lastName').lean();
+    const recordedByMap: Record<string, string> = Object.fromEntries(
+      enteredByMembers.map((m) => [String(m._id), `${m.firstName} ${m.lastName || ''}`.trim()])
+    );
+
     const groups: Record<string, any> = {};
     for (const c of contributors) {
       const cAny = c as any;
@@ -493,6 +518,9 @@ export const getStothrakazhchaByBavanakutayima = async (req: AuthRequest, res: R
       const bkName = bkId && bkMap[bkId] ? bkMap[bkId].name : 'Unknown Group';
       const key = bkId || 'unknown';
 
+      const enteredById = cAny.recordedBy || cAny.markedBy;
+      const enteredByName = enteredById ? (recordedByMap[String(enteredById)] || null) : null;
+
       if (!groups[key]) {
         groups[key] = {
           bavanakutayimaId: bkId,
@@ -505,7 +533,7 @@ export const getStothrakazhchaByBavanakutayima = async (req: AuthRequest, res: R
         };
       }
 
-      groups[key].entries.push({ ...cAny, contributorName });
+      groups[key].entries.push({ ...cAny, contributorName, enteredByName });
       if (cAny.approvalStatus !== 'rejected') groups[key].totalAmount += cAny.amount;
       if (cAny.approvalStatus === 'pending_approval') groups[key].pendingCount++;
       else if (cAny.approvalStatus === 'approved') groups[key].approvedCount++;

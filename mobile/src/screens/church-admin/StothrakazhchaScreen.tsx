@@ -23,6 +23,7 @@ interface BkEntry {
   amount: number;
   approvalStatus: 'pending_approval' | 'approved' | 'rejected';
   contributorName: string;
+  enteredByName?: string | null;
 }
 
 interface BkGroup {
@@ -405,6 +406,9 @@ export default function ChurchAdminStothrakazhchaScreen() {
                         <View style={[styles.entryStatusPill, { backgroundColor: es.bg }]}>
                           <Text style={[styles.entryStatusText, { color: es.color }]}>{es.label}</Text>
                         </View>
+                        {entry.enteredByName ? (
+                          <Text style={styles.entryBy}>By: {entry.enteredByName}</Text>
+                        ) : null}
                       </View>
                       <TouchableOpacity
                         style={[styles.amountPill, !isPending && { opacity: 0.6 }]}
@@ -574,6 +578,7 @@ const styles = StyleSheet.create({
   entryName: { fontSize: 14, color: '#374151', fontWeight: '500', marginBottom: 4 },
   entryStatusPill: { alignSelf: 'flex-start', paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999 },
   entryStatusText: { fontSize: 10, fontWeight: '600' },
+  entryBy: { fontSize: 11, color: '#9ca3af', marginTop: 3 },
   amountPill: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#f0fdf4', paddingVertical: 6, paddingHorizontal: 12,

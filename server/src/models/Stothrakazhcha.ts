@@ -84,6 +84,10 @@ const stothrakazhchaSchema = new Schema<IStothrakazhcha>(
         enum: ['pending_approval', 'approved', 'rejected'],
         default: 'approved',
       },
+      recordedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'Member',
+      },
       markedBy: {
         type: Schema.Types.ObjectId,
         ref: 'User',

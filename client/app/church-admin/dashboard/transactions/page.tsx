@@ -24,6 +24,7 @@ interface Transaction {
   memberId?: string | { _id: string; firstName: string; lastName: string; houseId?: string; hierarchicalNumber?: string };
   campaignId?: string | { _id: string; name: string };
   notes?: string;
+  createdBy?: string | { _id: string; firstName: string; lastName: string };
 }
 
 export default function TransactionsPage() {
@@ -171,6 +172,11 @@ export default function TransactionsPage() {
           }
         }
 
+        let enteredBy = '-';
+        if (transaction.createdBy && typeof transaction.createdBy === 'object') {
+          enteredBy = `${transaction.createdBy.firstName} ${transaction.createdBy.lastName || ''}`.trim();
+        }
+
         return {
           '#': index + 1,
           'Receipt Number': transaction.receiptNumber,
@@ -181,6 +187,7 @@ export default function TransactionsPage() {
           'Date': new Date(transaction.paymentDate).toLocaleDateString('en-IN'),
           'Campaign': (typeof transaction.campaignId === 'object' ? transaction.campaignId?.name : null) || '-',
           'Notes': transaction.notes || '-',
+          'Entered By': enteredBy,
         };
       });
 
@@ -195,6 +202,7 @@ export default function TransactionsPage() {
         'Date': '',
         'Campaign': '',
         'Notes': '',
+        'Entered By': '',
       });
 
       // Create worksheet
@@ -211,6 +219,7 @@ export default function TransactionsPage() {
         { wch: 15 }, // Date
         { wch: 20 }, // Campaign
         { wch: 30 }, // Notes
+        { wch: 20 }, // Entered By
       ];
 
       // Create workbook
@@ -302,6 +311,15 @@ export default function TransactionsPage() {
       accessorKey: 'notes',
       header: 'Notes',
       cell: ({ row }) => row.original.notes || '-',
+    },
+    {
+      header: 'Entered By',
+      cell: ({ row }) => {
+        const cb = row.original.createdBy;
+        if (!cb) return '-';
+        if (typeof cb === 'object') return `${cb.firstName} ${cb.lastName || ''}`.trim();
+        return '-';
+      },
     },
   ];
 

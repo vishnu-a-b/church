@@ -120,7 +120,8 @@ export default function StothrakazhchaPaymentsPage() {
         member: c.member || c.contributorId,
         house: c.house,
         amount: c.amount,
-        contributedAt: c.contributedAt
+        contributedAt: c.contributedAt,
+        recordedBy: c.recordedBy
       })));
     } catch (error: any) {
       console.error('Error:', error);
@@ -285,6 +286,9 @@ export default function StothrakazhchaPaymentsPage() {
         'House': payment.house?.familyName || '-',
         'Amount (₹)': payment.amount || 0,
         'Date': payment.contributedAt ? formatDate(payment.contributedAt) : '-',
+        'Entered By': payment.recordedBy
+          ? `${payment.recordedBy.firstName} ${payment.recordedBy.lastName || ''}`.trim()
+          : '-',
       }));
 
       // Add summary row
@@ -295,6 +299,7 @@ export default function StothrakazhchaPaymentsPage() {
         'House': 'Total Collected:',
         'Amount (₹)': payments.reduce((sum, p) => sum + (p.amount || 0), 0),
         'Date': '',
+        'Entered By': '',
       });
 
       // Create worksheet
@@ -308,6 +313,7 @@ export default function StothrakazhchaPaymentsPage() {
         { wch: 20 }, // House
         { wch: 15 }, // Amount
         { wch: 15 }, // Date
+        { wch: 20 }, // Entered By
       ];
 
       // Create workbook
@@ -546,6 +552,9 @@ export default function StothrakazhchaPaymentsPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Entered By
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -580,6 +589,11 @@ export default function StothrakazhchaPaymentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {payment.contributedAt ? formatDate(payment.contributedAt) : '-'}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {payment.recordedBy
+                        ? `${payment.recordedBy.firstName} ${payment.recordedBy.lastName || ''}`.trim()
+                        : '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -591,6 +605,7 @@ export default function StothrakazhchaPaymentsPage() {
                   <td className="px-6 py-4 text-sm font-bold text-green-600">
                     ₹{payments.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}
                   </td>
+                  <td></td>
                   <td></td>
                 </tr>
               </tfoot>
