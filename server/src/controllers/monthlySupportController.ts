@@ -209,9 +209,13 @@ export const getDuesForPlan = async (req: AuthRequest, res: Response, next: Next
     if (req.query.unpaidOnly === 'true') {
       filter.isPaid = false;
     }
+    if (req.query.periodMonth) {
+      filter.periodMonth = req.query.periodMonth;
+    }
 
     const dues = await MonthlySupportDue.find(filter)
       .populate('dueForId', 'firstName lastName name phone')
+      .populate('transactionId', 'paymentMethod referenceNo paymentDate')
       .sort({ periodMonth: -1, dueForName: 1 });
 
     const totalDue = dues.reduce((sum, d) => sum + (d.isPaid ? 0 : d.balance), 0);
