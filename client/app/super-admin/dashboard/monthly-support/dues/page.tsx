@@ -36,6 +36,7 @@ export default function SuperAdminMonthlySupportDuesPage() {
 
   const [plan, setPlan] = useState<MonthlySupportPlan | null>(null);
   const [dues, setDues] = useState<MonthlySupportDue[]>([]);
+  const [registeredNames, setRegisteredNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [periodFilter, setPeriodFilter] = useState('');
@@ -49,6 +50,15 @@ export default function SuperAdminMonthlySupportDuesPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [generatingDues, setGeneratingDues] = useState(false);
   const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
+
+  // Fetch full contributor list once per plan (independent of period/unpaid filters)
+  useEffect(() => {
+    if (!planId) return;
+    api.get(`/monthly-support-plans/${planId}/dues`).then((res) => {
+      const data: MonthlySupportDue[] = res.data?.data || [];
+      setRegisteredNames(Array.from(new Set(data.map((d) => d.dueForName))).sort() as string[]);
+    }).catch(() => {});
+  }, [planId]);
 
   useEffect(() => {
     if (planId) fetchData();
@@ -134,10 +144,6 @@ export default function SuperAdminMonthlySupportDuesPage() {
     return Array.from(set).sort().reverse();
   }, [dues]);
 
-  const allContributors = useMemo(() => {
-    const set = new Set(dues.map((d) => d.dueForName));
-    return Array.from(set).sort();
-  }, [dues]);
 
   const filtered = useMemo(() => {
     let result = dues;
@@ -241,7 +247,7 @@ export default function SuperAdminMonthlySupportDuesPage() {
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 max-w-xs"
           >
             <option value="">All members</option>
-            {allContributors.map((name) => <option key={name} value={name}>{name}</option>)}
+            {registeredNames.map((name) => <option key={name} value={name}>{name}</option>)}
           </select>
         </div>
         <div className="relative flex-1 min-w-[180px] max-w-sm">
