@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { CheckCircle, ArrowLeft, Pencil, Users, Clock, TrendingUp } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Pencil, Users, Clock, TrendingUp, PlusCircle, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface BkEntry {
   _id: string;
@@ -31,6 +31,9 @@ interface WeekDetail {
   status: 'active' | 'closed' | 'processed';
   totalCollected: number;
   totalContributors: number;
+  extraAmount: number;
+  extraAmountNote?: string;
+  grandTotal: number;
   groups: BkGroup[];
 }
 
@@ -51,6 +54,17 @@ function DetailContent() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [editAmounts, setEditAmounts] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [extraForm, setExtraForm] = useState<{ amount: string; note: string } | null>(null);
+  const [savingExtra, setSavingExtra] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   const fetchDetail = useCallback(async () => {
     if (!id) return;
@@ -79,6 +93,22 @@ function DetailContent() {
       toast.error(e.response?.data?.error || 'Failed to update amount');
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const saveExtraAmount = async () => {
+    const value = Number(extraForm?.amount ?? '');
+    if (isNaN(value) || value < 0) { toast.error('Enter a valid amount (≥ 0)'); return; }
+    setSavingExtra(true);
+    try {
+      await api.patch(`/stothrakazhcha/${week!._id}/extra-amount`, { amount: value, note: extraForm?.note || undefined });
+      toast.success('Extra amount saved');
+      setExtraForm(null);
+      fetchDetail();
+    } catch (e: any) {
+      toast.error(e.response?.data?.error || 'Failed to save extra amount');
+    } finally {
+      setSavingExtra(false);
     }
   };
 
@@ -115,7 +145,8 @@ function DetailContent() {
 
   const totalPending = week.groups.reduce((s, g) => s + g.pendingCount, 0);
   const totalApproved = week.groups.reduce((s, g) => s + g.approvedCount, 0);
-  const grandTotal = week.groups.reduce((s, g) => s + g.totalAmount, 0);
+  const contributionsTotal = week.groups.reduce((s, g) => s + g.totalAmount, 0);
+  const grandTotal = contributionsTotal + (week.extraAmount ?? 0);
 
   return (
     <div className="space-y-6">
@@ -144,7 +175,12 @@ function DetailContent() {
           </div>
           <div>
             <p className="text-2xl font-extrabold text-gray-900">₹{grandTotal.toLocaleString('en-IN')}</p>
-            <p className="text-xs text-gray-500">Total collected</p>
+            <p className="text-xs text-gray-500">Grand total</p>
+            {(week.extraAmount ?? 0) > 0 && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                ₹{contributionsTotal.toLocaleString('en-IN')} contributions + ₹{(week.extraAmount ?? 0).toLocaleString('en-IN')} extra
+              </p>
+            )}
           </div>
         </div>
         <div className="bg-white rounded-xl shadow p-5 flex items-center gap-4">
@@ -167,6 +203,67 @@ function DetailContent() {
         </div>
       </div>
 
+      {/* Extra Amount */}
+      <div className="bg-white rounded-xl shadow p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-500 mb-1">Extra Amount</p>
+            {extraForm ? (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-gray-500">₹</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={extraForm.amount}
+                  onChange={(e) => setExtraForm((f) => f && { ...f, amount: e.target.value })}
+                  className="w-28 border border-purple-400 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="0"
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  value={extraForm.note}
+                  onChange={(e) => setExtraForm((f) => f && { ...f, note: e.target.value })}
+                  className="w-56 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Note (optional)"
+                />
+                <button
+                  onClick={saveExtraAmount}
+                  disabled={savingExtra}
+                  className="text-sm bg-purple-600 text-white px-4 py-1.5 rounded-lg hover:bg-purple-700 disabled:opacity-50 font-medium"
+                >
+                  {savingExtra ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => setExtraForm(null)}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <p className="text-2xl font-extrabold text-gray-900">
+                  ₹{(week.extraAmount ?? 0).toLocaleString('en-IN')}
+                </p>
+                {week.extraAmountNote && (
+                  <span className="text-sm text-gray-400 italic">{week.extraAmountNote}</span>
+                )}
+              </div>
+            )}
+          </div>
+          {!extraForm && (
+            <button
+              onClick={() => setExtraForm({ amount: String(week.extraAmount ?? 0), note: week.extraAmountNote ?? '' })}
+              className="flex items-center gap-1.5 text-purple-600 hover:text-purple-700 text-sm font-medium border border-purple-200 rounded-lg px-3 py-2 hover:bg-purple-50 shrink-0"
+            >
+              <PlusCircle className="w-4 h-4" />
+              {(week.extraAmount ?? 0) > 0 ? 'Edit' : 'Add Extra'}
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* BK groups */}
       {week.groups.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-10 text-center text-gray-500">
@@ -174,42 +271,56 @@ function DetailContent() {
         </div>
       ) : (
         week.groups.map((group) => {
+          const groupKey = group.bavanakutayimaId || 'unknown';
           const isActing = actingId === `group_${group.bavanakutayimaId}`;
+          const isExpanded = expandedGroups.has(groupKey);
           return (
-            <div key={group.bavanakutayimaId || 'unknown'} className="bg-white rounded-xl shadow overflow-hidden">
-              {/* Group header */}
-              <div className="flex items-center justify-between px-6 py-4 bg-purple-50 border-b border-purple-100">
-                <div>
-                  <p className="font-bold text-gray-900 text-lg">{group.bavanakutayimaName}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    ₹{group.totalAmount.toLocaleString('en-IN')} total &middot;{' '}
-                    <span className="text-amber-600 font-medium">{group.pendingCount} pending</span>
-                    {' '}&middot;{' '}
-                    <span className="text-green-600 font-medium">{group.approvedCount} settled</span>
-                    {group.rejectedCount > 0 && (
-                      <> &middot; <span className="text-red-500 font-medium">{group.rejectedCount} rejected</span></>
-                    )}
-                  </p>
+            <div key={groupKey} className="bg-white rounded-xl shadow overflow-hidden">
+              {/* Group header — click to expand/collapse */}
+              <button
+                type="button"
+                onClick={() => toggleGroup(groupKey)}
+                className="w-full flex items-center justify-between px-6 py-4 bg-purple-50 border-b border-purple-100 hover:bg-purple-100 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {isExpanded
+                    ? <ChevronDown className="w-5 h-5 text-purple-500 shrink-0" />
+                    : <ChevronRight className="w-5 h-5 text-purple-500 shrink-0" />
+                  }
+                  <div>
+                    <p className="font-bold text-gray-900 text-lg">{group.bavanakutayimaName}</p>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      ₹{group.totalAmount.toLocaleString('en-IN')} total &middot;{' '}
+                      <span className="text-amber-600 font-medium">{group.pendingCount} pending</span>
+                      {' '}&middot;{' '}
+                      <span className="text-green-600 font-medium">{group.approvedCount} settled</span>
+                      {group.rejectedCount > 0 && (
+                        <> &middot; <span className="text-red-500 font-medium">{group.rejectedCount} rejected</span></>
+                      )}
+                    </p>
+                  </div>
                 </div>
-                {group.pendingCount > 0 && (
-                  <button
-                    onClick={() => approveGroup(group)}
-                    disabled={isActing || !group.bavanakutayimaId}
-                    className="flex items-center gap-2 bg-purple-600 text-white px-5 py-2.5 rounded-lg hover:bg-purple-700 disabled:opacity-50 font-semibold text-sm"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    {isActing ? 'Settling...' : 'Settle All'}
-                  </button>
-                )}
-                {group.pendingCount === 0 && group.approvedCount > 0 && (
-                  <span className="flex items-center gap-1 text-green-600 font-semibold text-sm">
-                    <CheckCircle className="w-4 h-4" /> Settled
-                  </span>
-                )}
-              </div>
+                <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {group.pendingCount > 0 && (
+                    <button
+                      onClick={() => approveGroup(group)}
+                      disabled={isActing || !group.bavanakutayimaId}
+                      className="flex items-center gap-2 bg-purple-600 text-white px-5 py-2.5 rounded-lg hover:bg-purple-700 disabled:opacity-50 font-semibold text-sm"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      {isActing ? 'Settling...' : 'Settle All'}
+                    </button>
+                  )}
+                  {group.pendingCount === 0 && group.approvedCount > 0 && (
+                    <span className="flex items-center gap-1 text-green-600 font-semibold text-sm">
+                      <CheckCircle className="w-4 h-4" /> Settled
+                    </span>
+                  )}
+                </div>
+              </button>
 
-              {/* Per-member rows */}
-              {group.entries.map((entry) => {
+              {/* Per-member rows — only visible when expanded */}
+              {isExpanded && group.entries.map((entry) => {
                 const isEditing = entry._id in editAmounts;
                 return (
                   <div key={entry._id} className="flex items-center justify-between px-6 py-3 border-b border-gray-50 last:border-0">
@@ -256,15 +367,13 @@ function DetailContent() {
                           <span className="text-sm font-semibold text-purple-700">
                             ₹{entry.amount.toLocaleString('en-IN')}
                           </span>
-                          {entry.approvalStatus === 'pending_approval' && (
-                            <button
-                              onClick={() => setEditAmounts((p) => ({ ...p, [entry._id]: String(entry.amount) }))}
-                              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-                              title="Edit amount"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => setEditAmounts((p) => ({ ...p, [entry._id]: String(entry.amount) }))}
+                            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                            title="Edit amount"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
                         </>
                       )}
                     </div>
