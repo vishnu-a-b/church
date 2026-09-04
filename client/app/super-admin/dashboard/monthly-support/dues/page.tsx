@@ -39,6 +39,7 @@ export default function SuperAdminMonthlySupportDuesPage() {
   const [loading, setLoading] = useState(true);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [periodFilter, setPeriodFilter] = useState('');
+  const [contributorFilter, setContributorFilter] = useState('');
   const [search, setSearch] = useState('');
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -133,11 +134,20 @@ export default function SuperAdminMonthlySupportDuesPage() {
     return Array.from(set).sort().reverse();
   }, [dues]);
 
+  const allContributors = useMemo(() => {
+    const set = new Set(dues.map((d) => d.dueForName));
+    return Array.from(set).sort();
+  }, [dues]);
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return dues;
-    const q = search.toLowerCase();
-    return dues.filter((d) => d.dueForName.toLowerCase().includes(q));
-  }, [dues, search]);
+    let result = dues;
+    if (contributorFilter) result = result.filter((d) => d.dueForName === contributorFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((d) => d.dueForName.toLowerCase().includes(q));
+    }
+    return result;
+  }, [dues, contributorFilter, search]);
 
   const totalOutstanding = filtered.reduce((s, d) => s + (d.isPaid ? 0 : d.balance), 0);
   const totalPaid = filtered.reduce((s, d) => s + d.paidAmount, 0);
@@ -221,9 +231,20 @@ export default function SuperAdminMonthlySupportDuesPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-lg shadow p-3">
-        <div className="relative max-w-sm">
+      {/* Search / contributor filter */}
+      <div className="bg-white rounded-lg shadow p-3 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-600 whitespace-nowrap">Member:</label>
+          <select
+            value={contributorFilter}
+            onChange={(e) => setContributorFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 max-w-xs"
+          >
+            <option value="">All members</option>
+            {allContributors.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
+        </div>
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
