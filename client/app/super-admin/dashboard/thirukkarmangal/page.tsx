@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { BookOpen, Sparkles, Settings, CheckCircle, AlertTriangle } from 'lucide-react';
+import { BookOpen, Sparkles, Settings, CheckCircle, AlertTriangle, Plus, X, History } from 'lucide-react';
 
 interface Church { _id: string; name: string; }
 interface Rite {
@@ -39,6 +39,17 @@ export default function SuperAdminThirukkarmangalPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newRite, setNewRite] = useState({
+    category: 'holy_masses',
+    code: '',
+    nameMalayalam: '',
+    nameEnglish: '',
+    amount: '',
+    sortOrder: '',
+  });
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     api.get('/churches').then((r) => setChurches(r.data?.data || [])).catch(console.error);
@@ -79,6 +90,35 @@ export default function SuperAdminThirukkarmangalPage() {
     setEditAmount(rite.amount.toString());
   };
 
+  const handleAddRite = async () => {
+    if (!newRite.code.trim() || !newRite.nameMalayalam.trim() || !newRite.nameEnglish.trim()) {
+      toast.error('Code, Malayalam name, and English name are required');
+      return;
+    }
+    const amount = Number(newRite.amount);
+    if (!amount || amount < 0) { toast.error('Enter a valid amount'); return; }
+    setAdding(true);
+    try {
+      await api.post('/thirukkarmangal/rites', {
+        churchId: selectedChurchId,
+        category: newRite.category,
+        code: newRite.code.trim(),
+        nameMalayalam: newRite.nameMalayalam.trim(),
+        nameEnglish: newRite.nameEnglish.trim(),
+        amount,
+        sortOrder: newRite.sortOrder ? Number(newRite.sortOrder) : 0,
+      });
+      toast.success('Rite added successfully');
+      setShowAddForm(false);
+      setNewRite({ category: 'holy_masses', code: '', nameMalayalam: '', nameEnglish: '', amount: '', sortOrder: '' });
+      fetchRites();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to add rite');
+    } finally {
+      setAdding(false);
+    }
+  };
+
   const saveAmount = async (id: string) => {
     const amount = Number(editAmount);
     if (!amount || amount <= 0) { toast.error('Enter a valid amount'); return; }
@@ -109,6 +149,23 @@ export default function SuperAdminThirukkarmangalPage() {
           <h2 className="text-2xl font-bold text-gray-800">Thirukkarmangal — Master Rate List</h2>
           <p className="text-gray-600">Sacred rites fee schedule and recipient split configuration</p>
         </div>
+        {selectedChurchId && (
+          <div className="flex gap-2">
+            <Link
+              href={`/super-admin/dashboard/thirukkarmangal/bookings?churchId=${selectedChurchId}`}
+              className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+            >
+              <History className="w-4 h-4" /> View Bookings
+            </Link>
+            <button
+              onClick={() => setShowAddForm((v) => !v)}
+              className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"
+            >
+              {showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {showAddForm ? 'Cancel' : 'Add Rite'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
@@ -124,6 +181,95 @@ export default function SuperAdminThirukkarmangalPage() {
           ))}
         </select>
       </div>
+
+      {showAddForm && selectedChurchId && (
+        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+          <h3 className="font-semibold text-gray-800">Add New Rite</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Category *</label>
+              <select
+                value={newRite.category}
+                onChange={(e) => setNewRite((p) => ({ ...p, category: e.target.value }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              >
+                {CATEGORY_ORDER.map((c) => (
+                  <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Code * (unique per church)</label>
+              <input
+                type="text"
+                value={newRite.code}
+                onChange={(e) => setNewRite((p) => ({ ...p, code: e.target.value }))}
+                placeholder="e.g. HM_CUSTOM_01"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Name (Malayalam) *</label>
+              <input
+                type="text"
+                value={newRite.nameMalayalam}
+                onChange={(e) => setNewRite((p) => ({ ...p, nameMalayalam: e.target.value }))}
+                placeholder="Malayalam name"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Name (English) *</label>
+              <input
+                type="text"
+                value={newRite.nameEnglish}
+                onChange={(e) => setNewRite((p) => ({ ...p, nameEnglish: e.target.value }))}
+                placeholder="English name"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Amount (₹) *</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={newRite.amount}
+                onChange={(e) => setNewRite((p) => ({ ...p, amount: e.target.value }))}
+                placeholder="0"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Sort Order</label>
+              <input
+                type="number"
+                min="0"
+                value={newRite.sortOrder}
+                onChange={(e) => setNewRite((p) => ({ ...p, sortOrder: e.target.value }))}
+                placeholder="0"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleAddRite}
+              disabled={adding}
+              className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 disabled:opacity-50 text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              {adding ? 'Adding...' : 'Add Rite'}
+            </button>
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedChurchId && !loading && rites.length === 0 && (
         <div className="bg-white rounded-lg shadow p-12 text-center">
