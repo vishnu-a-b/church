@@ -8,6 +8,7 @@ import MemberPathavarmScreen from '../screens/member/PathavarmScreen';
 import MemberNewsScreen from '../screens/member/NewsScreen';
 import MemberEventsScreen from '../screens/member/EventsScreen';
 import MemberStothrakazhchaScreen from '../screens/member/StothrakazhchaScreen';
+import MemberThirukkarmangalScreen from '../screens/member/ThirukkarmangalScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -35,6 +36,8 @@ export default function MemberTabs() {
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Stothrakazhcha" component={MemberStothrakazhchaScreen}
         options={{ tabBarLabel: 'Stothra', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'cash' : 'cash-outline'} size={size} color={color} /> }} />
+      <Tab.Screen name="Thirukkarmangal" component={MemberThirukkarmangalScreen}
+        options={{ title: 'Thirukkarmangal', tabBarLabel: 'Rites', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'flame' : 'flame-outline'} size={size} color={color} /> }} />
     </Tab.Navigator>
   );
 }

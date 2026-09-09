@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
 import { FiHome } from 'react-icons/fi';
-import { Receipt, Newspaper, CalendarDays, Heart, Repeat, Gift } from 'lucide-react';
+import { Receipt, Newspaper, CalendarDays, Heart, Repeat, Gift, Flame } from 'lucide-react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -65,6 +65,7 @@ export default function MemberDashboardLayout({ children }: { children: React.Re
     { name: 'Events', href: '/member/dashboard/events', icon: CalendarDays },
     { name: 'Spiritual Activities', href: '/member/dashboard/spiritual-activities', icon: Heart },
     { name: 'Pathavarm', href: '/member/dashboard/pathavarm', icon: Gift },
+    { name: 'Thirukkarmangal', href: '/member/dashboard/thirukkarmangal', icon: Flame },
   ];
 
   if (loading) {

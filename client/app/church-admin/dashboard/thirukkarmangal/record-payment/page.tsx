@@ -40,14 +40,11 @@ export default function RecordThirukkarmangalPaymentPage() {
   const [selectedHouse, setSelectedHouse] = useState('');
   const [selectedMember, setSelectedMember] = useState('');
 
-  const [me, setMe] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchRites();
     fetchUnits();
-    const stored = localStorage.getItem('church_admin_user');
-    if (stored) setMe(JSON.parse(stored));
   }, []);
 
   const fetchRites = async () => {
@@ -131,23 +128,12 @@ export default function RecordThirukkarmangalPaymentPage() {
       toast.error('Select a member');
       return;
     }
-    if (!me?.churchId) {
-      toast.error('Church admin must have a church assigned');
-      return;
-    }
 
     setSubmitting(true);
     try {
-      await api.post('/transactions', {
-        transactionType: 'thirukkarmangal',
+      await api.post('/thirukkarmangal/bookings', {
         riteId: selectedRiteId,
-        churchId: me.churchId,
         memberId: selectedMember,
-        unitId: selectedUnit,
-        houseId: selectedHouse,
-        distribution: 'member_only',
-        memberAmount: Number(amount),
-        houseAmount: 0,
         totalAmount: Number(amount),
         paymentMethod,
         notes: notes || `Thirukkarmangal: ${selectedRite?.nameEnglish}`,

@@ -3,8 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
-import { useAuth } from '../../context/AuthContext';
-
 const api = createRoleApi('church_admin');
 
 interface Rite {
@@ -26,7 +24,6 @@ interface Props {
 
 export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved }: Props) {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [memberId, setMemberId] = useState('');
   const [memberPickerVisible, setMemberPickerVisible] = useState(false);
@@ -52,19 +49,13 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
   const handleSubmit = async () => {
     if (!memberId) return setError('Select a member');
     if (!paidAmount || paidAmount <= 0) return setError('Enter a valid amount');
-    if (!user?.churchId) return setError('Church admin must have a church assigned');
 
     setError('');
     setSubmitting(true);
     try {
-      await api.post('/transactions', {
-        transactionType: 'thirukkarmangal',
+      await api.post('/thirukkarmangal/bookings', {
         riteId: rite._id,
-        churchId: user.churchId,
         memberId,
-        distribution: 'member_only',
-        memberAmount: paidAmount,
-        houseAmount: 0,
         totalAmount: paidAmount,
         paymentMethod: 'cash',
         notes: `Thirukkarmangal: ${rite.nameEnglish}`,

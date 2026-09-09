@@ -1,7 +1,12 @@
 import { Response, NextFunction } from 'express';
 import ThirukkarmangalRite from '../models/ThirukkarmangalRite';
+import Transaction from '../models/Transaction';
+import Member from '../models/Member';
 import { AuthRequest } from '../types';
 import { thirukkarmangalDefaultRites } from '../data/thirukkarmangalDefaultRites';
+import { computeSplitAmounts } from '../services/thirukkarmangalSplitService';
+import { pushTransactionToEdv } from '../services/edvBridgeService';
+import edvBridgeConfig from '../config/edvBridge';
 
 // Get all rites (optionally filtered by category), scoped by church
 export const getAllRites = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -186,6 +191,199 @@ export const deleteRite = async (req: AuthRequest, res: Response, next: NextFunc
     await existing.save();
 
     res.json({ success: true, message: 'Rite deactivated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Book a Thirukkarmangal rite against a specific member, creating a Transaction record.
+// Church admin supplies riteId + memberId; houseId/unitId are resolved automatically from the member.
+export const bookThirukkarmangal = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'church_admin') {
+      res.status(403).json({ success: false, error: 'Only church admins can book Thirukkarmangal rites' });
+      return;
+    }
+
+    if (!req.user.churchId) {
+      res.status(403).json({ success: false, error: 'Church admin must have a church assigned' });
+      return;
+    }
+
+    const { riteId, memberId, totalAmount, paymentMethod, paymentDate, referenceNo, notes, edvOverrideLedgerId } = req.body;
+
+    if (!riteId || !memberId) {
+      res.status(400).json({ success: false, error: 'riteId and memberId are required' });
+      return;
+    }
+
+    const churchId = String(req.user.churchId);
+
+    // Validate rite belongs to this church
+    const rite = await ThirukkarmangalRite.findById(riteId);
+    if (!rite || !rite.isActive) {
+      res.status(400).json({ success: false, error: 'Rite not found or inactive' });
+      return;
+    }
+    if (String(rite.churchId) !== churchId) {
+      res.status(403).json({ success: false, error: 'Rite does not belong to this church' });
+      return;
+    }
+
+    // Validate member belongs to this church; pull houseId/unitId from member (denormalized)
+    const member = await Member.findById(memberId);
+    if (!member) {
+      res.status(400).json({ success: false, error: 'Member not found' });
+      return;
+    }
+    if (String(member.churchId) !== churchId) {
+      res.status(403).json({ success: false, error: 'Member does not belong to this church' });
+      return;
+    }
+
+    const amountPaid = typeof totalAmount === 'number' ? totalAmount : rite.amount;
+    const splitBreakdown = computeSplitAmounts(rite, amountPaid);
+
+    const transaction = await Transaction.create({
+      transactionType: 'thirukkarmangal',
+      riteId: rite._id,
+      memberId: member._id,
+      houseId: member.houseId,
+      unitId: member.unitId,
+      churchId,
+      totalAmount: amountPaid,
+      memberAmount: amountPaid,
+      houseAmount: 0,
+      distribution: 'member_only',
+      paymentMethod: paymentMethod || 'cash',
+      paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+      referenceNo: referenceNo || undefined,
+      notes: notes || undefined,
+      edvOverrideLedgerId: edvOverrideLedgerId || undefined,
+      splitBreakdown: splitBreakdown.length > 0 ? splitBreakdown : undefined,
+      receiptNumber: `TKM-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdBy: req.user._id,
+    });
+
+    if (edvBridgeConfig.enabled) {
+      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed (thirukkarmangal booking):', err));
+    }
+
+    const populated = await Transaction.findById(transaction._id)
+      .populate('memberId', 'firstName lastName uniqueId')
+      .populate('houseId', 'familyName houseCode')
+      .populate('unitId', 'name')
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount');
+
+    res.status(201).json({ success: true, data: populated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// List Thirukkarmangal bookings (Transaction records with transactionType 'thirukkarmangal').
+// Filterable by memberId, houseId, unitId, riteId, and date range (from/to).
+export const getThirukkarmangalBookings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const filter: any = { transactionType: 'thirukkarmangal' };
+
+    if (req.user?.role === 'church_admin' && req.user.churchId) {
+      filter.churchId = req.user.churchId;
+    } else if (req.user?.role === 'super_admin' && req.query.churchId) {
+      filter.churchId = req.query.churchId;
+    }
+
+    if (req.query.memberId) filter.memberId = req.query.memberId;
+    if (req.query.houseId) filter.houseId = req.query.houseId;
+    if (req.query.unitId) filter.unitId = req.query.unitId;
+    if (req.query.riteId) filter.riteId = req.query.riteId;
+
+    if (req.query.from || req.query.to) {
+      filter.paymentDate = {};
+      if (req.query.from) filter.paymentDate.$gte = new Date(req.query.from as string);
+      if (req.query.to) filter.paymentDate.$lte = new Date(req.query.to as string);
+    }
+
+    const bookings = await Transaction.find(filter)
+      .sort({ paymentDate: -1 })
+      .populate('memberId', 'firstName lastName uniqueId')
+      .populate('houseId', 'familyName houseCode')
+      .populate('unitId', 'name')
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount');
+
+    res.json({ success: true, count: bookings.length, data: bookings });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Member self-service: get the logged-in member's own Thirukkarmangal history.
+export const getMyThirukkarmangalHistory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const filter: any = { transactionType: 'thirukkarmangal', memberId: req.user?._id };
+
+    if (req.query.from || req.query.to) {
+      filter.paymentDate = {};
+      if (req.query.from) filter.paymentDate.$gte = new Date(req.query.from as string);
+      if (req.query.to) filter.paymentDate.$lte = new Date(req.query.to as string);
+    }
+
+    const bookings = await Transaction.find(filter)
+      .sort({ paymentDate: -1 })
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount');
+
+    res.json({ success: true, count: bookings.length, data: bookings });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get a specific member's Thirukkarmangal booking history.
+// Accessible by: church_admin (any member in their church), or the member themselves.
+export const getMemberThirukkarmangalHistory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { memberId } = req.params;
+
+    // Members can only view their own history
+    if (req.user?.role === 'member') {
+      if (String(req.user._id) !== memberId) {
+        res.status(403).json({ success: false, error: 'Members can only view their own Thirukkarmangal history' });
+        return;
+      }
+    } else if (req.user?.role !== 'church_admin') {
+      res.status(403).json({ success: false, error: 'Access denied' });
+      return;
+    }
+
+    // Validate member exists and belongs to this church
+    const member = await Member.findById(memberId);
+    if (!member) {
+      res.status(404).json({ success: false, error: 'Member not found' });
+      return;
+    }
+
+    if (req.user?.role === 'church_admin' && req.user.churchId) {
+      if (String(member.churchId) !== String(req.user.churchId)) {
+        res.status(403).json({ success: false, error: 'Member does not belong to your church' });
+        return;
+      }
+    }
+
+    const filter: any = { transactionType: 'thirukkarmangal', memberId };
+
+    if (req.query.from || req.query.to) {
+      filter.paymentDate = {};
+      if (req.query.from) filter.paymentDate.$gte = new Date(req.query.from as string);
+      if (req.query.to) filter.paymentDate.$lte = new Date(req.query.to as string);
+    }
+
+    const bookings = await Transaction.find(filter)
+      .sort({ paymentDate: -1 })
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount')
+      .populate('houseId', 'familyName houseCode')
+      .populate('unitId', 'name');
+
+    res.json({ success: true, count: bookings.length, data: bookings });
   } catch (error) {
     next(error);
   }

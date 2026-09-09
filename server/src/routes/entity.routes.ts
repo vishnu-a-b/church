@@ -76,6 +76,7 @@ import {
   getCurrentWeekStothrakazhcha,
   addContribution,
   getStothrakazhchaByBavanakutayima,
+  setExtraAmount,
 } from '../controllers/stothrakazhchaController';
 import {
   getAllStothrakazhchaDues,
@@ -147,6 +148,10 @@ import {
   updateRiteSplit,
   deleteRite,
   seedDefaultRites,
+  bookThirukkarmangal,
+  getThirukkarmangalBookings,
+  getMemberThirukkarmangalHistory,
+  getMyThirukkarmangalHistory,
 } from '../controllers/thirukkarmangalController';
 import {
   createMyPathavarmContribution,
@@ -532,6 +537,7 @@ router.put('/members/me', updateMyProfile);
 router.get('/members/me/transactions', getMyTransactions);
 router.get('/members/me/spiritual-activities', getMySpiritualActivities);
 router.post('/members/me/spiritual-activities', createMySpiritualActivity);
+router.get('/members/me/thirukkarmangal', getMyThirukkarmangalHistory);
 
 router.route('/members/:id').get(getMemberById).put(updateMember).delete(deleteMember);
 
@@ -871,6 +877,7 @@ router.route('/stothrakazhcha').get(getAllStothrakazhcha).post(createStothrakazh
 router.get('/stothrakazhcha/current/week', getCurrentWeekStothrakazhcha);
 router.get('/stothrakazhcha/:id/by-bavanakutayima', getStothrakazhchaByBavanakutayima);
 router.post('/stothrakazhcha/:id/contribute', addContribution);
+router.patch('/stothrakazhcha/:id/extra-amount', setExtraAmount);
 router.route('/stothrakazhcha/:id').get(getStothrakazhchaById).put(updateStothrakazhcha).delete(deleteStothrakazhcha);
 
 // Stothrakazhcha Dues Routes
@@ -890,11 +897,15 @@ router.post('/monthly-support-plans/:id/draw', conductMonthlySupportDraw);
 router.get('/monthly-support-plans/:id/draws', getMonthlySupportDraws);
 router.get('/monthly-support-dues/mine', getMyMonthlySupportDues);
 
-// Thirukkarmangal Rite Routes
+// Thirukkarmangal Rite Routes (master list)
 router.route('/thirukkarmangal/rites').get(getAllRites).post(createRite);
 router.post('/thirukkarmangal/rites/seed-defaults', seedDefaultRites);
 router.put('/thirukkarmangal/rites/:id/split', updateRiteSplit);
 router.route('/thirukkarmangal/rites/:id').get(getRiteById).put(updateRite).delete(deleteRite);
+
+// Thirukkarmangal Booking Routes (booking a rite against a member + transaction)
+router.route('/thirukkarmangal/bookings').get(getThirukkarmangalBookings).post(bookThirukkarmangal);
+router.get('/thirukkarmangal/bookings/member/:memberId', getMemberThirukkarmangalHistory);
 
 // Pathavarm Routes (member self-service, matches /members/me/* convention; church_admin uses POST /transactions directly)
 router.post('/members/me/pathavarm', createMyPathavarmContribution);

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { BookOpen, Sparkles, Settings, CheckCircle, AlertTriangle, Receipt } from 'lucide-react';
+import { BookOpen, Sparkles, Settings, CheckCircle, AlertTriangle, Receipt, History } from 'lucide-react';
 
 interface Rite {
   _id: string;
@@ -106,12 +106,20 @@ export default function ThirukkarmangalRitesPage() {
         </div>
         <div className="flex gap-3">
           {rites.length > 0 && (
-            <Link
-              href="/church-admin/dashboard/thirukkarmangal/record-payment"
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Receipt className="w-5 h-5" /> Record Payment
-            </Link>
+            <>
+              <Link
+                href="/church-admin/dashboard/thirukkarmangal/bookings"
+                className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <History className="w-5 h-5" /> View Bookings
+              </Link>
+              <Link
+                href="/church-admin/dashboard/thirukkarmangal/record-payment"
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Receipt className="w-5 h-5" /> Record Payment
+              </Link>
+            </>
           )}
           {rites.length === 0 && !loading && (
             <button
