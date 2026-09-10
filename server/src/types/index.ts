@@ -266,6 +266,8 @@ export interface IStothrakazhcha extends Document {
   }>;
   totalCollected: number;
   totalContributors: number;
+  extraAmount: number;
+  extraAmountNote?: string;
   duesProcessed: boolean;
   duesProcessedAt?: Date;
   createdBy?: Types.ObjectId;

@@ -13,7 +13,13 @@ import { sendTransactionNotification, TransactionDetails } from './emailService'
  * Stothrakazhcha-specific notifier — includes the member's spiritual activities in the email.
  * Fire-and-forget, never throws.
  */
-export const notifyStothrakazhchaApproval = (transaction: any, weekNumber: number, year: number): void => {
+export const notifyStothrakazhchaApproval = (
+  transaction: any,
+  weekNumber: number,
+  year: number,
+  weekStartDate?: Date,
+  weekEndDate?: Date,
+): void => {
   if (!transaction.memberId) return;
 
   Member.findById(transaction.memberId)
@@ -21,12 +27,21 @@ export const notifyStothrakazhchaApproval = (transaction: any, weekNumber: numbe
     .lean()
     .then(async (m) => {
       if (!m) return;
-      const activities = await SpiritualActivity.find({
-        memberId: transaction.memberId,
-        approvalStatus: { $ne: 'rejected' },
-      })
+      const weekStr = `${year}-W${String(weekNumber).padStart(2, '0')}`;
+      const activityQuery: any = weekStartDate && weekEndDate
+        ? {
+            memberId: transaction.memberId,
+            approvalStatus: { $ne: 'rejected' },
+            $or: [
+              { activityType: 'mass', massDate: { $gte: weekStartDate, $lte: weekEndDate } },
+              { activityType: 'prayer', prayerWeek: weekStr },
+              { activityType: 'fasting', fastingWeek: weekStr },
+            ],
+          }
+        : { memberId: transaction.memberId, approvalStatus: { $ne: 'rejected' } };
+      const activities = await SpiritualActivity.find(activityQuery)
         .select('activityType approvalStatus massDate fastingWeek fastingDays prayerType prayerCount prayerWeek')
-        .sort({ createdAt: -1 })
+        .sort({ massDate: -1, createdAt: -1 })
         .lean();
 
       const txDetails: TransactionDetails = {

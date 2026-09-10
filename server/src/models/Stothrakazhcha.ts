@@ -114,6 +114,15 @@ const stothrakazhchaSchema = new Schema<IStothrakazhcha>(
       default: 0,
       min: 0,
     },
+    extraAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    extraAmountNote: {
+      type: String,
+      trim: true,
+    },
     duesProcessed: {
       type: Boolean,
       default: false,
