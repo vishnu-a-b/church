@@ -22,6 +22,7 @@ const LOGIN_ENDPOINT: Record<PortalRole, string> = {
   church_admin: '/auth/member-login',
   unit_admin: '/auth/member-login',
   kudumbakutayima_admin: '/auth/member-login',
+  super_admin: '/auth/login',
 };
 
 // A single provider mounted once at the app root. `activeRole` tracks which portal
@@ -70,7 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (username: string, password: string) => {
       if (!activeRole) return { success: false, error: 'No portal selected' };
       try {
-        const response = await axios.post(`${API_URL}${LOGIN_ENDPOINT[activeRole]}`, { username, password });
+        // super_admin uses email+password on /auth/login; all others use username+password
+        const payload = activeRole === 'super_admin' ? { email: username, password } : { username, password };
+        const response = await axios.post(`${API_URL}${LOGIN_ENDPOINT[activeRole]}`, payload);
         const { accessToken, refreshToken, user: userData } = response.data;
 
         // /auth/login is shared by all three admin roles — reject a login that

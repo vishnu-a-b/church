@@ -198,16 +198,28 @@ export const deleteRite = async (req: AuthRequest, res: Response, next: NextFunc
 
 // Book a Thirukkarmangal rite against a specific member, creating a Transaction record.
 // Church admin supplies riteId + memberId; houseId/unitId are resolved automatically from the member.
+// Super admin must also supply churchId in the request body.
 export const bookThirukkarmangal = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    if (req.user?.role !== 'church_admin') {
+    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
       res.status(403).json({ success: false, error: 'Only church admins can book Thirukkarmangal rites' });
       return;
     }
 
-    if (!req.user.churchId) {
-      res.status(403).json({ success: false, error: 'Church admin must have a church assigned' });
-      return;
+    let churchId: string;
+    if (req.user.role === 'church_admin') {
+      if (!req.user.churchId) {
+        res.status(403).json({ success: false, error: 'Church admin must have a church assigned' });
+        return;
+      }
+      churchId = String(req.user.churchId);
+    } else {
+      // super_admin must pass churchId in body
+      if (!req.body.churchId) {
+        res.status(400).json({ success: false, error: 'churchId is required' });
+        return;
+      }
+      churchId = String(req.body.churchId);
     }
 
     const { riteId, memberId, totalAmount, paymentMethod, paymentDate, referenceNo, notes, edvOverrideLedgerId } = req.body;
@@ -216,8 +228,6 @@ export const bookThirukkarmangal = async (req: AuthRequest, res: Response, next:
       res.status(400).json({ success: false, error: 'riteId and memberId are required' });
       return;
     }
-
-    const churchId = String(req.user.churchId);
 
     // Validate rite belongs to this church
     const rite = await ThirukkarmangalRite.findById(riteId);

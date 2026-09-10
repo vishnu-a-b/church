@@ -16,6 +16,7 @@ const PORTALS: Array<{
   { role: 'kudumbakutayima_admin',label: 'Kudumbakutayima Admin',desc: 'Manage your family group',                icon: 'home-outline',              color: '#ea580c', bg: '#fff7ed' },
   { role: 'unit_admin',           label: 'Unit Admin',          desc: 'Oversee members and unit activities',      icon: 'people-outline',            color: '#2563eb', bg: '#eff6ff' },
   { role: 'church_admin',         label: 'Church Admin',        desc: 'Full administrative access',               icon: 'shield-checkmark-outline',  color: '#059669', bg: '#f0fdf4' },
+  { role: 'super_admin',          label: 'Super Admin',         desc: 'Manage all churches and system settings',  icon: 'key-outline',               color: '#7c3aed', bg: '#f5f3ff' },
 ];
 
 export default function RolePickerScreen() {

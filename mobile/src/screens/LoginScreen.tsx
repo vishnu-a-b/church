@@ -10,12 +10,14 @@ const ROLE_CONFIG: Record<string, {
   label: string;
   icon: React.ComponentProps<typeof Ionicons>['name'];
   color: string;
+  usesEmail?: boolean;
 }> = {
   member:                { label: 'Member Portal',       icon: 'person-circle-outline',    color: '#0d9488' },
   donor:                 { label: 'Donor Portal',         icon: 'gift-outline',             color: '#7c3aed' },
   church_admin:          { label: 'Church Admin',         icon: 'shield-checkmark-outline', color: '#059669' },
   unit_admin:            { label: 'Unit Admin',           icon: 'people-outline',           color: '#2563eb' },
   kudumbakutayima_admin: { label: 'Kutayima Admin',       icon: 'home-outline',             color: '#ea580c' },
+  super_admin:           { label: 'Super Admin',          icon: 'key-outline',              color: '#7c3aed', usesEmail: true },
 };
 
 export default function LoginScreen() {
@@ -61,15 +63,16 @@ export default function LoginScreen() {
 
         {/* Form card */}
         <View style={styles.card}>
-          {/* Username */}
-          <Text style={styles.fieldLabel}>Username</Text>
+          {/* Username / Email */}
+          <Text style={styles.fieldLabel}>{cfg.usesEmail ? 'Email' : 'Username'}</Text>
           <View style={styles.inputRow}>
-            <Ionicons name="person-outline" size={18} color="#9ca3af" />
+            <Ionicons name={cfg.usesEmail ? 'mail-outline' : 'person-outline'} size={18} color="#9ca3af" />
             <TextInput
               style={styles.input}
-              placeholder="Username, email or phone"
+              placeholder={cfg.usesEmail ? 'Email address' : 'Username, email or phone'}
               placeholderTextColor="#c4c4c4"
               autoCapitalize="none"
+              keyboardType={cfg.usesEmail ? 'email-address' : 'default'}
               returnKeyType="next"
               value={username}
               onChangeText={setUsername}

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { Flame } from 'lucide-react';
+import { Flame, X } from 'lucide-react';
 
-interface Rite { nameMalayalam: string; nameEnglish: string; code: string; category: string; amount: number; }
+interface Rite { _id: string; nameMalayalam: string; nameEnglish: string; }
 
 interface Booking {
   _id: string;
@@ -19,25 +19,63 @@ interface Booking {
 
 export default function MemberThirukkarmangalPage() {
   const api = createRoleApi('member');
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [filterRiteId, setFilterRiteId] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
   useEffect(() => {
-    const fetchHistory = async () => {
-      setLoading(true);
+    const fetch = async () => {
       try {
         const res = await api.get('/members/me/thirukkarmangal');
-        setBookings(res.data?.data || []);
-      } catch (error) {
+        setAllBookings(res.data?.data || []);
+      } catch {
         toast.error('Failed to load Thirukkarmangal history');
       } finally {
         setLoading(false);
       }
     };
-    fetchHistory();
+    fetch();
   }, []);
 
-  const total = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
+  // Unique rites derived from bookings
+  const riteOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: Array<{ id: string; name: string }> = [];
+    for (const b of allBookings) {
+      if (b.riteId?._id && !seen.has(b.riteId._id)) {
+        seen.add(b.riteId._id);
+        opts.push({ id: b.riteId._id, name: b.riteId.nameEnglish });
+      }
+    }
+    return opts;
+  }, [allBookings]);
+
+  // Client-side filtering
+  const filtered = useMemo(() => {
+    return allBookings.filter((b) => {
+      if (filterRiteId && b.riteId?._id !== filterRiteId) return false;
+      const d = new Date(b.paymentDate);
+      if (fromDate && d < new Date(fromDate)) return false;
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        if (d > end) return false;
+      }
+      return true;
+    });
+  }, [allBookings, filterRiteId, fromDate, toDate]);
+
+  const total = filtered.reduce((sum, b) => sum + b.totalAmount, 0);
+  const hasFilters = !!(filterRiteId || fromDate || toDate);
+
+  const clearFilters = () => {
+    setFilterRiteId('');
+    setFromDate('');
+    setToDate('');
+  };
 
   return (
     <div className="space-y-6">
@@ -46,20 +84,64 @@ export default function MemberThirukkarmangalPage() {
         <p className="text-gray-600">Your sacred rite booking history</p>
       </div>
 
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-4 flex flex-wrap gap-3 items-end">
+        <div className="flex-1 min-w-[180px]">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Rite</label>
+          <select
+            value={filterRiteId}
+            onChange={(e) => setFilterRiteId(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">All rites</option>
+            {riteOptions.map((r) => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-[150px]">
+          <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="min-w-[150px]">
+          <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+        {hasFilters && (
+          <button
+            onClick={clearFilters}
+            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            <X className="w-3.5 h-3.5" /> Clear
+          </button>
+        )}
+      </div>
+
       {/* Summary banner */}
-      {!loading && bookings.length > 0 && (
+      {!loading && allBookings.length > 0 && (
         <div className="bg-teal-600 text-white rounded-lg p-5 flex justify-between items-center">
           <div>
             <p className="text-sm text-teal-100">Total Paid</p>
             <p className="text-3xl font-bold">₹{total.toLocaleString()}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-teal-100">Bookings</p>
-            <p className="text-3xl font-bold">{bookings.length}</p>
+            <p className="text-sm text-teal-100">Bookings{hasFilters ? ' (filtered)' : ''}</p>
+            <p className="text-3xl font-bold">{filtered.length}</p>
           </div>
         </div>
       )}
 
+      {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
           <Flame className="w-5 h-5 text-teal-600" />
@@ -70,10 +152,17 @@ export default function MemberThirukkarmangalPage() {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
           </div>
-        ) : bookings.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center py-12 gap-2 text-gray-400">
             <Flame className="w-10 h-10" />
-            <p className="text-sm">No Thirukkarmangal bookings yet</p>
+            <p className="text-sm font-medium text-gray-500">
+              {hasFilters ? 'No matching bookings' : 'No Thirukkarmangal bookings yet'}
+            </p>
+            {hasFilters && (
+              <button onClick={clearFilters} className="text-xs text-teal-600 hover:underline">
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -88,7 +177,7 @@ export default function MemberThirukkarmangalPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {bookings.map((b) => (
+                {filtered.map((b) => (
                   <tr key={b._id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium text-gray-900">{b.riteId?.nameEnglish ?? '—'}</div>

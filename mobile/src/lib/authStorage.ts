@@ -19,7 +19,7 @@ const webStorage = {
 
 const Storage = Platform.OS === 'web' ? webStorage : SecureStore;
 
-export type AppRole = 'member' | 'donor' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin';
+export type AppRole = 'member' | 'donor' | 'church_admin' | 'unit_admin' | 'kudumbakutayima_admin' | 'super_admin';
 
 export interface UserData {
   id: string;

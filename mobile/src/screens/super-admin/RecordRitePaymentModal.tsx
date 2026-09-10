@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 
-const api = createRoleApi('church_admin');
+const api = createRoleApi('super_admin');
 
 interface Rite {
   _id: string;
@@ -22,11 +22,12 @@ interface Member { _id: string; firstName: string; lastName: string; }
 interface Props {
   visible: boolean;
   rite: Rite | null;
+  churchId: string;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved }: Props) {
+export default function SuperAdminRecordRitePaymentModal({ visible, rite, churchId, onClose, onSaved }: Props) {
   const insets = useSafeAreaInsets();
 
   const [units, setUnits] = useState<Unit[]>([]);
@@ -49,7 +50,7 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (visible && rite) {
+    if (visible && rite && churchId) {
       setAmount(String(rite.amount));
       setUnitId('');
       setBkId('');
@@ -59,9 +60,9 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
       setHouses([]);
       setMembers([]);
       setError('');
-      api.get('/units').then((r) => setUnits(r.data?.data || [])).catch(() => setUnits([]));
+      api.get(`/units?churchId=${churchId}`).then((r) => setUnits(r.data?.data || [])).catch(() => setUnits([]));
     }
-  }, [visible, rite]);
+  }, [visible, rite, churchId]);
 
   const handleUnitSelect = async (id: string) => {
     setUnitId(id);
@@ -113,6 +114,7 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
     setSubmitting(true);
     try {
       await api.post('/thirukkarmangal/bookings', {
+        churchId,
         riteId: rite._id,
         memberId,
         totalAmount: paidAmount,
@@ -239,6 +241,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 20, marginBottom: 8 },
   cancelButton: { paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db' },
   cancelText: { color: '#374151', fontWeight: '600' },
-  saveButton: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#059669', minWidth: 140, alignItems: 'center' },
+  saveButton: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#7c3aed', minWidth: 140, alignItems: 'center' },
   saveText: { color: '#fff', fontWeight: '600' },
 });

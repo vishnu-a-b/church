@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ChurchAdminApprovalsScreen from '../screens/church-admin/ApprovalsScreen';
 import ChurchAdminStothrakazhchaScreen from '../screens/church-admin/StothrakazhchaScreen';
 import ChurchAdminThirukkarmangalScreen from '../screens/church-admin/ThirukkarmangalScreen';
+import ChurchAdminThirukkarmangalBookingsScreen from '../screens/church-admin/ThirukkarmangalBookingsScreen';
 import ChurchAdminPathavarmScreen from '../screens/church-admin/PathavarmScreen';
 import ChurchAdminMembersScreen from '../screens/church-admin/MembersScreen';
 import ChurchAdminTransactionsScreen from '../screens/church-admin/TransactionsScreen';
@@ -29,6 +30,8 @@ export default function ChurchAdminTabs() {
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'cash' : 'cash-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Thirukkarmangal" component={ChurchAdminThirukkarmangalScreen}
         options={{ tabBarLabel: 'Rites', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'ribbon' : 'ribbon-outline'} size={size} color={color} /> }} />
+      <Tab.Screen name="RiteBookings" component={ChurchAdminThirukkarmangalBookingsScreen}
+        options={{ tabBarLabel: 'Bookings', title: 'Rite Bookings', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Pathavarm" component={ChurchAdminPathavarmScreen}
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'gift' : 'gift-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Groups" component={ChurchAdminHierarchyScreen}

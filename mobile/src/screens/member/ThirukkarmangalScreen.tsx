@@ -1,9 +1,15 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
+import { PickerModal, PickerField } from '../../components/PickerModal';
+import { DatePickerField } from '../../components/DatePickerField';
+
+const api = createRoleApi('member');
+const COLOR = '#059669';
 
 interface Rite {
+  _id?: string;
   nameMalayalam: string;
   nameEnglish: string;
   code: string;
@@ -18,11 +24,8 @@ interface Booking {
   paymentMethod: string;
   paymentDate: string;
   notes?: string;
-  riteId: Rite | null;
+  riteId: (Rite & { _id: string }) | null;
 }
-
-const api = createRoleApi('member');
-const COLOR = '#059669';
 
 const PAYMENT_ICON: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
   cash:          'cash-outline',
@@ -34,7 +37,6 @@ const PAYMENT_ICON: Record<string, React.ComponentProps<typeof Ionicons>['name']
 function BookingCard({ item }: { item: Booking }) {
   const d = new Date(item.paymentDate);
   const icon = PAYMENT_ICON[item.paymentMethod] ?? 'receipt-outline';
-  const riteName = item.riteId?.nameEnglish ?? 'Sacred Rite';
 
   return (
     <View style={styles.card}>
@@ -45,7 +47,7 @@ function BookingCard({ item }: { item: Booking }) {
             <Ionicons name="flame-outline" size={16} color={COLOR} />
           </View>
           <View style={styles.cardMain}>
-            <Text style={styles.riteName}>{riteName}</Text>
+            <Text style={styles.riteName}>{item.riteId?.nameEnglish ?? 'Sacred Rite'}</Text>
             {item.riteId?.nameMalayalam ? (
               <Text style={styles.riteNameML}>{item.riteId.nameMalayalam}</Text>
             ) : null}
@@ -70,14 +72,20 @@ function BookingCard({ item }: { item: Booking }) {
 }
 
 export default function MemberThirukkarmangalScreen() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const [ritePickerVisible, setRitePickerVisible] = useState(false);
+  const [filterRiteId, setFilterRiteId] = useState('');
+  const [filterRiteName, setFilterRiteName] = useState('');
+  const [fromDate, setFromDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
 
   const fetchHistory = useCallback(async () => {
     try {
       const res = await api.get('/members/me/thirukkarmangal');
-      setBookings(res.data?.data || []);
+      setAllBookings(res.data?.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -88,47 +96,154 @@ export default function MemberThirukkarmangalScreen() {
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  const total = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
+  // Derive unique rites from fetched bookings for the filter picker
+  const riteOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: Array<{ value: string; label: string }> = [];
+    for (const b of allBookings) {
+      if (b.riteId?._id && !seen.has(b.riteId._id)) {
+        seen.add(b.riteId._id);
+        opts.push({ value: b.riteId._id, label: b.riteId.nameEnglish });
+      }
+    }
+    return opts;
+  }, [allBookings]);
+
+  // Apply filters client-side
+  const filtered = useMemo(() => {
+    return allBookings.filter((b) => {
+      if (filterRiteId && b.riteId?._id !== filterRiteId) return false;
+      const d = new Date(b.paymentDate);
+      if (fromDate && d < fromDate) return false;
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        if (d > end) return false;
+      }
+      return true;
+    });
+  }, [allBookings, filterRiteId, fromDate, toDate]);
+
+  const total = filtered.reduce((sum, b) => sum + b.totalAmount, 0);
+  const hasFilters = !!(filterRiteId || fromDate || toDate);
+
+  const clearFilters = () => {
+    setFilterRiteId('');
+    setFilterRiteName('');
+    setFromDate(null);
+    setToDate(null);
+  };
 
   if (loading) {
     return <View style={styles.center}><ActivityIndicator size="large" color={COLOR} /></View>;
   }
 
   return (
-    <FlatList
-      data={bookings}
-      keyExtractor={(b) => b._id}
-      contentContainerStyle={styles.list}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchHistory(); }} tintColor={COLOR} />
-      }
-      ListHeaderComponent={
-        <View style={styles.banner}>
-          <View>
-            <Text style={styles.bannerLabel}>Total Paid</Text>
-            <Text style={styles.bannerAmount}>₹{total.toLocaleString()}</Text>
-            <Text style={styles.bannerSub}>{bookings.length} booking{bookings.length !== 1 ? 's' : ''}</Text>
+    <View style={styles.container}>
+      <FlatList
+        data={filtered}
+        keyExtractor={(b) => b._id}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); fetchHistory(); }}
+            tintColor={COLOR}
+          />
+        }
+        ListHeaderComponent={
+          <>
+            {/* Filters */}
+            <View style={styles.filtersCard}>
+              <Text style={styles.sectionLabel}>Rite</Text>
+              <PickerField
+                label={filterRiteName}
+                placeholder="All rites"
+                onPress={() => riteOptions.length > 0 && setRitePickerVisible(true)}
+              />
+              <View style={styles.dateRow}>
+                <View style={styles.dateCol}>
+                  <Text style={styles.sectionLabel}>From</Text>
+                  <DatePickerField value={fromDate} onChange={setFromDate} placeholder="Start date" color={COLOR} modalTitle="From Date" />
+                </View>
+                <View style={styles.dateCol}>
+                  <Text style={styles.sectionLabel}>To</Text>
+                  <DatePickerField value={toDate} onChange={setToDate} placeholder="End date" color={COLOR} modalTitle="To Date" />
+                </View>
+              </View>
+              {hasFilters && (
+                <TouchableOpacity style={styles.clearBtn} onPress={clearFilters}>
+                  <Ionicons name="close-circle-outline" size={15} color="#6b7280" />
+                  <Text style={styles.clearText}>Clear filters</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Banner */}
+            <View style={styles.banner}>
+              <View>
+                <Text style={styles.bannerLabel}>Total Paid</Text>
+                <Text style={styles.bannerAmount}>₹{total.toLocaleString()}</Text>
+                <Text style={styles.bannerSub}>
+                  {filtered.length} booking{filtered.length !== 1 ? 's' : ''}
+                  {hasFilters ? ' (filtered)' : ''}
+                </Text>
+              </View>
+              <View style={styles.bannerIcon}>
+                <Ionicons name="flame-outline" size={28} color="#fff" />
+              </View>
+            </View>
+          </>
+        }
+        renderItem={({ item }) => <BookingCard item={item} />}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="flame-outline" size={36} color="#d1d5db" />
+            <Text style={styles.emptyTitle}>
+              {hasFilters ? 'No matching bookings' : 'No bookings yet'}
+            </Text>
+            <Text style={styles.emptySub}>
+              {hasFilters
+                ? 'Try adjusting or clearing the filters'
+                : 'Your Thirukkarmangal bookings will appear here'}
+            </Text>
           </View>
-          <View style={styles.bannerIcon}>
-            <Ionicons name="flame-outline" size={28} color="#fff" />
-          </View>
-        </View>
-      }
-      renderItem={({ item }) => <BookingCard item={item} />}
-      ListEmptyComponent={
-        <View style={styles.empty}>
-          <Ionicons name="flame-outline" size={36} color="#d1d5db" />
-          <Text style={styles.emptyTitle}>No bookings yet</Text>
-          <Text style={styles.emptySub}>Your Thirukkarmangal bookings will appear here</Text>
-        </View>
-      }
-    />
+        }
+      />
+
+      <PickerModal
+        visible={ritePickerVisible}
+        title="Filter by Rite"
+        options={[
+          { value: '', label: 'All rites' },
+          ...riteOptions,
+        ]}
+        onSelect={(id) => {
+          setFilterRiteId(id);
+          setFilterRiteName(riteOptions.find((r) => r.value === id)?.label || '');
+        }}
+        onClose={() => setRitePickerVisible(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f3f4f6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { padding: 16, paddingBottom: 40 },
+
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 },
+
+  filtersCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12 },
+  dateRow: { flexDirection: 'row', gap: 10 },
+  dateCol: { flex: 1 },
+  clearBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-end',
+    paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8,
+    borderWidth: 1, borderColor: '#e5e7eb', marginTop: 10,
+  },
+  clearText: { fontSize: 12, fontWeight: '600', color: '#6b7280' },
 
   banner: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',

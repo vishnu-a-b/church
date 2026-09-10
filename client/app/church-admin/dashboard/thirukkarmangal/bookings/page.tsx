@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { ArrowLeft, Flame, Receipt, Search } from 'lucide-react';
+import { ArrowLeft, Flame, Receipt, Search, X } from 'lucide-react';
 
 interface Rite { _id: string; nameMalayalam: string; nameEnglish: string; code: string; category: string; amount: number; }
 interface MemberRef { _id: string; firstName: string; lastName: string; uniqueId: string; }
@@ -73,6 +73,20 @@ export default function ThirukkarmangalBookingsPage() {
     fetchBookings();
   };
 
+  const hasFilters = !!(filterRite || filterFrom || filterTo);
+
+  const clearFilters = () => {
+    setFilterRite('');
+    setFilterFrom('');
+    setFilterTo('');
+    // re-fetch with no filters
+    setLoading(true);
+    api.get('/thirukkarmangal/bookings')
+      .then((res) => setBookings(res.data?.data || []))
+      .catch((err: any) => toast.error(err.response?.data?.error || 'Failed to load bookings'))
+      .finally(() => setLoading(false));
+  };
+
   const total = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
 
   return (
@@ -116,6 +130,15 @@ export default function ThirukkarmangalBookingsPage() {
           <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
           <input type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
         </div>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            <X className="w-3.5 h-3.5" /> Clear
+          </button>
+        )}
         <button type="submit" className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 text-sm">
           <Search className="w-4 h-4" /> Search
         </button>
@@ -145,7 +168,13 @@ export default function ThirukkarmangalBookingsPage() {
           <div className="flex flex-col items-center py-16 gap-2 text-gray-400">
             <Flame className="w-10 h-10" />
             <p className="font-medium text-gray-500">No bookings found</p>
-            <p className="text-sm">Try adjusting the filters</p>
+            {hasFilters ? (
+              <button onClick={clearFilters} className="text-sm text-teal-600 hover:underline">
+                Clear filters
+              </button>
+            ) : (
+              <p className="text-sm">No Thirukkarmangal payments have been recorded yet</p>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

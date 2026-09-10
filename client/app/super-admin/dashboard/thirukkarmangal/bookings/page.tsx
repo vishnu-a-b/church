@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { ArrowLeft, Flame, Search } from 'lucide-react';
+import { ArrowLeft, Flame, Receipt, Search, X } from 'lucide-react';
 
 interface Church { _id: string; name: string; }
 interface Rite { _id: string; nameMalayalam: string; nameEnglish: string; code: string; category: string; amount: number; }
@@ -82,6 +82,15 @@ function BookingsContent() {
     fetchBookings(selectedChurchId, filterRite, filterFrom, filterTo);
   };
 
+  const hasFilters = !!(filterRite || filterFrom || filterTo);
+
+  const clearFilters = () => {
+    setFilterRite('');
+    setFilterFrom('');
+    setFilterTo('');
+    fetchBookings(selectedChurchId, '', '', '');
+  };
+
   const total = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
 
   return (
@@ -96,6 +105,12 @@ function BookingsContent() {
             <p className="text-gray-500 text-sm">View rite payment bookings across churches</p>
           </div>
         </div>
+        <Link
+          href="/super-admin/dashboard/thirukkarmangal/record-payment"
+          className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
+        >
+          <Receipt className="w-4 h-4" /> Record Payment
+        </Link>
       </div>
 
       {/* Church + Filters */}
@@ -131,6 +146,15 @@ function BookingsContent() {
           <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
           <input type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
         </div>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            <X className="w-3.5 h-3.5" /> Clear
+          </button>
+        )}
         <button
           type="submit"
           disabled={!selectedChurchId}
@@ -169,7 +193,13 @@ function BookingsContent() {
           <div className="flex flex-col items-center py-16 gap-2 text-gray-400">
             <Flame className="w-10 h-10" />
             <p className="font-medium text-gray-500">No bookings found</p>
-            <p className="text-sm">Try adjusting the filters</p>
+            {hasFilters ? (
+              <button onClick={clearFilters} className="text-sm text-purple-600 hover:underline">
+                Clear filters
+              </button>
+            ) : (
+              <p className="text-sm">No Thirukkarmangal payments have been recorded for this church yet</p>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

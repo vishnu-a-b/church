@@ -11,6 +11,7 @@ import DonorTabs from './src/navigation/DonorTabs';
 import ChurchAdminTabs from './src/navigation/ChurchAdminTabs';
 import KutayimaAdminTabs from './src/navigation/KutayimaAdminTabs';
 import UnitAdminTabs from './src/navigation/UnitAdminTabs';
+import SuperAdminTabs from './src/navigation/SuperAdminTabs';
 
 function RootGate() {
   const { activeRole, user, loading } = useAuth();
@@ -39,6 +40,8 @@ function RootGate() {
       return <KutayimaAdminTabs />;
     case 'unit_admin':
       return <UnitAdminTabs />;
+    case 'super_admin':
+      return <SuperAdminTabs />;
     default:
       return null;
   }
