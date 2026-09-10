@@ -6,7 +6,7 @@ import House from '../models/House';
 import Bavanakutayima from '../models/Bavanakutayima';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../types';
-import { notifyTransactionMember } from '../services/transactionNotifier';
+import { notifyStothrakazhchaApproval } from '../services/transactionNotifier';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
 
@@ -435,7 +435,7 @@ export const addContribution = async (req: AuthRequest, res: Response, next: Nex
       populated.contributors = populatedContributors;
     }
 
-    notifyTransactionMember(transaction, `Stothrakazhcha — Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year}`);
+    notifyStothrakazhchaApproval(transaction, stothrakazhcha.weekNumber, stothrakazhcha.year, stothrakazhcha.weekStartDate, stothrakazhcha.weekEndDate);
 
     // Push into EDV asynchronously (don't block response)
     if (edvBridgeConfig.enabled) {
@@ -443,6 +443,48 @@ export const addContribution = async (req: AuthRequest, res: Response, next: Nex
     }
 
     res.json({ success: true, data: populated, message: 'Contribution added successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Set extra amount for a Stothrakazhcha week (church admin only)
+export const setExtraAmount = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
+      res.status(403).json({ success: false, error: 'Only church admins can set extra amount' });
+      return;
+    }
+
+    const stothrakazhcha = await Stothrakazhcha.findById(req.params.id);
+    if (!stothrakazhcha) {
+      res.status(404).json({ success: false, error: 'Stothrakazhcha not found' });
+      return;
+    }
+    if (req.user.role === 'church_admin' && String(stothrakazhcha.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Cannot update stothrakazhcha from another church' });
+      return;
+    }
+
+    const { amount, note } = req.body;
+    if (amount === undefined || amount < 0) {
+      res.status(400).json({ success: false, error: 'Valid amount (>= 0) is required' });
+      return;
+    }
+
+    stothrakazhcha.extraAmount = amount;
+    stothrakazhcha.extraAmountNote = note || undefined;
+    await stothrakazhcha.save();
+
+    res.json({
+      success: true,
+      data: {
+        extraAmount: stothrakazhcha.extraAmount,
+        extraAmountNote: stothrakazhcha.extraAmountNote,
+        totalCollected: stothrakazhcha.totalCollected,
+        grandTotal: stothrakazhcha.totalCollected + stothrakazhcha.extraAmount,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -551,6 +593,9 @@ export const getStothrakazhchaByBavanakutayima = async (req: AuthRequest, res: R
         amountType: stothrakazhcha.amountType,
         totalCollected: stothrakazhcha.totalCollected,
         totalContributors: stothrakazhcha.totalContributors,
+        extraAmount: stothrakazhcha.extraAmount ?? 0,
+        extraAmountNote: stothrakazhcha.extraAmountNote,
+        grandTotal: (stothrakazhcha.totalCollected ?? 0) + (stothrakazhcha.extraAmount ?? 0),
         groups: Object.values(groups),
       },
     });

@@ -524,6 +524,18 @@ export const sendTransactionNotification = async (
 </html>
   `;
 
+  const spiritualActivitiesText = transactionDetails.spiritualActivities && transactionDetails.spiritualActivities.length > 0
+    ? '\nSpiritual Activities:\n' + transactionDetails.spiritualActivities.map((a) => {
+        const label = a.activityType === 'mass'
+          ? `Mass${a.massDate ? ' — ' + new Date(a.massDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}`
+          : a.activityType === 'fasting'
+          ? `Fasting${a.fastingWeek ? ' — ' + a.fastingWeek : ''}${a.fastingDays && a.fastingDays.length ? ' (' + a.fastingDays.join(', ') + ')' : ''}`
+          : `Prayer (${a.prayerType || 'other'})${a.prayerCount ? ' × ' + a.prayerCount : ''}${a.prayerWeek ? ' — ' + a.prayerWeek : ''}`;
+        const status = a.approvalStatus === 'pending_approval' ? 'pending' : a.approvalStatus;
+        return `- ${label}    ${status}`;
+      }).join('\n')
+    : '';
+
   const textContent = `
 Transaction Notification
 
@@ -538,7 +550,7 @@ ${transactionDetails.campaignName ? `- Campaign: ${transactionDetails.campaignNa
 - Amount: ${formattedAmount}
 - Payment Method: ${transactionDetails.paymentMethod.replace('_', ' ').toUpperCase()}
 - Date: ${formattedDate}
-
+${spiritualActivitiesText}
 Thank you for your contribution to the church!
 
 To manage your email notification preferences, visit your member portal settings.
