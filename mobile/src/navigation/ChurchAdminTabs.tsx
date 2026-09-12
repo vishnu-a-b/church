@@ -28,10 +28,10 @@ export default function ChurchAdminTabs() {
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'checkmark-circle' : 'checkmark-circle-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Stothra" component={ChurchAdminStothrakazhchaScreen}
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'cash' : 'cash-outline'} size={size} color={color} /> }} />
-      <Tab.Screen name="Thirukkarmangal" component={ChurchAdminThirukkarmangalScreen}
-        options={{ tabBarLabel: 'Rites', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'ribbon' : 'ribbon-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="RiteBookings" component={ChurchAdminThirukkarmangalBookingsScreen}
         options={{ tabBarLabel: 'Bookings', title: 'Rite Bookings', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={size} color={color} /> }} />
+      <Tab.Screen name="Thirukkarmangal" component={ChurchAdminThirukkarmangalScreen}
+        options={{ tabBarLabel: 'Rites', tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'ribbon' : 'ribbon-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Pathavarm" component={ChurchAdminPathavarmScreen}
         options={{ tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'gift' : 'gift-outline'} size={size} color={color} /> }} />
       <Tab.Screen name="Groups" component={ChurchAdminHierarchyScreen}

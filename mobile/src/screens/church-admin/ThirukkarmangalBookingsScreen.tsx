@@ -7,11 +7,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 import { DatePickerField, formatDateISO } from '../../components/DatePickerField';
+import RecordRitePaymentModal from './RecordRitePaymentModal';
 
 const api = createRoleApi('church_admin');
 const COLOR = '#059669';
 
-interface RiteMaster { _id: string; nameEnglish: string; }
+interface RiteMaster {
+  _id: string;
+  nameEnglish: string;
+  amount: number;
+  splitConfigured: boolean;
+  split: Array<{ recipientLabel: string; percent: number }>;
+}
 interface Booking {
   _id: string;
   receiptNumber: string;
@@ -107,6 +114,9 @@ export default function ChurchAdminThirukkarmangalBookingsScreen() {
   const [filterRiteName, setFilterRiteName] = useState('');
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
+
+  const [newBookingRitePickerVisible, setNewBookingRitePickerVisible] = useState(false);
+  const [bookingRite, setBookingRite] = useState<RiteMaster | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -226,6 +236,16 @@ export default function ChurchAdminThirukkarmangalBookingsScreen() {
         }
       />
 
+      {/* FAB: Record new booking */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setNewBookingRitePickerVisible(true)}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={26} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Filter rite picker */}
       <PickerModal
         visible={ritePickerVisible}
         title="Filter by Rite"
@@ -239,6 +259,30 @@ export default function ChurchAdminThirukkarmangalBookingsScreen() {
         }}
         onClose={() => setRitePickerVisible(false)}
       />
+
+      {/* New booking: rite picker */}
+      <PickerModal
+        visible={newBookingRitePickerVisible}
+        title="Select Rite to Book"
+        options={rites.map((r) => ({ value: r._id, label: r.nameEnglish }))}
+        onSelect={(id) => {
+          const rite = rites.find((r) => r._id === id) || null;
+          setBookingRite(rite);
+        }}
+        onClose={() => setNewBookingRitePickerVisible(false)}
+      />
+
+      {/* New booking: payment modal */}
+      <RecordRitePaymentModal
+        visible={!!bookingRite}
+        rite={bookingRite}
+        onClose={() => setBookingRite(null)}
+        onSaved={() => {
+          setBookingRite(null);
+          setRefreshing(true);
+          fetchBookings(filterRiteId, fromDate, toDate);
+        }}
+      />
     </View>
   );
 }
@@ -246,7 +290,7 @@ export default function ChurchAdminThirukkarmangalBookingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: 16, paddingBottom: 40 },
+  list: { padding: 16, paddingBottom: 100 },
 
   sectionLabel: { fontSize: 11, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 },
 
@@ -312,4 +356,15 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: '700', color: '#374151' },
   emptySub: { fontSize: 13, color: '#9ca3af', textAlign: 'center' },
   emptyLink: { fontSize: 13, color: COLOR, fontWeight: '600' },
+
+  fab: {
+    position: 'absolute', bottom: 24, right: 20,
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: COLOR,
+    justifyContent: 'center', alignItems: 'center',
+    ...Platform.select({
+      ios: { shadowColor: COLOR, shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
+      android: { elevation: 10 },
+    }),
+  },
 });

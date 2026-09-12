@@ -3,8 +3,17 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
+import { DatePickerField, formatDateISO } from '../../components/DatePickerField';
 
 const api = createRoleApi('church_admin');
+const COLOR = '#059669';
+
+const PAYMENT_METHODS = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'bank_transfer', label: 'Bank Transfer' },
+  { value: 'upi', label: 'UPI' },
+  { value: 'cheque', label: 'Cheque' },
+];
 
 interface Rite {
   _id: string;
@@ -43,8 +52,12 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
   const [bkPickerVisible, setBkPickerVisible] = useState(false);
   const [housePickerVisible, setHousePickerVisible] = useState(false);
   const [memberPickerVisible, setMemberPickerVisible] = useState(false);
+  const [methodPickerVisible, setMethodPickerVisible] = useState(false);
 
   const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentDate, setPaymentDate] = useState<Date>(new Date());
+  const [referenceNo, setReferenceNo] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -58,6 +71,9 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
       setBavanakutayimas([]);
       setHouses([]);
       setMembers([]);
+      setPaymentMethod('cash');
+      setPaymentDate(new Date());
+      setReferenceNo('');
       setError('');
       api.get('/units').then((r) => setUnits(r.data?.data || [])).catch(() => setUnits([]));
     }
@@ -99,6 +115,7 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
   const selectedBk = bavanakutayimas.find((b) => b._id === bkId);
   const selectedHouse = houses.find((h) => h._id === houseId);
   const selectedMember = members.find((m) => m._id === memberId);
+  const selectedMethodLabel = PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label ?? 'Cash';
 
   const paidAmount = Number(amount) || 0;
   const preview = rite.splitConfigured
@@ -116,7 +133,9 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
         riteId: rite._id,
         memberId,
         totalAmount: paidAmount,
-        paymentMethod: 'cash',
+        paymentMethod,
+        paymentDate: formatDateISO(paymentDate),
+        referenceNo: referenceNo.trim() || undefined,
         notes: `Thirukkarmangal: ${rite.nameEnglish}`,
       });
       onSaved();
@@ -166,6 +185,33 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
 
             <Text style={styles.label}>Amount (₹)</Text>
             <TextInput style={styles.input} keyboardType="numeric" value={amount} onChangeText={setAmount} />
+
+            <Text style={styles.label}>Payment Method</Text>
+            <PickerField
+              label={selectedMethodLabel}
+              placeholder="Select method..."
+              onPress={() => setMethodPickerVisible(true)}
+            />
+
+            <Text style={styles.label}>Payment Date</Text>
+            <DatePickerField
+              value={paymentDate}
+              onChange={setPaymentDate}
+              color={COLOR}
+              modalTitle="Payment Date"
+            />
+
+            {paymentMethod !== 'cash' && (
+              <>
+                <Text style={styles.label}>Reference No.</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Transaction / cheque reference"
+                  value={referenceNo}
+                  onChangeText={setReferenceNo}
+                />
+              </>
+            )}
 
             {rite.splitConfigured ? (
               <View style={styles.previewBox}>
@@ -220,6 +266,13 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
         onSelect={setMemberId}
         onClose={() => setMemberPickerVisible(false)}
       />
+      <PickerModal
+        visible={methodPickerVisible}
+        title="Payment Method"
+        options={PAYMENT_METHODS}
+        onSelect={setPaymentMethod}
+        onClose={() => setMethodPickerVisible(false)}
+      />
     </Modal>
   );
 }
@@ -239,6 +292,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 20, marginBottom: 8 },
   cancelButton: { paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db' },
   cancelText: { color: '#374151', fontWeight: '600' },
-  saveButton: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#059669', minWidth: 140, alignItems: 'center' },
+  saveButton: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8, backgroundColor: COLOR, minWidth: 140, alignItems: 'center' },
   saveText: { color: '#fff', fontWeight: '600' },
 });

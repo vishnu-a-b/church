@@ -7,12 +7,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
 import { PickerModal, PickerField } from '../../components/PickerModal';
 import { DatePickerField, formatDateISO } from '../../components/DatePickerField';
+import SuperAdminRecordRitePaymentModal from './RecordRitePaymentModal';
 
 const api = createRoleApi('super_admin');
 const COLOR = '#7c3aed';
 
 interface Church { _id: string; name: string; }
-interface RiteMaster { _id: string; nameEnglish: string; }
+interface RiteMaster {
+  _id: string;
+  nameEnglish: string;
+  amount: number;
+  splitConfigured: boolean;
+  split: Array<{ recipientLabel: string; percent: number }>;
+}
 interface Booking {
   _id: string;
   receiptNumber: string;
@@ -110,6 +117,8 @@ export default function SuperAdminThirukkarmangalBookingsScreen() {
 
   const [churchPickerVisible, setChurchPickerVisible] = useState(false);
   const [ritePickerVisible, setRitePickerVisible] = useState(false);
+  const [newBookingRitePickerVisible, setNewBookingRitePickerVisible] = useState(false);
+  const [bookingRite, setBookingRite] = useState<RiteMaster | null>(null);
 
   const [selectedChurchId, setSelectedChurchId] = useState('');
   const [selectedChurchName, setSelectedChurchName] = useState('');
@@ -281,6 +290,17 @@ export default function SuperAdminThirukkarmangalBookingsScreen() {
         />
       )}
 
+      {/* FAB: Record new booking (only when a church is selected) */}
+      {!!selectedChurchId && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setNewBookingRitePickerVisible(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={26} color="#fff" />
+        </TouchableOpacity>
+      )}
+
       <PickerModal
         visible={churchPickerVisible}
         title="Select Church"
@@ -301,6 +321,31 @@ export default function SuperAdminThirukkarmangalBookingsScreen() {
         }}
         onClose={() => setRitePickerVisible(false)}
       />
+
+      {/* New booking: rite picker */}
+      <PickerModal
+        visible={newBookingRitePickerVisible}
+        title="Select Rite to Book"
+        options={rites.map((r) => ({ value: r._id, label: r.nameEnglish }))}
+        onSelect={(id) => {
+          const rite = rites.find((r) => r._id === id) || null;
+          setBookingRite(rite);
+        }}
+        onClose={() => setNewBookingRitePickerVisible(false)}
+      />
+
+      {/* New booking: payment modal */}
+      <SuperAdminRecordRitePaymentModal
+        visible={!!bookingRite}
+        rite={bookingRite}
+        churchId={selectedChurchId}
+        onClose={() => setBookingRite(null)}
+        onSaved={() => {
+          setBookingRite(null);
+          setRefreshing(true);
+          fetchBookings(selectedChurchId, filterRiteId, fromDate, toDate);
+        }}
+      />
     </View>
   );
 }
@@ -315,7 +360,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 17, fontWeight: '700', color: '#374151' },
   emptySub: { fontSize: 13, color: '#9ca3af', textAlign: 'center' },
 
-  list: { padding: 16, paddingBottom: 40 },
+  list: { padding: 16, paddingBottom: 100 },
 
   filtersCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 16 },
   dateRow: { flexDirection: 'row', gap: 10 },
@@ -380,4 +425,15 @@ const styles = StyleSheet.create({
 
   empty: { alignItems: 'center', gap: 8, paddingVertical: 40 },
   emptyLink: { fontSize: 13, color: COLOR, fontWeight: '600' },
+
+  fab: {
+    position: 'absolute', bottom: 24, right: 20,
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: COLOR,
+    justifyContent: 'center', alignItems: 'center',
+    ...Platform.select({
+      ios: { shadowColor: COLOR, shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
+      android: { elevation: 10 },
+    }),
+  },
 });
