@@ -33,6 +33,8 @@ export default function SuperAdminRecordThirukkarmangalPage() {
   const [selectedRiteId, setSelectedRiteId] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [referenceNo, setReferenceNo] = useState('');
   const [notes, setNotes] = useState('');
 
   const [units, setUnits] = useState<Unit[]>([]);
@@ -140,6 +142,8 @@ export default function SuperAdminRecordThirukkarmangalPage() {
         memberId: selectedMember,
         totalAmount: Number(amount),
         paymentMethod,
+        paymentDate,
+        referenceNo: referenceNo.trim() || undefined,
         notes: notes || `Thirukkarmangal: ${selectedRite?.nameEnglish}`,
       });
       toast.success('Payment recorded successfully');
@@ -297,6 +301,30 @@ export default function SuperAdminRecordThirukkarmangalPage() {
             <option value="cheque">Cheque</option>
           </select>
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date *</label>
+          <input
+            type="date"
+            value={paymentDate}
+            onChange={(e) => setPaymentDate(e.target.value)}
+            max={new Date().toISOString().slice(0, 10)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2"
+          />
+        </div>
+
+        {paymentMethod !== 'cash' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Reference No.</label>
+            <input
+              type="text"
+              value={referenceNo}
+              onChange={(e) => setReferenceNo(e.target.value)}
+              placeholder="Transaction / cheque reference"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2"
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
