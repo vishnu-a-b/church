@@ -27,6 +27,7 @@ export default function ChurchAdminPathavarmPage() {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [me, setMe] = useState<any>(null);
+  const [edvLedgers, setEdvLedgers] = useState<{ id: string; name: string; group: { name: string } }[]>([]);
 
   const [units, setUnits] = useState<Unit[]>([]);
   const [bavanakutayimas, setBavanakutayimas] = useState<Bavanakutayima[]>([]);
@@ -38,12 +39,14 @@ export default function ChurchAdminPathavarmPage() {
   const [selectedMember, setSelectedMember] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [receivingLedgerId, setReceivingLedgerId] = useState('');
 
   useEffect(() => {
     fetchTransactions();
     fetchUnits();
     const stored = localStorage.getItem('church_admin_user');
     if (stored) setMe(JSON.parse(stored));
+    api.get('/edv-sync/ledgers').then(r => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
   }, []);
 
   const fetchTransactions = async () => {
@@ -103,6 +106,7 @@ export default function ChurchAdminPathavarmPage() {
     setSelectedMember('');
     setAmount('');
     setPaymentMethod('cash');
+    setReceivingLedgerId('');
     setBavanakutayimas([]);
     setHouses([]);
     setMembers([]);
@@ -131,6 +135,7 @@ export default function ChurchAdminPathavarmPage() {
         totalAmount: Number(amount),
         paymentMethod,
         notes: 'Pathavarm (Tithe)',
+        receivingLedgerId: receivingLedgerId || undefined,
       });
       toast.success('Pathavarm contribution recorded');
       setShowModal(false);
@@ -241,6 +246,14 @@ export default function ChurchAdminPathavarmPage() {
                 <option value="upi">UPI</option>
                 <option value="cheque">Cheque</option>
               </select>
+              {edvLedgers.length > 0 && (
+                <select value={receivingLedgerId} onChange={(e) => setReceivingLedgerId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                  <option value="">— Receiving Account (None) —</option>
+                  {edvLedgers.map(l => (
+                    <option key={l.id} value={l.id}>{l.group.name} › {l.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-2">

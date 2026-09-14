@@ -368,7 +368,7 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
       return;
     }
 
-    const { memberId, donorId, amount, paymentMethod, referenceNo, paymentDate, months } = req.body;
+    const { memberId, donorId, amount, paymentMethod, referenceNo, paymentDate, months, receivingLedgerId } = req.body;
 
     if ((!memberId && !donorId) || (memberId && donorId)) {
       res.status(400).json({ success: false, error: 'Specify exactly one of memberId or donorId' });
@@ -449,6 +449,7 @@ export const addPaymentForMember = async (req: AuthRequest, res: Response, next:
         paymentDate: effectivePaymentDate,
         notes: `Monthly support payment for ${due.dueForName} (${periodMonth})`,
         createdBy: req.user?._id,
+        receivingLedgerId: receivingLedgerId || undefined,
       });
 
       due.paidAmount += paymentAmount;

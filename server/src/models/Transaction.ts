@@ -108,6 +108,9 @@ const transactionSchema = new Schema<ITransaction>(
     edvOverrideLedgerId: {
       type: String,
     },
+    receivingLedgerId: {
+      type: String,
+    },
     edvSyncError: {
       type: String,
     },

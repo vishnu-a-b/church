@@ -222,7 +222,7 @@ export const bookThirukkarmangal = async (req: AuthRequest, res: Response, next:
       churchId = String(req.body.churchId);
     }
 
-    const { riteId, memberId, totalAmount, paymentMethod, paymentDate, referenceNo, notes, edvOverrideLedgerId } = req.body;
+    const { riteId, memberId, totalAmount, paymentMethod, paymentDate, referenceNo, notes, edvOverrideLedgerId, receivingLedgerId } = req.body;
 
     if (!riteId || !memberId) {
       res.status(400).json({ success: false, error: 'riteId and memberId are required' });
@@ -270,6 +270,7 @@ export const bookThirukkarmangal = async (req: AuthRequest, res: Response, next:
       referenceNo: referenceNo || undefined,
       notes: notes || undefined,
       edvOverrideLedgerId: edvOverrideLedgerId || undefined,
+      receivingLedgerId: receivingLedgerId || undefined,
       splitBreakdown: splitBreakdown.length > 0 ? splitBreakdown : undefined,
       receiptNumber: `TKM-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       createdBy: req.user._id,

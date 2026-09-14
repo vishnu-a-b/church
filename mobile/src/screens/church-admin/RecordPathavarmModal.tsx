@@ -9,6 +9,7 @@ const api = createRoleApi('church_admin');
 const PAYMENT_METHODS = ['cash', 'bank_transfer', 'upi', 'cheque'] as const;
 
 interface Member { _id: string; firstName: string; lastName: string; }
+interface EdvLedger { id: string; name: string; group: { name: string } }
 
 interface Props {
   visible: boolean;
@@ -26,13 +27,18 @@ export default function RecordPathavarmModal({ visible, onClose, onSaved }: Prop
   const [paymentMethod, setPaymentMethod] = useState<(typeof PAYMENT_METHODS)[number]>('cash');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [edvLedgers, setEdvLedgers] = useState<EdvLedger[]>([]);
+  const [receivingLedgerId, setReceivingLedgerId] = useState('');
+  const [ledgerPickerVisible, setLedgerPickerVisible] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setMemberId('');
       setAmount('');
       setError('');
+      setReceivingLedgerId('');
       api.get('/members').then((res) => setMembers(res.data?.data || [])).catch(() => setMembers([]));
+      api.get('/edv-sync/ledgers').then((r) => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
     }
   }, [visible]);
 
@@ -57,6 +63,7 @@ export default function RecordPathavarmModal({ visible, onClose, onSaved }: Prop
         totalAmount: value,
         paymentMethod,
         notes: 'Pathavarm (Tithe)',
+        receivingLedgerId: receivingLedgerId || undefined,
       });
       onSaved();
       onClose();
@@ -93,6 +100,17 @@ export default function RecordPathavarmModal({ visible, onClose, onSaved }: Prop
             ))}
           </View>
 
+          {edvLedgers.length > 0 && (
+            <>
+              <Text style={styles.label}>Receiving Account</Text>
+              <PickerField
+                label={receivingLedgerId ? `${edvLedgers.find(l => l.id === receivingLedgerId)?.group.name} › ${edvLedgers.find(l => l.id === receivingLedgerId)?.name}` : ''}
+                placeholder="— None (use default) —"
+                onPress={() => setLedgerPickerVisible(true)}
+              />
+            </>
+          )}
+
           {!!error && <Text style={styles.error}>{error}</Text>}
 
           <View style={styles.actions}>
@@ -113,6 +131,16 @@ export default function RecordPathavarmModal({ visible, onClose, onSaved }: Prop
         options={members.map((m) => ({ value: m._id, label: `${m.firstName} ${m.lastName}` }))}
         onSelect={setMemberId}
         onClose={() => setMemberPickerVisible(false)}
+      />
+      <PickerModal
+        visible={ledgerPickerVisible}
+        title="Receiving Account"
+        options={[
+          { value: '', label: '— None (use default) —' },
+          ...edvLedgers.map((l) => ({ value: l.id, label: `${l.group.name} › ${l.name}` })),
+        ]}
+        onSelect={setReceivingLedgerId}
+        onClose={() => setLedgerPickerVisible(false)}
       />
     </Modal>
   );

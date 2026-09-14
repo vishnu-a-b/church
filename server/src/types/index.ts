@@ -170,6 +170,7 @@ export interface ITransaction extends Document {
   edvSynced: boolean;
   edvVoucherId?: string;
   edvOverrideLedgerId?: string;
+  receivingLedgerId?: string;
   edvSyncError?: string;
   edvSyncedAt?: Date;
   // Thirukkarmangal-only fields — populated only when transactionType === 'thirukkarmangal'

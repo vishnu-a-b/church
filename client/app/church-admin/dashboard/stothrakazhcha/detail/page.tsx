@@ -59,6 +59,8 @@ function StothrakazhchaDetailContent() {
   const [extraForm, setExtraForm] = useState<{ amount: string; note: string } | null>(null);
   const [savingExtra, setSavingExtra] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [edvLedgers, setEdvLedgers] = useState<{ id: string; name: string; group: { name: string } }[]>([]);
+  const [receivingLedgerId, setReceivingLedgerId] = useState('');
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) => {
@@ -81,6 +83,10 @@ function StothrakazhchaDetailContent() {
   }, [id]);
 
   useEffect(() => { fetchDetail(); }, [fetchDetail]);
+
+  useEffect(() => {
+    api.get('/edv-sync/ledgers').then(r => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
+  }, []);
 
   const saveAmount = async (stothrakazhchaId: string, entryId: string, newAmountStr: string) => {
     const value = Number(newAmountStr);
@@ -123,7 +129,9 @@ function StothrakazhchaDetailContent() {
 
     setActingId(`group_${group.bavanakutayimaId}`);
     try {
-      await api.post(`/approvals/stothrakazhcha/${week._id}/bavanakutayima/${group.bavanakutayimaId}/approve-all`, {});
+      await api.post(`/approvals/stothrakazhcha/${week._id}/bavanakutayima/${group.bavanakutayimaId}/approve-all`, {
+        receivingLedgerId: receivingLedgerId || undefined,
+      });
       toast.success(`${group.pendingCount} contribution(s) approved`);
       fetchDetail();
     } catch (e: any) {
@@ -269,6 +277,24 @@ function StothrakazhchaDetailContent() {
           )}
         </div>
       </div>
+
+      {/* Receiving account selector (only when EDV is configured) */}
+      {edvLedgers.length > 0 && (
+        <div className="bg-white rounded-xl shadow p-4 flex items-center gap-4">
+          <label className="text-sm font-medium text-gray-700 shrink-0">Receiving Account</label>
+          <select
+            value={receivingLedgerId}
+            onChange={(e) => setReceivingLedgerId(e.target.value)}
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">— None (use default) —</option>
+            {edvLedgers.map(l => (
+              <option key={l.id} value={l.id}>{l.group.name} › {l.name}</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400 shrink-0">Applied to all approvals on this page</p>
+        </div>
+      )}
 
       {/* BK groups */}
       {week.groups.length === 0 ? (

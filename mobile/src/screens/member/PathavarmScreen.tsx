@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
+import { PickerModal, PickerField } from '../../components/PickerModal';
 
 interface Transaction {
   _id: string;
@@ -16,6 +17,7 @@ interface Transaction {
 
 const api = createRoleApi('member');
 const PAYMENT_METHODS = ['cash', 'bank_transfer', 'upi', 'cheque'] as const;
+interface EdvLedger { id: string; name: string; group: { name: string } }
 
 const PAYMENT_ICON: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
   cash:          'cash-outline',
@@ -54,6 +56,9 @@ export default function MemberPathavarmScreen() {
   const [paymentMethod, setPaymentMethod] = useState<(typeof PAYMENT_METHODS)[number]>('cash');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [edvLedgers, setEdvLedgers] = useState<EdvLedger[]>([]);
+  const [receivingLedgerId, setReceivingLedgerId] = useState('');
+  const [ledgerPickerVisible, setLedgerPickerVisible] = useState(false);
 
   const fetchHistory = useCallback(async () => {
     try {
@@ -69,13 +74,21 @@ export default function MemberPathavarmScreen() {
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
+  useEffect(() => {
+    api.get('/edv-sync/ledgers').then((r) => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
+  }, []);
+
   const handleContribute = async () => {
     const value = Number(amount);
     if (!value || value <= 0) return setError('Please enter a valid amount');
     setError('');
     setSubmitting(true);
     try {
-      await api.post('/members/me/pathavarm', { amount: value, paymentMethod });
+      await api.post('/members/me/pathavarm', {
+        amount: value,
+        paymentMethod,
+        receivingLedgerId: receivingLedgerId || undefined,
+      });
       setAmount('');
       setRefreshing(true);
       fetchHistory();
@@ -143,6 +156,17 @@ export default function MemberPathavarmScreen() {
           })}
         </View>
 
+        {edvLedgers.length > 0 && (
+          <>
+            <Text style={styles.fieldLabel}>Receiving Account</Text>
+            <PickerField
+              label={receivingLedgerId ? `${edvLedgers.find(l => l.id === receivingLedgerId)?.group.name} › ${edvLedgers.find(l => l.id === receivingLedgerId)?.name}` : ''}
+              placeholder="— None (use default) —"
+              onPress={() => setLedgerPickerVisible(true)}
+            />
+          </>
+        )}
+
         {!!error && (
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle-outline" size={15} color="#dc2626" />
@@ -184,6 +208,16 @@ export default function MemberPathavarmScreen() {
             <Text style={styles.emptyHistText}>No contributions yet — this is a one-time, optional gift</Text>
           </View>
         }
+      />
+      <PickerModal
+        visible={ledgerPickerVisible}
+        title="Receiving Account"
+        options={[
+          { value: '', label: '— None (use default) —' },
+          ...edvLedgers.map((l) => ({ value: l.id, label: `${l.group.name} › ${l.name}` })),
+        ]}
+        onSelect={setReceivingLedgerId}
+        onClose={() => setLedgerPickerVisible(false)}
       />
     </KeyboardAvoidingView>
   );

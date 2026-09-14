@@ -18,7 +18,7 @@ export const createMyPathavarmContribution = async (req: AuthRequest, res: Respo
       return;
     }
 
-    const { amount, paymentMethod, referenceNo, notes } = req.body;
+    const { amount, paymentMethod, referenceNo, notes, receivingLedgerId } = req.body;
     if (!amount || amount <= 0) {
       res.status(400).json({ success: false, error: 'Valid amount is required' });
       return;
@@ -47,6 +47,7 @@ export const createMyPathavarmContribution = async (req: AuthRequest, res: Respo
       referenceNo,
       notes: notes || 'Pathavarm (Tithe)',
       createdBy: req.user?._id,
+      receivingLedgerId: receivingLedgerId || undefined,
     });
 
     if (edvBridgeConfig.enabled) {

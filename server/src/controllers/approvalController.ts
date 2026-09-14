@@ -342,6 +342,8 @@ export const approveStothrakazhchaContributor = async (req: AuthRequest, res: Re
       return;
     }
 
+    const { receivingLedgerId } = req.body;
+
     const contributor: any = (stothrakazhcha.contributors || []).find((c: any) => String(c._id) === String(contributorId));
     if (!contributor) {
       res.status(404).json({ success: false, error: 'Contributor entry not found' });
@@ -384,6 +386,7 @@ export const approveStothrakazhchaContributor = async (req: AuthRequest, res: Re
         paymentMethod: 'cash',
         notes: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year} (approved)`,
         createdBy: req.user._id,
+        receivingLedgerId: receivingLedgerId || undefined,
       });
 
       contributor.transactionId = transaction._id;
@@ -393,7 +396,7 @@ export const approveStothrakazhchaContributor = async (req: AuthRequest, res: Re
       if (edvBridgeConfig.enabled) {
         pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
       }
-      notifyStothrakazhchaApproval(transaction, stothrakazhcha.weekNumber, stothrakazhcha.year);
+      notifyStothrakazhchaApproval(transaction, stothrakazhcha.weekNumber, stothrakazhcha.year, stothrakazhcha.weekStartDate, stothrakazhcha.weekEndDate);
     } else if (entryType === 'offering') {
       // Offering with 0 amount: counts as contributed (no due), but no financial transaction
       stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
@@ -561,6 +564,8 @@ export const approveStothrakazhchaByBavanakutayima = async (req: AuthRequest, re
     const bkHouseIds = new Set(bkHouses.map((h) => String(h._id)));
     const membersById: Record<string, any> = Object.fromEntries(bkMembers.map((m) => [String(m._id), m]));
 
+    const { receivingLedgerId } = req.body;
+
     const toApprove = pendingContributors.filter((c) => {
       if (c.contributorType === 'Member') return bkMemberIds.has(String(c.contributorId));
       return bkHouseIds.has(String(c.contributorId));
@@ -600,6 +605,7 @@ export const approveStothrakazhchaByBavanakutayima = async (req: AuthRequest, re
           paymentMethod: 'cash',
           notes: `Stothrakazhcha - Week ${stothrakazhcha.weekNumber}, ${stothrakazhcha.year} (batch approved)`,
           createdBy: req.user._id,
+          receivingLedgerId: receivingLedgerId || undefined,
         });
 
         contributor.transactionId = transaction._id;
@@ -609,7 +615,7 @@ export const approveStothrakazhchaByBavanakutayima = async (req: AuthRequest, re
         if (edvBridgeConfig.enabled) {
           pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed:', err));
         }
-        notifyStothrakazhchaApproval(transaction, stothrakazhcha.weekNumber, stothrakazhcha.year);
+        notifyStothrakazhchaApproval(transaction, stothrakazhcha.weekNumber, stothrakazhcha.year, stothrakazhcha.weekStartDate, stothrakazhcha.weekEndDate);
       } else if (bkEntryType === 'offering') {
         stothrakazhcha.totalContributors = (stothrakazhcha.totalContributors || 0) + 1;
       }

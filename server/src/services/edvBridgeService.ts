@@ -63,6 +63,7 @@ export async function pushTransactionToEdv(
     notes: transaction.notes,
     ledgerTreatment,
     overridePartyLedgerId: options?.overridePartyLedgerId ?? transaction.edvOverrideLedgerId,
+    receivingLedgerId: transaction.receivingLedgerId,
   };
 
   try {

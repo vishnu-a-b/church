@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createRoleApi } from '../../lib/api';
+import { PickerModal, PickerField } from '../../components/PickerModal';
 
 interface PendingContribution {
   stothrakazhchaId: string;
@@ -31,6 +32,8 @@ interface BkGroup {
   entries: PendingContribution[];
 }
 
+interface EdvLedger { id: string; name: string; group: { name: string } }
+
 const api = createRoleApi('church_admin');
 const COLOR = '#059669';
 
@@ -42,6 +45,9 @@ export default function ChurchAdminApprovalsScreen() {
 
   const [editModal, setEditModal] = useState<{ contributorSubId: string; stothrakazhchaId: string; current: number } | null>(null);
   const [editAmount, setEditAmount] = useState('');
+  const [edvLedgers, setEdvLedgers] = useState<EdvLedger[]>([]);
+  const [receivingLedgerId, setReceivingLedgerId] = useState('');
+  const [ledgerPickerVisible, setLedgerPickerVisible] = useState(false);
 
   const fetchPending = useCallback(async () => {
     try {
@@ -72,6 +78,10 @@ export default function ChurchAdminApprovalsScreen() {
   }, []);
 
   useEffect(() => { fetchPending(); }, [fetchPending]);
+
+  useEffect(() => {
+    api.get('/edv-sync/ledgers').then((r) => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
+  }, []);
 
   const openEditModal = (stothrakazhchaId: string, contributorSubId: string, current: number) => {
     setEditModal({ contributorSubId, stothrakazhchaId, current });
@@ -107,7 +117,9 @@ export default function ChurchAdminApprovalsScreen() {
           onPress: () => {
             setActingId(`group_${group.bkId}`);
             api
-              .post(`/approvals/stothrakazhcha/${group.stothrakazhchaId}/bavanakutayima/${group.bkId}/approve-all`, {})
+              .post(`/approvals/stothrakazhcha/${group.stothrakazhchaId}/bavanakutayima/${group.bkId}/approve-all`, {
+                receivingLedgerId: receivingLedgerId || undefined,
+              })
               .then(fetchPending)
               .catch((e) => Alert.alert('Error', e.response?.data?.error || 'Failed to approve'))
               .finally(() => setActingId(null));
@@ -141,6 +153,19 @@ export default function ChurchAdminApprovalsScreen() {
           <Ionicons name="checkmark-done-outline" size={28} color="#fff" />
         </View>
       </View>
+
+      {/* Receiving account picker (only when EDV is configured) */}
+      {edvLedgers.length > 0 && (
+        <View style={styles.ledgerCard}>
+          <Text style={styles.ledgerLabel}>Receiving Account</Text>
+          <PickerField
+            label={receivingLedgerId ? `${edvLedgers.find(l => l.id === receivingLedgerId)?.group.name} › ${edvLedgers.find(l => l.id === receivingLedgerId)?.name}` : ''}
+            placeholder="— None (use default) —"
+            onPress={() => setLedgerPickerVisible(true)}
+          />
+          <Text style={styles.ledgerHint}>Applied to all approvals on this screen</Text>
+        </View>
+      )}
 
       {/* Stothrakazhcha by BK group */}
       <Text style={styles.sectionLabel}>
@@ -219,6 +244,17 @@ export default function ChurchAdminApprovalsScreen() {
 
       <View style={{ height: 32 }} />
 
+      <PickerModal
+        visible={ledgerPickerVisible}
+        title="Receiving Account"
+        options={[
+          { value: '', label: '— None (use default) —' },
+          ...edvLedgers.map((l) => ({ value: l.id, label: `${l.group.name} › ${l.name}` })),
+        ]}
+        onSelect={setReceivingLedgerId}
+        onClose={() => setLedgerPickerVisible(false)}
+      />
+
       {/* Edit amount modal */}
       <Modal visible={!!editModal} animationType="fade" transparent onRequestClose={() => setEditModal(null)}>
         <View style={styles.modalOverlay}>
@@ -276,6 +312,16 @@ const styles = StyleSheet.create({
     fontSize: 11, fontWeight: '700', color: '#6b7280',
     textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10,
   },
+
+  ledgerCard: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 16,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
+      android: { elevation: 2 },
+    }),
+  },
+  ledgerLabel: { fontSize: 12, fontWeight: '700', color: '#4b5563', marginBottom: 8 },
+  ledgerHint: { fontSize: 11, color: '#9ca3af', marginTop: 6 },
 
   emptySection: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

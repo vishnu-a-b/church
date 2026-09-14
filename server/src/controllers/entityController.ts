@@ -2210,7 +2210,7 @@ export const processCampaignDues = async (req: AuthRequest, res: Response, next:
 export const addCampaignContribution = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const { amount, memberId: providedMemberId, houseId: providedHouseId, paymentType } = req.body;
+    const { amount, memberId: providedMemberId, houseId: providedHouseId, paymentType, receivingLedgerId } = req.body;
 
     if (!amount || amount <= 0) {
       res.status(400).json({ success: false, error: 'Valid amount is required' });
@@ -2323,6 +2323,7 @@ export const addCampaignContribution = async (req: AuthRequest, res: Response, n
       smsNotificationSent: false,
       createdBy: req.user?._id,
       edvOverrideLedgerId: campaign.edvLedgerId || undefined,
+      receivingLedgerId: receivingLedgerId || undefined,
     });
 
     // Add contribution to Campaign
@@ -3290,7 +3291,7 @@ export const getAllDues = async (req: AuthRequest, res: Response, next: NextFunc
 // Pay a Due (Campaign or Stothrakazhcha)
 export const payDue = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { dueId, dueType, amount, paymentMethod, notes } = req.body;
+    const { dueId, dueType, amount, paymentMethod, notes, receivingLedgerId } = req.body;
 
     if (!dueId || !dueType || !amount || !paymentMethod) {
       res.status(400).json({
@@ -3352,7 +3353,8 @@ export const payDue = async (req: AuthRequest, res: Response, next: NextFunction
       paymentMethod: paymentMethod,
       paymentDate: new Date(),
       notes: notes || `Due payment for ${due.dueForName}`,
-      createdBy: req.user._id
+      createdBy: req.user._id,
+      receivingLedgerId: receivingLedgerId || undefined,
     });
 
     due.paidAmount += paymentAmount;

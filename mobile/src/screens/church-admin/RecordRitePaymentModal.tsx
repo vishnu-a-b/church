@@ -8,6 +8,8 @@ import { DatePickerField, formatDateISO } from '../../components/DatePickerField
 const api = createRoleApi('church_admin');
 const COLOR = '#059669';
 
+interface EdvLedger { id: string; name: string; group: { name: string } }
+
 const PAYMENT_METHODS = [
   { value: 'cash', label: 'Cash' },
   { value: 'bank_transfer', label: 'Bank Transfer' },
@@ -60,6 +62,9 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
   const [referenceNo, setReferenceNo] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [edvLedgers, setEdvLedgers] = useState<EdvLedger[]>([]);
+  const [receivingLedgerId, setReceivingLedgerId] = useState('');
+  const [ledgerPickerVisible, setLedgerPickerVisible] = useState(false);
 
   useEffect(() => {
     if (visible && rite) {
@@ -75,7 +80,9 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
       setPaymentDate(new Date());
       setReferenceNo('');
       setError('');
+      setReceivingLedgerId('');
       api.get('/units').then((r) => setUnits(r.data?.data || [])).catch(() => setUnits([]));
+      api.get('/edv-sync/ledgers').then((r) => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
     }
   }, [visible, rite]);
 
@@ -137,6 +144,7 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
         paymentDate: formatDateISO(paymentDate),
         referenceNo: referenceNo.trim() || undefined,
         notes: `Thirukkarmangal: ${rite.nameEnglish}`,
+        receivingLedgerId: receivingLedgerId || undefined,
       });
       onSaved();
       onClose();
@@ -224,6 +232,17 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
               <Text style={styles.warning}>No split configured for this rite yet — payment will still be recorded.</Text>
             )}
 
+            {edvLedgers.length > 0 && (
+              <>
+                <Text style={styles.label}>Receiving Account</Text>
+                <PickerField
+                  label={receivingLedgerId ? `${edvLedgers.find(l => l.id === receivingLedgerId)?.group.name} › ${edvLedgers.find(l => l.id === receivingLedgerId)?.name}` : ''}
+                  placeholder="— None (use default) —"
+                  onPress={() => setLedgerPickerVisible(true)}
+                />
+              </>
+            )}
+
             {!!error && <Text style={styles.error}>{error}</Text>}
 
             <View style={styles.actions}>
@@ -272,6 +291,16 @@ export default function RecordRitePaymentModal({ visible, rite, onClose, onSaved
         options={PAYMENT_METHODS}
         onSelect={setPaymentMethod}
         onClose={() => setMethodPickerVisible(false)}
+      />
+      <PickerModal
+        visible={ledgerPickerVisible}
+        title="Receiving Account"
+        options={[
+          { value: '', label: '— None (use default) —' },
+          ...edvLedgers.map((l) => ({ value: l.id, label: `${l.group.name} › ${l.name}` })),
+        ]}
+        onSelect={setReceivingLedgerId}
+        onClose={() => setLedgerPickerVisible(false)}
       />
     </Modal>
   );

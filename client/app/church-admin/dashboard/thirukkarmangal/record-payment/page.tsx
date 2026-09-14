@@ -43,10 +43,13 @@ export default function RecordThirukkarmangalPaymentPage() {
   const [selectedMember, setSelectedMember] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
+  const [edvLedgers, setEdvLedgers] = useState<{ id: string; name: string; group: { name: string } }[]>([]);
+  const [receivingLedgerId, setReceivingLedgerId] = useState('');
 
   useEffect(() => {
     fetchRites();
     fetchUnits();
+    api.get('/edv-sync/ledgers').then(r => setEdvLedgers(r.data?.data ?? [])).catch(() => {});
   }, []);
 
   const fetchRites = async () => {
@@ -141,6 +144,7 @@ export default function RecordThirukkarmangalPaymentPage() {
         paymentDate,
         referenceNo: referenceNo.trim() || undefined,
         notes: notes || `Thirukkarmangal: ${selectedRite?.nameEnglish}`,
+        receivingLedgerId: receivingLedgerId || undefined,
       });
       toast.success('Payment recorded successfully');
       router.push('/church-admin/dashboard/thirukkarmangal/bookings');
@@ -289,6 +293,24 @@ export default function RecordThirukkarmangalPaymentPage() {
             placeholder="Optional"
           />
         </div>
+
+        {edvLedgers.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Receiving Account <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <select
+              value={receivingLedgerId}
+              onChange={(e) => setReceivingLedgerId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2"
+            >
+              <option value="">— None (use default) —</option>
+              {edvLedgers.map(l => (
+                <option key={l.id} value={l.id}>{l.group.name} › {l.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="flex justify-end pt-2">
           <button
