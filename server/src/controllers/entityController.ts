@@ -741,7 +741,15 @@ export const getAllMembers = async (req: AuthRequest, res: Response, next: NextF
           }
         }
       })
-      .sort({ uniqueId: 1 });
+      .lean();
+
+    members.sort((a: any, b: any) => {
+      const houseA = (a.houseId as any)?.houseNumber ?? 0;
+      const houseB = (b.houseId as any)?.houseNumber ?? 0;
+      if (houseA !== houseB) return houseA - houseB;
+      return (a.memberNumber ?? 0) - (b.memberNumber ?? 0);
+    });
+
     res.json({ success: true, data: members });
   } catch (error) {
     next(error);
