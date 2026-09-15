@@ -60,6 +60,9 @@ export interface TransactionDetails {
   paymentDate: Date;
   campaignName?: string;
   spiritualActivities?: SpiritualActivitySummary[];
+  churchName?: string;
+  houseName?: string;
+  memberCode?: string;
 }
 
 // Common shape covering both Member and Donor recipients. Donors have no
@@ -68,6 +71,7 @@ export interface TransactionDetails {
 // enforced when actually present on the recipient.
 export interface TransactionEmailRecipient {
   firstName?: string;
+  lastName?: string;
   name?: string;
   email?: string;
   isEmailVerified?: boolean;
@@ -415,7 +419,10 @@ export const sendTransactionNotification = async (
     return;
   }
 
-  const recipientName = member.firstName || member.name || 'there';
+  const recipientFullName = [member.firstName, member.lastName].filter(Boolean).join(' ') || member.name || 'Member';
+  const recipientFirstName = member.firstName || member.name || 'there';
+
+  const churchName = transactionDetails.churchName || 'Church Offerings Portal';
 
   const transactionTypeLabel = transactionDetails.transactionType
     .split('_')
@@ -433,145 +440,183 @@ export const sendTransactionNotification = async (
     day: 'numeric',
   });
 
-  const htmlContent = `
-<!DOCTYPE html>
+  const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transaction Notification</title>
+  <title>Official Receipt</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0;">Transaction Notification</h1>
-  </div>
+<body style="margin:0; padding:24px 16px; background:#ebe8e3; font-family:Arial, Helvetica, sans-serif;">
+  <div style="max-width:580px; margin:0 auto; background:#ffffff; border-radius:10px; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,0.13);">
 
-  <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-    <h2 style="color: #667eea;">Hello ${recipientName}!</h2>
+    <!-- Header -->
+    <div style="background:#6b1a1a; padding:30px 32px 22px; text-align:center;">
+      <div style="color:#c9a227; font-size:28px; line-height:1; margin-bottom:10px;">&#10013;</div>
+      <h1 style="color:#ffffff; margin:0; font-size:19px; letter-spacing:2px; text-transform:uppercase; font-weight:bold;">${churchName}</h1>
+      <div style="margin-top:14px;">
+        <span style="display:inline-block; background:rgba(255,255,255,0.1); border:1px solid rgba(201,162,39,0.55); border-radius:4px; padding:5px 22px; color:#c9a227; font-size:10px; letter-spacing:3px; text-transform:uppercase; font-weight:bold;">Official Receipt</span>
+      </div>
+    </div>
 
-    <p>A new transaction has been recorded for you in the Church Wallet System.</p>
-
-    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
-      <h3 style="margin-top: 0; color: #28a745;">Transaction Details</h3>
-      <table style="width: 100%; border-collapse: collapse;">
+    <!-- Receipt No + Date strip -->
+    <div style="background:#f8f2e8; border-bottom:1px solid #e4d5b8; padding:11px 32px;">
+      <table style="width:100%; border-collapse:collapse;">
         <tr>
-          <td style="padding: 8px 0; font-weight: bold;">Receipt Number:</td>
-          <td style="padding: 8px 0;">${transactionDetails.receiptNumber}</td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0; font-weight: bold;">Type:</td>
-          <td style="padding: 8px 0;">${transactionTypeLabel}</td>
-        </tr>
-        ${transactionDetails.campaignName ? `
-        <tr>
-          <td style="padding: 8px 0; font-weight: bold;">Campaign:</td>
-          <td style="padding: 8px 0;">${transactionDetails.campaignName}</td>
-        </tr>
-        ` : ''}
-        <tr>
-          <td style="padding: 8px 0; font-weight: bold;">Amount:</td>
-          <td style="padding: 8px 0; font-size: 20px; color: #28a745; font-weight: bold;">${formattedAmount}</td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0; font-weight: bold;">Payment Method:</td>
-          <td style="padding: 8px 0;">${transactionDetails.paymentMethod.replace('_', ' ').toUpperCase()}</td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0; font-weight: bold;">Date:</td>
-          <td style="padding: 8px 0;">${formattedDate}</td>
+          <td style="vertical-align:top;">
+            <div style="font-size:9px; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px;">Receipt No.</div>
+            <div style="font-size:13px; color:#6b1a1a; font-weight:bold; font-family:Courier New, monospace;">${transactionDetails.receiptNumber}</div>
+          </td>
+          <td style="vertical-align:top; text-align:right;">
+            <div style="font-size:9px; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px;">Date</div>
+            <div style="font-size:13px; color:#333;">${formattedDate}</div>
+          </td>
         </tr>
       </table>
     </div>
 
-    ${transactionDetails.spiritualActivities && transactionDetails.spiritualActivities.length > 0 ? `
-    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9333ea;">
-      <h3 style="margin-top: 0; color: #9333ea;">Spiritual Activities</h3>
-      <table style="width: 100%; border-collapse: collapse;">
-        ${transactionDetails.spiritualActivities.map((a) => {
-          const label = a.activityType === 'mass'
-            ? `Mass${a.massDate ? ' — ' + new Date(a.massDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}`
-            : a.activityType === 'fasting'
-            ? `Fasting${a.fastingWeek ? ' — ' + a.fastingWeek : ''}${a.fastingDays && a.fastingDays.length ? ' (' + a.fastingDays.join(', ') + ')' : ''}`
-            : `Prayer (${a.prayerType || 'other'})${a.prayerCount ? ' × ' + a.prayerCount : ''}${a.prayerWeek ? ' — ' + a.prayerWeek : ''}`;
-          const statusColor = a.approvalStatus === 'approved' ? '#16a34a' : a.approvalStatus === 'rejected' ? '#dc2626' : '#d97706';
-          return `<tr>
-            <td style="padding: 6px 0; font-size: 14px;">${label}</td>
-            <td style="padding: 6px 0; text-align: right; font-size: 12px; color: ${statusColor}; font-weight: bold; text-transform: capitalize;">${a.approvalStatus.replace('_', ' ')}</td>
-          </tr>`;
-        }).join('')}
-      </table>
+    <div style="padding:26px 32px;">
+
+      <!-- Greeting -->
+      <p style="margin:0 0 20px; font-size:14px; color:#555;">Dear <strong>${recipientFirstName}</strong>, your payment has been received. Please find your receipt details below.</p>
+
+      <!-- Received From -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:9px; text-transform:uppercase; letter-spacing:1.5px; color:#9b7a50; font-weight:bold; margin-bottom:7px;">&#9658; Received From</div>
+        <div style="background:#fdf9f3; border:1px solid #e8dcc4; border-radius:6px; padding:13px 15px;">
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="padding:4px 0; font-size:11px; color:#999; width:115px;">Name</td>
+              <td style="padding:4px 0; font-size:14px; color:#1a1a1a; font-weight:bold;">${recipientFullName}</td>
+            </tr>
+            ${transactionDetails.memberCode ? `<tr>
+              <td style="padding:4px 0; font-size:11px; color:#999;">Member Code</td>
+              <td style="padding:4px 0; font-size:12px; color:#444; font-family:Courier New, monospace;">${transactionDetails.memberCode}</td>
+            </tr>` : ''}
+            ${transactionDetails.houseName ? `<tr>
+              <td style="padding:4px 0; font-size:11px; color:#999;">House / Family</td>
+              <td style="padding:4px 0; font-size:12px; color:#444;">${transactionDetails.houseName}</td>
+            </tr>` : ''}
+          </table>
+        </div>
+      </div>
+
+      <!-- Payment Details -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:9px; text-transform:uppercase; letter-spacing:1.5px; color:#9b7a50; font-weight:bold; margin-bottom:7px;">&#9658; Payment Details</div>
+        <div style="background:#f3f8f3; border:1px solid #ccdccc; border-radius:6px; padding:13px 15px;">
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="padding:4px 0; font-size:11px; color:#999; width:115px;">Type</td>
+              <td style="padding:4px 0; font-size:13px; color:#222;">${transactionTypeLabel}</td>
+            </tr>
+            ${transactionDetails.campaignName ? `<tr>
+              <td style="padding:4px 0; font-size:11px; color:#999;">Description</td>
+              <td style="padding:4px 0; font-size:13px; color:#222;">${transactionDetails.campaignName}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding:4px 0; font-size:11px; color:#999;">Payment Method</td>
+              <td style="padding:4px 0; font-size:13px; color:#222;">${transactionDetails.paymentMethod.replace(/_/g, ' ').toUpperCase()}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Amount Box -->
+      <div style="background:#6b1a1a; border-radius:8px; padding:16px 24px; text-align:center; margin-bottom:20px;">
+        <div style="color:rgba(201,162,39,0.85); font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">Amount Received</div>
+        <div style="color:#ffffff; font-size:32px; font-weight:bold; letter-spacing:1px;">${formattedAmount}</div>
+      </div>
+
+      ${transactionDetails.spiritualActivities && transactionDetails.spiritualActivities.length > 0 ? `<!-- Spiritual Activities -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:9px; text-transform:uppercase; letter-spacing:1.5px; color:#9b7a50; font-weight:bold; margin-bottom:7px;">&#9658; Spiritual Activities This Week</div>
+        <div style="background:#f8f3fd; border:1px solid #d8c4ec; border-radius:6px; padding:13px 15px;">
+          <table style="width:100%; border-collapse:collapse;">
+            ${transactionDetails.spiritualActivities.map((a) => {
+              const label = a.activityType === 'mass'
+                ? `Mass${a.massDate ? ' &mdash; ' + new Date(a.massDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}`
+                : a.activityType === 'fasting'
+                ? `Fasting${a.fastingWeek ? ' &mdash; ' + a.fastingWeek : ''}${a.fastingDays && a.fastingDays.length ? ' (' + a.fastingDays.join(', ') + ')' : ''}`
+                : `Prayer (${a.prayerType || 'other'})${a.prayerCount ? ' &times; ' + a.prayerCount : ''}${a.prayerWeek ? ' &mdash; ' + a.prayerWeek : ''}`;
+              const statusColor = a.approvalStatus === 'approved' ? '#16a34a' : a.approvalStatus === 'rejected' ? '#dc2626' : '#d97706';
+              const statusLabel = a.approvalStatus.replace(/_/g, ' ');
+              return `<tr>
+                <td style="padding:5px 0; font-size:12px; color:#333;">${label}</td>
+                <td style="padding:5px 0; text-align:right; font-size:11px; color:${statusColor}; font-weight:bold; text-transform:capitalize;">${statusLabel}</td>
+              </tr>`;
+            }).join('')}
+          </table>
+        </div>
+      </div>` : ''}
+
+      <!-- Footer message + signature -->
+      <div style="border-top:1px solid #e8e0d4; padding-top:18px; text-align:center;">
+        <p style="color:#6b1a1a; font-style:italic; font-size:13px; margin:0 0 18px; line-height:1.7;">
+          &ldquo;Thank you for your generous offering.<br>May God bless you and your family.&rdquo;
+        </p>
+        <div style="text-align:right; padding-right:16px;">
+          <div style="display:inline-block; min-width:160px; text-align:center;">
+            <div style="border-top:1px solid #bbb; padding-top:6px; font-size:10px; color:#999; letter-spacing:0.5px;">Authorised Signatory</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; padding-top:14px; border-top:1px solid #f0ebe3; text-align:center;">
+        <p style="font-size:10px; color:#bbb; margin:0; line-height:1.7;">
+          This is a computer-generated receipt. No signature required.<br>
+          To manage email preferences, visit your member portal.
+        </p>
+      </div>
+
     </div>
-    ` : ''}
-
-    <p style="color: #666; font-size: 14px;">
-      Thank you for your contribution to the church!
-    </p>
-
-    <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0;">
-      <p style="margin: 0; color: #666; font-size: 12px;">
-        To manage your email notification preferences, visit your member portal settings.
-      </p>
-    </div>
-
-    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-
-    <p style="color: #999; font-size: 12px; text-align: center;">
-      This is an automated message from Church Wallet System.<br>
-      Please do not reply to this email.
-    </p>
   </div>
 </body>
-</html>
-  `;
+</html>`;
 
   const spiritualActivitiesText = transactionDetails.spiritualActivities && transactionDetails.spiritualActivities.length > 0
-    ? '\nSpiritual Activities:\n' + transactionDetails.spiritualActivities.map((a) => {
+    ? '\nSpiritual Activities This Week:\n' + transactionDetails.spiritualActivities.map((a) => {
         const label = a.activityType === 'mass'
-          ? `Mass${a.massDate ? ' — ' + new Date(a.massDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}`
+          ? `Mass${a.massDate ? ' - ' + new Date(a.massDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}`
           : a.activityType === 'fasting'
-          ? `Fasting${a.fastingWeek ? ' — ' + a.fastingWeek : ''}${a.fastingDays && a.fastingDays.length ? ' (' + a.fastingDays.join(', ') + ')' : ''}`
-          : `Prayer (${a.prayerType || 'other'})${a.prayerCount ? ' × ' + a.prayerCount : ''}${a.prayerWeek ? ' — ' + a.prayerWeek : ''}`;
+          ? `Fasting${a.fastingWeek ? ' - ' + a.fastingWeek : ''}${a.fastingDays && a.fastingDays.length ? ' (' + a.fastingDays.join(', ') + ')' : ''}`
+          : `Prayer (${a.prayerType || 'other'})${a.prayerCount ? ' x ' + a.prayerCount : ''}${a.prayerWeek ? ' - ' + a.prayerWeek : ''}`;
         const status = a.approvalStatus === 'pending_approval' ? 'pending' : a.approvalStatus;
-        return `- ${label}    ${status}`;
+        return `  - ${label}  [${status}]`;
       }).join('\n')
     : '';
 
-  const textContent = `
-Transaction Notification
+  const textContent = `OFFICIAL RECEIPT
+${churchName}
 
-Hello ${recipientName}!
+Receipt No: ${transactionDetails.receiptNumber}
+Date: ${formattedDate}
 
-A new transaction has been recorded for you in the Church Wallet System.
+RECEIVED FROM
+  Name:         ${recipientFullName}${transactionDetails.memberCode ? `\n  Member Code:  ${transactionDetails.memberCode}` : ''}${transactionDetails.houseName ? `\n  House/Family: ${transactionDetails.houseName}` : ''}
 
-Transaction Details:
-- Receipt Number: ${transactionDetails.receiptNumber}
-- Type: ${transactionTypeLabel}
-${transactionDetails.campaignName ? `- Campaign: ${transactionDetails.campaignName}` : ''}
-- Amount: ${formattedAmount}
-- Payment Method: ${transactionDetails.paymentMethod.replace('_', ' ').toUpperCase()}
-- Date: ${formattedDate}
+PAYMENT DETAILS
+  Type:         ${transactionTypeLabel}${transactionDetails.campaignName ? `\n  Description:  ${transactionDetails.campaignName}` : ''}
+  Method:       ${transactionDetails.paymentMethod.replace(/_/g, ' ').toUpperCase()}
+  Amount:       ${formattedAmount}
 ${spiritualActivitiesText}
-Thank you for your contribution to the church!
-
-To manage your email notification preferences, visit your member portal settings.
-
 ---
-This is an automated message from Church Wallet System.
-Please do not reply to this email.
-  `;
+"Thank you for your generous offering. May God bless you and your family."
+
+This is a computer-generated receipt. To manage email preferences, visit your member portal.`;
 
   try {
     await getTransporter().sendMail({
-      from: process.env.EMAIL_FROM || 'Church Wallet System <noreply@church.com>',
+      from: process.env.EMAIL_FROM || 'Church Offerings Portal <noreply@church.com>',
       to: member.email,
-      subject: `Transaction Receipt - ${transactionDetails.receiptNumber}`,
+      subject: `Receipt #${transactionDetails.receiptNumber} — ${churchName}`,
       html: htmlContent,
       text: textContent,
     });
 
-    console.log(`✅ Transaction notification sent to ${member.email}`);
+    console.log(`✅ Transaction receipt sent to ${member.email}`);
   } catch (error) {
-    console.error('❌ Error sending transaction notification:', error);
+    console.error('❌ Error sending transaction receipt:', error);
     // Don't throw error - transaction should succeed even if email fails
   }
 };

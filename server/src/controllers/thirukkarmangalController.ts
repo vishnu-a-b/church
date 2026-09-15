@@ -7,6 +7,7 @@ import { thirukkarmangalDefaultRites } from '../data/thirukkarmangalDefaultRites
 import { computeSplitAmounts } from '../services/thirukkarmangalSplitService';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
+import { notifyTransactionMember } from '../services/transactionNotifier';
 
 // Get all rites (optionally filtered by category), scoped by church
 export const getAllRites = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -279,6 +280,8 @@ export const bookThirukkarmangal = async (req: AuthRequest, res: Response, next:
     if (edvBridgeConfig.enabled) {
       pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed (thirukkarmangal booking):', err));
     }
+
+    notifyTransactionMember(transaction, rite.nameEnglish || rite.nameMalayalam || 'Thirukkarmangal');
 
     const populated = await Transaction.findById(transaction._id)
       .populate('memberId', 'firstName lastName uniqueId')
