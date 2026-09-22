@@ -70,7 +70,10 @@ const generateDuesForPlan = async (plan: InstanceType<typeof MonthlySupportPlan>
       if (!donor) continue;
       dueForId = entry.donorId;
       dueForModel = 'Donor';
-      dueForName = donor.name;
+      // Append JGCC_NOS tag from donor notes so name is unique per slot
+      const jgccMatch = (donor as any).notes?.match(/JGCC_NOS:([^|]+)/);
+      const jgccTag = jgccMatch ? ` (${jgccMatch[1].trim()})` : '';
+      dueForName = donor.name + jgccTag;
     } else {
       continue;
     }

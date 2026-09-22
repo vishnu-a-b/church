@@ -278,7 +278,7 @@ export default function SuperAdminMembersPage() {
         const payload: any = { ...rest, churchId: church };
         if (username) payload.username = username;
         if (password) payload.password = password;
-        if (email) payload.email = email;
+        if (email) { payload.email = email; payload.isEmailVerified = true; payload.emailNotificationsEnabled = true; }
         await api.put(`/members/${editingMember._id}`, payload);
         toast.success('Member updated successfully!');
       } else {
@@ -286,7 +286,7 @@ export default function SuperAdminMembersPage() {
         const payload: any = { ...rest, churchId: church };
         if (username) payload.username = username;
         if (password) payload.password = password;
-        if (email) payload.email = email;
+        if (email) { payload.email = email; payload.isEmailVerified = true; payload.emailNotificationsEnabled = true; }
         await api.post('/members', payload);
         toast.success('Member added successfully!');
       }

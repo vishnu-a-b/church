@@ -64,7 +64,6 @@ const memberSchema = new Schema<IMember>(
       type: String,
       lowercase: true,
       trim: true,
-      unique: true,
       sparse: true, // Allows multiple null values
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
     },

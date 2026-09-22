@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 
 const stothrakazhchaSchema = z.object({
   weekStartDate: z.string().min(1, 'Select a date to calculate the week'),
-  defaultAmount: z.coerce.number().positive('Default amount must be greater than 0'),
+  defaultAmount: z.coerce.number().min(0, 'Default amount cannot be negative'),
 });
 
 const stothrakazhchaPaymentSchema = z.object({

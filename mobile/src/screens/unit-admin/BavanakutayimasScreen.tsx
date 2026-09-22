@@ -13,6 +13,7 @@ interface Bavanakutayima {
 
 const api = createRoleApi('unit_admin');
 const COLOR = '#2563eb';
+const shortId = (uid?: string) => uid ? uid.split('-').slice(1).map(s => String(+s.replace(/\D/g, ''))).join('-') : '';
 
 export default function UnitAdminBavanakutayimasScreen() {
   const [items, setItems] = useState<Bavanakutayima[]>([]);
@@ -63,7 +64,7 @@ export default function UnitAdminBavanakutayimasScreen() {
             <View style={styles.cardBody}>
               <Text style={styles.cardName}>{b.name}</Text>
               <Text style={styles.cardMeta}>
-                {b.hierarchicalNumber || b.uniqueId || '-'}
+                {shortId(b.uniqueId) || '-'}
                 {b.leaderName ? ` · Leader: ${b.leaderName}` : ''}
               </Text>
             </View>
