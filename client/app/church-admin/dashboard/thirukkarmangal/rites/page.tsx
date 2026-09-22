@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
-import { BookOpen, Sparkles, Settings, CheckCircle, AlertTriangle, Receipt, History } from 'lucide-react';
+import { BookOpen, Sparkles, Settings, CheckCircle, AlertTriangle, CalendarPlus, History } from 'lucide-react';
 
 interface Rite {
   _id: string;
@@ -114,10 +114,10 @@ export default function ThirukkarmangalRitesPage() {
                 <History className="w-5 h-5" /> View Bookings
               </Link>
               <Link
-                href="/church-admin/dashboard/thirukkarmangal/record-payment"
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                href="/church-admin/dashboard/thirukkarmangal/bookings/new"
+                className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
               >
-                <Receipt className="w-5 h-5" /> Record Payment
+                <CalendarPlus className="w-5 h-5" /> New Booking
               </Link>
             </>
           )}

@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import ThirukkarmangalRite from '../models/ThirukkarmangalRite';
+import ThirukkarmangalBooking from '../models/ThirukkarmangalBooking';
 import Transaction from '../models/Transaction';
 import Member from '../models/Member';
 import { AuthRequest } from '../types';
@@ -451,6 +452,195 @@ export const seedDefaultRites = async (req: AuthRequest, res: Response, next: Ne
 
     const created = await ThirukkarmangalRite.insertMany(toInsert);
     res.status(201).json({ success: true, message: `${created.length} default rites seeded`, data: created });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─── Scheduled Bookings (two-step: book first, pay later) ─────────────────────
+
+export const createScheduledBooking = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
+      res.status(403).json({ success: false, error: 'Only church admins can create bookings' });
+      return;
+    }
+
+    let churchId: string;
+    if (req.user.role === 'church_admin') {
+      if (!req.user.churchId) { res.status(403).json({ success: false, error: 'Church admin must have a church assigned' }); return; }
+      churchId = String(req.user.churchId);
+    } else {
+      if (!req.body.churchId) { res.status(400).json({ success: false, error: 'churchId is required' }); return; }
+      churchId = String(req.body.churchId);
+    }
+
+    const { riteId, memberId, scheduledDate, notes } = req.body;
+    if (!riteId || !memberId || !scheduledDate) {
+      res.status(400).json({ success: false, error: 'riteId, memberId and scheduledDate are required' });
+      return;
+    }
+
+    const rite = await ThirukkarmangalRite.findById(riteId);
+    if (!rite || !rite.isActive || String(rite.churchId) !== churchId) {
+      res.status(400).json({ success: false, error: 'Rite not found or inactive' });
+      return;
+    }
+
+    const member = await Member.findById(memberId);
+    if (!member || String(member.churchId) !== churchId) {
+      res.status(400).json({ success: false, error: 'Member not found' });
+      return;
+    }
+
+    const booking = await ThirukkarmangalBooking.create({
+      churchId,
+      riteId: rite._id,
+      memberId: member._id,
+      houseId: member.houseId,
+      unitId: member.unitId,
+      bavanakutayimaId: member.bavanakutayimaId,
+      scheduledDate: new Date(scheduledDate),
+      notes: notes || undefined,
+      status: 'pending',
+      createdBy: req.user._id,
+    });
+
+    const populated = await ThirukkarmangalBooking.findById(booking._id)
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount')
+      .populate('memberId', 'firstName lastName uniqueId')
+      .populate('houseId', 'familyName houseCode')
+      .populate('unitId', 'name');
+
+    res.status(201).json({ success: true, data: populated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getScheduledBookings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const filter: any = {};
+
+    if (req.user?.role === 'church_admin' && req.user.churchId) {
+      filter.churchId = req.user.churchId;
+    } else if (req.user?.role === 'super_admin' && req.query.churchId) {
+      filter.churchId = req.query.churchId;
+    }
+
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.riteId) filter.riteId = req.query.riteId;
+    if (req.query.memberId) filter.memberId = req.query.memberId;
+
+    if (req.query.from || req.query.to) {
+      filter.scheduledDate = {};
+      if (req.query.from) filter.scheduledDate.$gte = new Date(req.query.from as string);
+      if (req.query.to) {
+        const to = new Date(req.query.to as string);
+        to.setHours(23, 59, 59, 999);
+        filter.scheduledDate.$lte = to;
+      }
+    }
+
+    const bookings = await ThirukkarmangalBooking.find(filter)
+      .sort({ scheduledDate: 1 })
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount')
+      .populate('memberId', 'firstName lastName uniqueId')
+      .populate('houseId', 'familyName houseCode')
+      .populate('unitId', 'name')
+      .populate('transactionId', 'receiptNumber totalAmount paymentMethod paymentDate');
+
+    res.json({ success: true, count: bookings.length, data: bookings });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addPaymentToBooking = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
+      res.status(403).json({ success: false, error: 'Only church admins can record payments' });
+      return;
+    }
+
+    const booking = await ThirukkarmangalBooking.findById(req.params.id);
+    if (!booking) { res.status(404).json({ success: false, error: 'Booking not found' }); return; }
+
+    if (req.user.role === 'church_admin' && req.user.churchId && String(booking.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Booking does not belong to your church' }); return;
+    }
+    if (booking.status === 'paid') { res.status(400).json({ success: false, error: 'Booking already paid' }); return; }
+    if (booking.status === 'cancelled') { res.status(400).json({ success: false, error: 'Cannot pay a cancelled booking' }); return; }
+
+    const rite = await ThirukkarmangalRite.findById(booking.riteId);
+    if (!rite) { res.status(400).json({ success: false, error: 'Rite not found' }); return; }
+
+    const { totalAmount, paymentMethod, paymentDate, referenceNo, notes, receivingLedgerId } = req.body;
+    const amountPaid = typeof totalAmount === 'number' ? totalAmount : rite.amount;
+    const splitBreakdown = computeSplitAmounts(rite, amountPaid);
+
+    const transaction = await Transaction.create({
+      transactionType: 'thirukkarmangal',
+      riteId: booking.riteId,
+      memberId: booking.memberId,
+      houseId: booking.houseId,
+      unitId: booking.unitId,
+      churchId: booking.churchId,
+      totalAmount: amountPaid,
+      memberAmount: amountPaid,
+      houseAmount: 0,
+      distribution: 'member_only',
+      paymentMethod: paymentMethod || 'cash',
+      paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+      referenceNo: referenceNo || undefined,
+      notes: notes || `Thirukkarmangal: ${rite.nameEnglish}`,
+      receivingLedgerId: receivingLedgerId || undefined,
+      splitBreakdown: splitBreakdown.length > 0 ? splitBreakdown : undefined,
+      receiptNumber: `TKM-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdBy: req.user._id,
+    });
+
+    booking.status = 'paid';
+    booking.transactionId = transaction._id as any;
+    await booking.save();
+
+    if (edvBridgeConfig.enabled) {
+      pushTransactionToEdv(transaction).catch((err) => console.error('EDV bridge push failed (booking payment):', err));
+    }
+    notifyTransactionMember(transaction, rite.nameEnglish || rite.nameMalayalam || 'Thirukkarmangal');
+
+    const populated = await ThirukkarmangalBooking.findById(booking._id)
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount')
+      .populate('memberId', 'firstName lastName uniqueId')
+      .populate('houseId', 'familyName houseCode')
+      .populate('unitId', 'name')
+      .populate('transactionId', 'receiptNumber totalAmount paymentMethod paymentDate');
+
+    res.json({ success: true, data: populated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cancelScheduledBooking = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
+      res.status(403).json({ success: false, error: 'Only church admins can cancel bookings' });
+      return;
+    }
+
+    const booking = await ThirukkarmangalBooking.findById(req.params.id);
+    if (!booking) { res.status(404).json({ success: false, error: 'Booking not found' }); return; }
+
+    if (req.user.role === 'church_admin' && req.user.churchId && String(booking.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Booking does not belong to your church' }); return;
+    }
+    if (booking.status === 'paid') { res.status(400).json({ success: false, error: 'Cannot cancel a paid booking' }); return; }
+
+    booking.status = 'cancelled';
+    await booking.save();
+
+    res.json({ success: true, data: booking });
   } catch (error) {
     next(error);
   }

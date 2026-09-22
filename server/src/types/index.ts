@@ -202,6 +202,21 @@ export interface IThirukkarmangalRite extends Document {
   createdBy?: Types.ObjectId;
 }
 
+// Thirukkarmangal Booking (scheduled, two-step: book first, pay later)
+export interface IThirukkarmangalBooking extends Document {
+  churchId: Types.ObjectId;
+  riteId: Types.ObjectId;
+  memberId: Types.ObjectId;
+  houseId: Types.ObjectId;
+  unitId: Types.ObjectId;
+  bavanakutayimaId?: Types.ObjectId;
+  scheduledDate: Date;
+  notes?: string;
+  status: 'pending' | 'paid' | 'cancelled';
+  transactionId?: Types.ObjectId;
+  createdBy?: Types.ObjectId;
+}
+
 // Campaign Types
 export type CampaignType = 'spl_contribution' | 'general_fund' | 'building_fund' | 'charity' | 'other';
 export type AmountType = 'per_house' | 'per_member' | 'flexible';

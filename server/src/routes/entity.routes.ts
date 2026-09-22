@@ -152,6 +152,10 @@ import {
   getThirukkarmangalBookings,
   getMemberThirukkarmangalHistory,
   getMyThirukkarmangalHistory,
+  createScheduledBooking,
+  getScheduledBookings,
+  addPaymentToBooking,
+  cancelScheduledBooking,
 } from '../controllers/thirukkarmangalController';
 import {
   createMyPathavarmContribution,
@@ -903,9 +907,14 @@ router.post('/thirukkarmangal/rites/seed-defaults', seedDefaultRites);
 router.put('/thirukkarmangal/rites/:id/split', updateRiteSplit);
 router.route('/thirukkarmangal/rites/:id').get(getRiteById).put(updateRite).delete(deleteRite);
 
-// Thirukkarmangal Booking Routes (booking a rite against a member + transaction)
+// Thirukkarmangal Booking Routes (direct payment — legacy)
 router.route('/thirukkarmangal/bookings').get(getThirukkarmangalBookings).post(bookThirukkarmangal);
 router.get('/thirukkarmangal/bookings/member/:memberId', getMemberThirukkarmangalHistory);
+
+// Thirukkarmangal Scheduled Bookings (two-step: book with date first, pay later)
+router.route('/thirukkarmangal/scheduled-bookings').get(getScheduledBookings).post(createScheduledBooking);
+router.put('/thirukkarmangal/scheduled-bookings/:id/payment', addPaymentToBooking);
+router.put('/thirukkarmangal/scheduled-bookings/:id/cancel', cancelScheduledBooking);
 
 // Pathavarm Routes (member self-service, matches /members/me/* convention; church_admin uses POST /transactions directly)
 router.post('/members/me/pathavarm', createMyPathavarmContribution);
