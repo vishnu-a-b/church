@@ -168,8 +168,14 @@ export default function BavanakutayimasPage() {
   const handleEdit = (item: Bavanakutayima) => {
     setEditing(item);
     setFormErrors({});
+
+    // Normalize unitId to plain string (API may return populated object)
+    const unitId = typeof item.unitId === 'object' && item.unitId
+      ? (item.unitId as any)._id
+      : item.unitId || '';
+
     setFormData({
-      unitId: item.unitId,
+      unitId,
       name: item.name,
       leaderName: item.leaderName || '',
       createAdmin: false,

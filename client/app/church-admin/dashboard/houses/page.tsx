@@ -107,13 +107,21 @@ export default function HousesPage() {
   const handleEdit = (house: House) => {
     setEditingHouse(house);
     setFormErrors({});
-    // Find the unit for this house's bavanakutayima
-    const bavanakutayima = allBavanakutayimas.find(bk => bk._id === house.bavanakutayimaId);
-    const unitId = bavanakutayima?.unitId || '';
+
+    // Normalize bavanakutayimaId to plain string (API may return populated object)
+    const bavanakutayimaId = typeof house.bavanakutayimaId === 'object' && house.bavanakutayimaId
+      ? (house.bavanakutayimaId as any)._id
+      : house.bavanakutayimaId || '';
+
+    // Find the unit for this bavanakutayima
+    const bavanakutayima = allBavanakutayimas.find(bk => bk._id === bavanakutayimaId);
+    const unitId = typeof bavanakutayima?.unitId === 'object' && bavanakutayima?.unitId
+      ? (bavanakutayima.unitId as any)._id
+      : bavanakutayima?.unitId || '';
 
     setFormData({
-      unitId: unitId,
-      bavanakutayimaId: house.bavanakutayimaId,
+      unitId,
+      bavanakutayimaId,
       familyName: house.familyName,
       headOfFamily: house.headOfFamily || '',
       address: house.address || '',

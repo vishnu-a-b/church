@@ -74,7 +74,6 @@ export default function ChurchAdminMembersPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
   const [allBavanakutayimas, setAllBavanakutayimas] = useState<any[]>([]);
   const [allHouses, setAllHouses] = useState<any[]>([]);
   const [filters, setFilters] = useState({
@@ -239,51 +238,50 @@ export default function ChurchAdminMembersPage() {
     setAllHouses([]);
   };
 
-  const handleEdit = async (member: Member) => {
-    setEditingLoadingId(member._id);
-    try {
-      setEditingId(member._id);
-      setFormErrors({});
+  const handleEdit = (member: Member) => {
+    setEditingId(member._id);
+    setFormErrors({});
 
-      // Extract IDs from populated fields
-      const unitId = typeof member.unitId === 'object' ? member.unitId._id : member.unitId || '';
-      const bavanakutayimaId = typeof member.bavanakutayimaId === 'object' ? member.bavanakutayimaId._id : member.bavanakutayimaId || '';
-      const houseId = typeof member.houseId === 'object' ? member.houseId._id : member.houseId || '';
+    // Extract IDs from nested houseId object first (deep populate), then direct fields
+    const houseObj = typeof member.houseId === 'object' && member.houseId ? (member.houseId as any) : null;
+    const bkObj = houseObj?.bavanakutayimaId && typeof houseObj.bavanakutayimaId === 'object' ? houseObj.bavanakutayimaId : null;
+    const unitObj = bkObj?.unitId && typeof bkObj.unitId === 'object' ? bkObj.unitId : null;
 
-      // Load cascading data
-      if (unitId) {
-        await fetchAllBavanakutayimas(unitId);
-      }
-      if (bavanakutayimaId) {
-        await fetchAllHouses(bavanakutayimaId);
-      }
+    const houseId = houseObj?._id || (member.houseId as string) || '';
+    const bavanakutayimaId = bkObj?._id || (typeof member.bavanakutayimaId === 'object' && member.bavanakutayimaId ? (member.bavanakutayimaId as any)._id : (member.bavanakutayimaId as string)) || '';
+    const unitId = unitObj?._id || (typeof member.unitId === 'object' && member.unitId ? (member.unitId as any)._id : (member.unitId as string)) || '';
 
-      setFormData({
-        firstName: member.firstName || '',
-        lastName: member.lastName || '',
-        gender: member.gender || 'male',
-        dateOfBirth: member.dateOfBirth || '',
-        phone: member.phone || '',
-        email: member.email || '',
-        baptismName: member.baptismName || '',
-        relationToHead: member.relationToHead || 'head',
-        unitId,
-        bavanakutayimaId,
-        houseId,
-        username: member.username || '',
-        password: '',
-        role: member.role || 'member',
-        isActive: member.isActive !== undefined ? member.isActive : true,
-        smsPreferences: {
-          enabled: true,
-          paymentNotifications: true,
-          receiptNotifications: true,
-        },
-      });
-      setShowAddModal(true);
-    } finally {
-      setEditingLoadingId(null);
-    }
+    // Pre-populate dropdown options immediately so selection shows before async fetches complete
+    if (bkObj) setAllBavanakutayimas([{ _id: bkObj._id, name: bkObj.name }]);
+    if (houseObj) setAllHouses([{ _id: houseObj._id, familyName: houseObj.familyName }]);
+
+    setFormData({
+      firstName: member.firstName || '',
+      lastName: member.lastName || '',
+      gender: member.gender || 'male',
+      dateOfBirth: member.dateOfBirth || '',
+      phone: member.phone || '',
+      email: member.email || '',
+      baptismName: member.baptismName || '',
+      relationToHead: member.relationToHead || 'head',
+      unitId,
+      bavanakutayimaId,
+      houseId,
+      username: member.username || '',
+      password: '',
+      role: member.role || 'member',
+      isActive: member.isActive !== undefined ? member.isActive : true,
+      smsPreferences: {
+        enabled: true,
+        paymentNotifications: true,
+        receiptNotifications: true,
+      },
+    });
+    setShowAddModal(true);
+
+    // Fetch full lists in background for complete dropdowns
+    if (unitId) fetchAllBavanakutayimas(unitId);
+    if (bavanakutayimaId) fetchAllHouses(bavanakutayimaId);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -448,14 +446,14 @@ export default function ChurchAdminMembersPage() {
         <div className="flex gap-2">
           <button
             onClick={() => handleEdit(row.original)}
-            disabled={editingLoadingId === row.original._id || deletingId === row.original._id}
+            disabled={deletingId === row.original._id}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {editingLoadingId === row.original._id ? <div className="animate-spin">⏳</div> : <FiEdit />}
+            <FiEdit />
           </button>
           <button
             onClick={() => handleDeleteMember(row.original._id)}
-            disabled={deletingId === row.original._id || editingLoadingId === row.original._id}
+            disabled={deletingId === row.original._id}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {deletingId === row.original._id ? <div className="animate-spin">⏳</div> : <FiTrash />}
