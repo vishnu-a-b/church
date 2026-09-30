@@ -293,7 +293,7 @@ function SupporterPortalInner() {
               <p className="text-red-600 font-medium">{error || 'Unable to load your portal.'}</p>
             </div>
           </div>
-        ) : (
+        ) : donor ? (
           /* Results */
           <div className="w-full max-w-2xl">
             {!linkedId && (
@@ -406,7 +406,7 @@ function SupporterPortalInner() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </main>
 
       <footer className="py-6 text-center text-xs text-gray-400">
