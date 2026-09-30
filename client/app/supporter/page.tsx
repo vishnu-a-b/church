@@ -24,6 +24,19 @@ interface SupportTransaction {
   createdAt: string;
 }
 
+interface SupportDue {
+  _id: string;
+  planId: string;
+  planName: string;
+  periodMonth: string; // e.g. "2026-09"
+  amount: number;
+  paidAmount: number;
+  balance: number;
+  isPaid: boolean;
+  dueDate: string;
+  paidAt?: string;
+}
+
 const PAYMENT_LABELS: Record<string, string> = {
   cash: 'Cash',
   bank_transfer: 'Bank Transfer',
@@ -107,6 +120,7 @@ function SupporterPortalInner() {
   const [error, setError] = useState('');
   const [donor, setDonor] = useState<DonorInfo | null>(null);
   const [transactions, setTransactions] = useState<SupportTransaction[]>([]);
+  const [dues, setDues] = useState<SupportDue[]>([]);
 
   useEffect(() => {
     const phoneParam = searchParams.get('phone');
@@ -120,6 +134,7 @@ function SupporterPortalInner() {
     setError('');
     setDonor(null);
     setTransactions([]);
+    setDues([]);
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/public/donor-lookup`, {
@@ -134,6 +149,7 @@ function SupporterPortalInner() {
       }
       setDonor(json.data.donor);
       setTransactions(json.data.transactions);
+      setDues(json.data.dues || []);
     } catch {
       setError('Unable to connect. Please try again.');
     } finally {
@@ -149,6 +165,7 @@ function SupporterPortalInner() {
   const handleReset = () => {
     setDonor(null);
     setTransactions([]);
+    setDues([]);
     setError('');
     setPhone('');
   };
@@ -252,6 +269,41 @@ function SupporterPortalInner() {
                 </div>
               </div>
             </div>
+
+            {/* Dues Summary */}
+            {dues.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-base font-semibold text-gray-700 mb-3">Monthly Support Dues</h3>
+                <div className="space-y-2">
+                  {dues.map((due) => (
+                    <div key={due._id} className="bg-white rounded-xl shadow p-4 flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{due.planName}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {new Date(due.periodMonth + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0 space-y-0.5">
+                        <p className="text-xs text-gray-500">
+                          Due: <span className="font-medium text-gray-700">{formatAmount(due.amount)}</span>
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Paid: <span className="font-medium text-green-700">{formatAmount(due.paidAmount)}</span>
+                        </p>
+                        {due.balance > 0 && (
+                          <p className="text-xs text-red-600 font-medium">Balance: {formatAmount(due.balance)}</p>
+                        )}
+                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          due.isPaid ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {due.isPaid ? 'Paid' : 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Transactions */}
             <h3 className="text-base font-semibold text-gray-700 mb-3">

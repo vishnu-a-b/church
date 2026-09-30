@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Donor from '../models/Donor';
 import Transaction from '../models/Transaction';
+import MonthlySupportDue from '../models/MonthlySupportDue';
 
 // Public endpoint — no auth required.
 // Looks up a donor by their registered phone number and returns their
@@ -31,6 +32,14 @@ export const lookupDonorByPhone = async (req: Request, res: Response, next: Next
       .limit(50)
       .select('receiptNumber transactionType totalAmount paymentMethod paymentDate notes monthlySupportPlanId createdAt');
 
+    const dues = await MonthlySupportDue.find({
+      dueForId: donor._id,
+      dueForModel: 'Donor',
+    })
+      .sort({ periodMonth: -1 })
+      .limit(24)
+      .select('planId planName periodMonth amount paidAmount balance isPaid dueDate paidAt');
+
     res.json({
       success: true,
       data: {
@@ -40,6 +49,7 @@ export const lookupDonorByPhone = async (req: Request, res: Response, next: Next
           church: donor.churchId,
         },
         transactions,
+        dues,
       },
     });
   } catch (error) {
