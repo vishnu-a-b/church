@@ -53,7 +53,7 @@ export default function BavanakutayimasPage() {
 
   const handleEdit = (item: Bavanakutayima) => {
     setEditing(item);
-    setFormData({ unitId: item.unitId, name: item.name, leaderName: item.leaderName || '' });
+    setFormData({ unitId: resolveId(item.unitId), name: item.name, leaderName: item.leaderName || '' });
     setShowModal(true);
   };
 
@@ -67,7 +67,13 @@ export default function BavanakutayimasPage() {
     }
   };
 
-  const getUnitName = (id: string) => units.find((u) => u._id === id)?.name || 'Unknown';
+  const resolveId = (val: any): string =>
+    typeof val === 'object' && val !== null ? val._id : val ?? '';
+
+  const getUnitName = (id: any) => {
+    if (typeof id === 'object' && id !== null) return id.name || 'Unknown';
+    return units.find((u) => u._id === id)?.name || 'Unknown';
+  };
 
   const filtered = bavanakutayimas.filter((b) =>
     b.name.toLowerCase().includes(searchTerm.toLowerCase())

@@ -64,7 +64,7 @@ export default function HousesPage() {
   const handleEdit = (house: House) => {
     setEditingHouse(house);
     setFormData({
-      bavanakutayimaId: house.bavanakutayimaId,
+      bavanakutayimaId: resolveId(house.bavanakutayimaId),
       familyName: house.familyName,
       headOfFamily: house.headOfFamily || '',
       address: house.address || '',
@@ -95,7 +95,11 @@ export default function HousesPage() {
     });
   };
 
-  const getBavanakutayimaName = (id: string) => {
+  const resolveId = (val: any): string =>
+    typeof val === 'object' && val !== null ? val._id : val ?? '';
+
+  const getBavanakutayimaName = (id: any) => {
+    if (typeof id === 'object' && id !== null) return id.name || 'Unknown';
     return bavanakutayimas.find((b) => b._id === id)?.name || 'Unknown';
   };
 

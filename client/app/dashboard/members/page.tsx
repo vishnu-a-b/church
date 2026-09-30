@@ -237,12 +237,18 @@ export default function MembersPage() {
 
     if (filters.unit) {
       const house = getHouseData(member.houseId);
-      if (!house || resolveId((house as any).unitId) !== filters.unit) return false;
+      if (!house) return false;
+      const bk = (house as any).bavanakutayimaId;
+      if (!bk || resolveId(bk.unitId) !== filters.unit) return false;
     }
 
     if (filters.church) {
       const house = getHouseData(member.houseId);
-      if (!house || resolveId((house as any).churchId) !== filters.church) return false;
+      if (!house) return false;
+      const bk = (house as any).bavanakutayimaId;
+      if (!bk) return false;
+      const unit = typeof bk.unitId === 'object' ? bk.unitId : null;
+      if (!unit || resolveId(unit.churchId) !== filters.church) return false;
     }
 
     return true;

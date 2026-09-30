@@ -61,7 +61,7 @@ export default function UnitsPage() {
   const handleEdit = (unit: Unit) => {
     setEditingUnit(unit);
     setFormData({
-      churchId: unit.churchId,
+      churchId: resolveId(unit.churchId),
       name: unit.name,
       unitNumber: unit.unitNumber || '',
     });
@@ -82,7 +82,11 @@ export default function UnitsPage() {
     setFormData({ churchId: '', name: '', unitNumber: '' });
   };
 
-  const getChurchName = (churchId: string) => {
+  const resolveId = (val: any): string =>
+    typeof val === 'object' && val !== null ? val._id : val ?? '';
+
+  const getChurchName = (churchId: any) => {
+    if (typeof churchId === 'object' && churchId !== null) return churchId.name || 'Unknown';
     return churches.find((c) => c._id === churchId)?.name || 'Unknown';
   };
 
