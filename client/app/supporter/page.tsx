@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, Download, Phone, ChevronLeft } from 'lucide-react';
 
@@ -100,7 +100,7 @@ function printReceipt(tx: SupportTransaction, donor: DonorInfo) {
   }
 }
 
-export default function SupporterPortal() {
+function SupporterPortalInner() {
   const searchParams = useSearchParams();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -309,5 +309,17 @@ export default function SupporterPortal() {
         Church Management System &mdash; Supporter Portal
       </footer>
     </div>
+  );
+}
+
+export default function SupporterPortal() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <SupporterPortalInner />
+    </Suspense>
   );
 }
