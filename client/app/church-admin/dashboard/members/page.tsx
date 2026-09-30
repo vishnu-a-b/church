@@ -35,9 +35,6 @@ const memberSchema = z
     }),
   })
   .superRefine((data, ctx) => {
-    if ((data.username || data.password) && !data.email) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['email'], message: 'Email is required when adding login credentials' });
-    }
     if (data.password && data.password.length > 0 && data.password.length < 6) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['password'], message: 'Password must be at least 6 characters' });
     }
@@ -51,6 +48,8 @@ interface Member {
   email?: string;
   role: string;
   isActive: boolean;
+  uniqueId?: string;
+  hierarchicalNumber?: string;
   churchId?: { _id: string; name: string } | string;
   unitId?: { _id: string; name: string } | string;
   bavanakutayimaId?: { _id: string; name: string } | string;
@@ -60,7 +59,6 @@ interface Member {
   dateOfBirth?: string;
   baptismName?: string;
   relationToHead?: 'head' | 'spouse' | 'child' | 'parent' | 'other';
-  hierarchicalNumber?: string;
 }
 
 export default function ChurchAdminMembersPage() {
@@ -259,7 +257,7 @@ export default function ChurchAdminMembersPage() {
       firstName: member.firstName || '',
       lastName: member.lastName || '',
       gender: member.gender || 'male',
-      dateOfBirth: member.dateOfBirth || '',
+      dateOfBirth: member.dateOfBirth ? new Date(member.dateOfBirth).toISOString().split('T')[0] : '',
       phone: member.phone || '',
       email: member.email || '',
       baptismName: member.baptismName || '',
@@ -300,10 +298,11 @@ export default function ChurchAdminMembersPage() {
       const unit = units.find(u => u._id === result.data.unitId);
       const churchId = unit?.churchId?._id || unit?.churchId;
 
-      const memberData = {
-        ...result.data,
-        churchId,
-      };
+      const { password, username, email, ...rest } = result.data;
+      const memberData: any = { ...rest, churchId };
+      if (username) memberData.username = username;
+      if (password) memberData.password = password;
+      if (email) { memberData.email = email; memberData.isEmailVerified = true; memberData.emailNotificationsEnabled = true; }
 
       if (editingId) {
         // Update existing member
@@ -372,10 +371,12 @@ export default function ChurchAdminMembersPage() {
 
   const columns: ColumnDef<Member>[] = [
     {
-      accessorKey: 'hierarchicalNumber',
-      header: 'Hierarchical ID',
+      accessorKey: 'uniqueId',
+      header: 'Unique ID',
       cell: ({ row }) => (
-        <div className="text-sm font-semibold text-blue-600">{row.original.hierarchicalNumber || '-'}</div>
+        <span className="text-xs font-mono font-semibold text-blue-600">
+          {row.original.uniqueId || row.original.hierarchicalNumber || '-'}
+        </span>
       ),
     },
     {
@@ -781,7 +782,7 @@ export default function ChurchAdminMembersPage() {
 
               {/* Login Credentials (Optional) */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Login Credentials (Optional)</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Login Credentials {editingId ? '(leave password blank to keep unchanged)' : '(Optional)'}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
