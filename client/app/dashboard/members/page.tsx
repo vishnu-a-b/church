@@ -132,10 +132,22 @@ export default function MembersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = {
+      const house = houses.find((h) => h._id === formData.houseId) as any;
+      const payload: any = {
         ...formData,
+        houseId: formData.houseId,
         dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
       };
+      // Derive required hierarchy fields from the selected house
+      if (house) {
+        payload.bavanakutayimaId = resolveId(house.bavanakutayimaId);
+        const bk = typeof house.bavanakutayimaId === 'object' ? house.bavanakutayimaId : null;
+        if (bk) {
+          payload.unitId = resolveId(bk.unitId);
+          const unit = typeof bk.unitId === 'object' ? bk.unitId : null;
+          if (unit) payload.churchId = resolveId(unit.churchId);
+        }
+      }
 
       if (editingMember) {
         await api.put(`/members/${editingMember._id}`, payload);
@@ -155,7 +167,7 @@ export default function MembersPage() {
   const handleEdit = (member: Member) => {
     setEditingMember(member);
     setFormData({
-      houseId: member.houseId,
+      houseId: resolveId(member.houseId),
       firstName: member.firstName,
       lastName: member.lastName || '',
       dateOfBirth: member.dateOfBirth ? new Date(member.dateOfBirth).toISOString().split('T')[0] : '',
@@ -194,17 +206,21 @@ export default function MembersPage() {
     });
   };
 
-  const getHouseName = (houseId: string) => {
+  const resolveId = (val: any): string =>
+    typeof val === 'object' && val !== null ? val._id : val ?? '';
+
+  const getHouseName = (houseId: any) => {
+    if (typeof houseId === 'object' && houseId !== null) return houseId.familyName || 'Unknown';
     const house = houses.find((h) => h._id === houseId);
     return house?.familyName || 'Unknown';
   };
 
-  const getHouseData = (houseId: string) => {
-    return houses.find((h) => h._id === houseId);
+  const getHouseData = (houseId: any) => {
+    const id = resolveId(houseId);
+    return houses.find((h) => h._id === id);
   };
 
   const filteredMembers = members.filter((member) => {
-    // Search term filter
     const matchesSearch =
       member.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -212,22 +228,21 @@ export default function MembersPage() {
 
     if (!matchesSearch) return false;
 
-    // Hierarchy filters
-    if (filters.house && member.houseId !== filters.house) return false;
+    if (filters.house && resolveId(member.houseId) !== filters.house) return false;
 
     if (filters.bavanakutayima) {
       const house = getHouseData(member.houseId);
-      if (!house || (house as any).bavanakutayimaId !== filters.bavanakutayima) return false;
+      if (!house || resolveId((house as any).bavanakutayimaId) !== filters.bavanakutayima) return false;
     }
 
     if (filters.unit) {
       const house = getHouseData(member.houseId);
-      if (!house || (house as any).unitId !== filters.unit) return false;
+      if (!house || resolveId((house as any).unitId) !== filters.unit) return false;
     }
 
     if (filters.church) {
       const house = getHouseData(member.houseId);
-      if (!house || (house as any).churchId !== filters.church) return false;
+      if (!house || resolveId((house as any).churchId) !== filters.church) return false;
     }
 
     return true;
@@ -387,7 +402,7 @@ export default function MembersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                      <div className="text-sm text-gray-900">{getHouseName(member.houseId)}</div>
+                      <div className="text-sm text-gray-900">{getHouseName((member as any).houseId)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                       <div className="text-sm text-gray-900 capitalize">{member.gender}</div>
