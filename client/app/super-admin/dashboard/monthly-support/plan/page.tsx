@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, Donor } from '@/types';
-import { ArrowLeft, Search, Trash, UserPlus, Pencil } from 'lucide-react';
+import { ArrowLeft, Search, Trash, UserPlus, Pencil, Link2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const planSchema = z
@@ -49,6 +49,7 @@ interface PlanMemberDraft {
   amount: string; // empty string = use plan default
   name: string;
   donorNotes?: string;
+  donorPhone?: string;
 }
 
 function extractJgccNos(notes?: string): string | null {
@@ -57,7 +58,16 @@ function extractJgccNos(notes?: string): string | null {
   return m ? m[1].trim() : null;
 }
 
-const entryId = (m: PlanMemberDraft): string => (m.memberId ?? m.donorId)!;
+const entryId = (m: PlanMemberDraft): string => (m.memberId ?? m.donorId)!
+
+const copySupporterLink = (phone: string) => {
+  const url = `${window.location.origin}/supporter?phone=${encodeURIComponent(phone)}`;
+  navigator.clipboard.writeText(url).then(() => {
+    toast.success('Supporter portal link copied!');
+  }).catch(() => {
+    toast.error('Could not copy link');
+  });
+};;
 
 const emptyForm = {
   name: '',
@@ -146,7 +156,8 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
               donorId: typeof m.donorId === 'object' ? m.donorId._id : m.donorId,
               amount: m.amount !== undefined && m.amount !== null ? String(m.amount) : '',
               name: donor ? donor.name : 'Donor',
-              donorNotes: donor ? donor.notes : undefined,
+              donorNotes: donor ? (donor as any).notes : undefined,
+              donorPhone: donor ? (donor as any).phone : undefined,
             };
           }
           const member = typeof m.memberId === 'object' ? m.memberId : null;
@@ -208,7 +219,7 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
       toast.warning('Already added to this plan');
       return;
     }
-    setPlanMembers([...planMembers, { donorId: donor._id, amount: '', name: donor.name, donorNotes: donor.notes }]);
+    setPlanMembers([...planMembers, { donorId: donor._id, amount: '', name: donor.name, donorNotes: donor.notes, donorPhone: donor.phone }]);
   };
 
   const handleCreateDonor = async () => {
@@ -559,14 +570,26 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
                       />
                     </div>
                     {m.donorId && (
-                      <button
-                        type="button"
-                        onClick={() => openEditDonor(entryId(m))}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit donor"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                      <>
+                        {m.donorPhone && (
+                          <button
+                            type="button"
+                            onClick={() => copySupporterLink(m.donorPhone!)}
+                            className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                            title="Copy supporter portal link"
+                          >
+                            <Link2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => openEditDonor(entryId(m))}
+                          className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="Edit donor"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
                     <button
                       type="button"

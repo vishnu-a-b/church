@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, Download, Phone, ChevronLeft } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -100,24 +101,31 @@ function printReceipt(tx: SupportTransaction, donor: DonorInfo) {
 }
 
 export default function SupporterPortal() {
+  const searchParams = useSearchParams();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [donor, setDonor] = useState<DonorInfo | null>(null);
   const [transactions, setTransactions] = useState<SupportTransaction[]>([]);
 
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    const phoneParam = searchParams.get('phone');
+    if (phoneParam) {
+      setPhone(phoneParam);
+      doLookup(phoneParam);
+    }
+  }, []);
+
+  const doLookup = async (phoneNumber: string) => {
     setError('');
     setDonor(null);
     setTransactions([]);
     setLoading(true);
-
     try {
       const res = await fetch(`${API_URL}/public/donor-lookup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phone.trim() }),
+        body: JSON.stringify({ phone: phoneNumber.trim() }),
       });
       const json = await res.json();
       if (!json.success) {
@@ -131,6 +139,11 @@ export default function SupporterPortal() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    doLookup(phone);
   };
 
   const handleReset = () => {
