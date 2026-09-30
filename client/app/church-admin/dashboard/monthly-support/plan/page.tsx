@@ -7,7 +7,8 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, Donor } from '@/types';
-import { ArrowLeft, Search, Trash, UserPlus, Pencil, Link2 } from 'lucide-react';
+import { ArrowLeft, Search, Trash, UserPlus, Pencil, Link2, QrCode } from 'lucide-react';
+import { downloadQRCards } from '@/lib/generateQRCards';
 import { toast } from 'react-toastify';
 
 const planSchema = z
@@ -114,6 +115,7 @@ export default function MonthlySupportPlanFormPage() {
 
   const [editingDonor, setEditingDonor] = useState<{ id: string; name: string; phone: string; address: string; notes: string; jgccNo: string } | null>(null);
   const [savingDonor, setSavingDonor] = useState(false);
+  const [generatingQR, setGeneratingQR] = useState(false);
 
   useEffect(() => {
     fetchAllMembers();
@@ -320,6 +322,30 @@ export default function MonthlySupportPlanFormPage() {
     }
   };
 
+  const handleDownloadQRCards = async () => {
+    const donors = planMembers
+      .filter((m) => m.donorId && m.donorPhone)
+      .map((m) => ({
+        name: m.name,
+        phone: m.donorPhone!,
+        jgccNo: extractJgccNos(m.donorNotes) || undefined,
+        planName: formData.name || 'Monthly Support',
+      }));
+    if (donors.length === 0) {
+      toast.warning('No outside donors with phone numbers found');
+      return;
+    }
+    setGeneratingQR(true);
+    try {
+      await downloadQRCards(donors, window.location.origin);
+      toast.success(`QR cards generated for ${donors.length} donor(s)`);
+    } catch {
+      toast.error('Failed to generate QR cards');
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -502,7 +528,21 @@ export default function MonthlySupportPlanFormPage() {
 
           {/* Member Selection */}
           <div className="border-t pt-4 mt-4">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">Members ({planMembers.length})</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-md font-semibold text-gray-800">Members ({planMembers.length})</h3>
+              {planMembers.some((m) => m.donorId && m.donorPhone) && (
+                <button
+                  type="button"
+                  onClick={handleDownloadQRCards}
+                  disabled={generatingQR}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  title="Download QR portal cards for all outside donors"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  {generatingQR ? 'Generating...' : 'Download QR Cards'}
+                </button>
+              )}
+            </div>
 
             {planMembers.length > 0 && (
               <>
