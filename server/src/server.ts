@@ -6,6 +6,7 @@ import connectDB from './config/database';
 import errorHandler from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
 import entityRoutes from './routes/entity.routes';
+import publicRoutes from './routes/public.routes';
 import swaggerSpec from './config/swagger';
 import { scheduleCampaignDuesProcessing } from './jobs/campaignDuesProcessor';
 import { scheduleEdvBridgeRetryProcessing } from './jobs/edvBridgeRetryProcessor';
@@ -117,6 +118,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 // API Routes
+app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', entityRoutes);
 

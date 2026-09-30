@@ -1,0 +1,48 @@
+import { Request, Response, NextFunction } from 'express';
+import Donor from '../models/Donor';
+import Transaction from '../models/Transaction';
+
+// Public endpoint — no auth required.
+// Looks up a donor by their registered phone number and returns their
+// recent monthly-support transactions so they can view/download receipts.
+export const lookupDonorByPhone = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone || !String(phone).trim()) {
+      res.status(400).json({ success: false, error: 'Phone number is required' });
+      return;
+    }
+
+    const donor = await Donor.findOne({ phone: String(phone).trim(), isActive: true })
+      .populate('churchId', 'name');
+
+    if (!donor) {
+      res.status(404).json({ success: false, error: 'No supporter found with this phone number' });
+      return;
+    }
+
+    const transactions = await Transaction.find({
+      donorId: donor._id,
+      transactionType: 'monthly_support',
+    })
+      .populate('monthlySupportPlanId', 'name')
+      .sort({ paymentDate: -1 })
+      .limit(50)
+      .select('receiptNumber transactionType totalAmount paymentMethod paymentDate notes monthlySupportPlanId createdAt');
+
+    res.json({
+      success: true,
+      data: {
+        donor: {
+          name: donor.name,
+          phone: donor.phone,
+          church: donor.churchId,
+        },
+        transactions,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
