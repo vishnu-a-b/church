@@ -143,7 +143,7 @@ export default function UnitsPage() {
             const unitId = response.data.data._id;
 
             await api.post('/members', {
-              churchId: user?.churchId,
+              churchId: selectedChurch,
               unitId: unitId,
               bavanakutayimaId: null, // Will be assigned later
               houseId: null, // Will be assigned later
