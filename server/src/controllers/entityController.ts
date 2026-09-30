@@ -750,7 +750,12 @@ export const getAllMembers = async (req: AuthRequest, res: Response, next: NextF
       return (a.memberNumber ?? 0) - (b.memberNumber ?? 0);
     });
 
-    res.json({ success: true, data: members });
+    const membersWithHierarchy = members.map((member: any) => ({
+      ...member,
+      hierarchicalNumber: member.uniqueId,
+    }));
+
+    res.json({ success: true, data: membersWithHierarchy });
   } catch (error) {
     next(error);
   }
