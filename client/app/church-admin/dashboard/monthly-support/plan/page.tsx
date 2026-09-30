@@ -61,8 +61,8 @@ function extractJgccNos(notes?: string): string | null {
 
 const entryId = (m: PlanMemberDraft): string => (m.memberId ?? m.donorId)!;
 
-const copySupporterLink = (phone: string) => {
-  const url = `${window.location.origin}/supporter?phone=${encodeURIComponent(phone)}`;
+const copySupporterLink = (donorId: string) => {
+  const url = `${window.location.origin}/supporter?id=${encodeURIComponent(donorId)}`;
   navigator.clipboard.writeText(url).then(() => {
     toast.success('Supporter portal link copied!');
   }).catch(() => {
@@ -324,15 +324,15 @@ export default function MonthlySupportPlanFormPage() {
 
   const handleDownloadQRCards = async () => {
     const donors = planMembers
-      .filter((m) => m.donorId && m.donorPhone)
+      .filter((m) => m.donorId)
       .map((m) => ({
+        id: m.donorId!,
         name: m.name,
-        phone: m.donorPhone!,
         jgccNo: extractJgccNos(m.donorNotes) || undefined,
         planName: formData.name || 'Monthly Support',
       }));
     if (donors.length === 0) {
-      toast.warning('No outside donors with phone numbers found');
+      toast.warning('No outside donors found');
       return;
     }
     setGeneratingQR(true);
@@ -530,7 +530,7 @@ export default function MonthlySupportPlanFormPage() {
           <div className="border-t pt-4 mt-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-md font-semibold text-gray-800">Members ({planMembers.length})</h3>
-              {planMembers.some((m) => m.donorId && m.donorPhone) && (
+              {planMembers.some((m) => m.donorId) && (
                 <button
                   type="button"
                   onClick={handleDownloadQRCards}
@@ -589,16 +589,14 @@ export default function MonthlySupportPlanFormPage() {
                     </div>
                     {m.donorId && (
                       <>
-                        {m.donorPhone && (
-                          <button
-                            type="button"
-                            onClick={() => copySupporterLink(m.donorPhone!)}
-                            className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
-                            title="Copy supporter portal link"
-                          >
-                            <Link2 className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => copySupporterLink(m.donorId!)}
+                          className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                          title="Copy supporter portal link"
+                        >
+                          <Link2 className="w-4 h-4" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => openEditDonor(entryId(m))}

@@ -56,3 +56,44 @@ export const lookupDonorByPhone = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
+// GET /api/public/donor/:id — lookup by donor _id (used by QR-code links)
+export const lookupDonorById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const donor = await Donor.findOne({ _id: id, isActive: true }).populate('churchId', 'name');
+
+    if (!donor) {
+      res.status(404).json({ success: false, error: 'No supporter found' });
+      return;
+    }
+
+    const [transactions, dues] = await Promise.all([
+      Transaction.find({ donorId: donor._id, transactionType: 'monthly_support' })
+        .populate('monthlySupportPlanId', 'name')
+        .sort({ paymentDate: -1 })
+        .limit(50)
+        .select('receiptNumber transactionType totalAmount paymentMethod paymentDate notes monthlySupportPlanId createdAt'),
+      MonthlySupportDue.find({ dueForId: donor._id, dueForModel: 'Donor' })
+        .sort({ periodMonth: -1 })
+        .limit(24)
+        .select('planId planName periodMonth amount paidAmount balance isPaid dueDate paidAt'),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        donor: {
+          name: donor.name,
+          phone: donor.phone,
+          church: donor.churchId,
+        },
+        transactions,
+        dues,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

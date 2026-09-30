@@ -2,8 +2,8 @@ import QRCode from 'qrcode';
 import JSZip from 'jszip';
 
 export interface DonorCardData {
+  id: string;
   name: string;
-  phone: string;
   jgccNo?: string; // e.g. "JGCC 0001-JGCC 0030"
   planName: string;
 }
@@ -117,7 +117,7 @@ export async function downloadQRCards(
   const root = zip.folder('QR Cards')!;
 
   for (const donor of donors) {
-    const portalUrl = `${baseUrl}/supporter?phone=${encodeURIComponent(donor.phone)}`;
+    const portalUrl = `${baseUrl}/supporter?id=${encodeURIComponent(donor.id)}`;
     const folderName = safeName(
       donor.jgccNo ? `${donor.name} (${donor.jgccNo})` : donor.name,
     );

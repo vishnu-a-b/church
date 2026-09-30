@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, Download, Phone, ChevronLeft } from 'lucide-react';
+import { Search, Download, Phone, ChevronLeft, Heart } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -121,16 +121,52 @@ function SupporterPortalInner() {
   const [donor, setDonor] = useState<DonorInfo | null>(null);
   const [transactions, setTransactions] = useState<SupportTransaction[]>([]);
   const [dues, setDues] = useState<SupportDue[]>([]);
+  // When opened via QR/link with ?id=, we skip the search form entirely
+  const [linkedId, setLinkedId] = useState<string | null>(null);
 
   useEffect(() => {
+    const idParam = searchParams.get('id');
+    if (idParam) {
+      setLinkedId(idParam);
+      doLookupById(idParam);
+      return;
+    }
+    // Legacy phone-based param (kept for backwards compat)
     const phoneParam = searchParams.get('phone');
     if (phoneParam) {
       setPhone(phoneParam);
-      doLookup(phoneParam);
+      doLookupByPhone(phoneParam);
     }
   }, []);
 
-  const doLookup = async (phoneNumber: string) => {
+  const loadData = (json: any) => {
+    setDonor(json.data.donor);
+    setTransactions(json.data.transactions);
+    setDues(json.data.dues || []);
+  };
+
+  const doLookupById = async (id: string) => {
+    setError('');
+    setDonor(null);
+    setTransactions([]);
+    setDues([]);
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/public/donor/${encodeURIComponent(id)}`);
+      const json = await res.json();
+      if (!json.success) {
+        setError(json.error || 'Not found');
+        return;
+      }
+      loadData(json);
+    } catch {
+      setError('Unable to connect. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const doLookupByPhone = async (phoneNumber: string) => {
     setError('');
     setDonor(null);
     setTransactions([]);
@@ -147,9 +183,7 @@ function SupporterPortalInner() {
         setError(json.error || 'Not found');
         return;
       }
-      setDonor(json.data.donor);
-      setTransactions(json.data.transactions);
-      setDues(json.data.dues || []);
+      loadData(json);
     } catch {
       setError('Unable to connect. Please try again.');
     } finally {
@@ -159,7 +193,7 @@ function SupporterPortalInner() {
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
-    doLookup(phone);
+    doLookupByPhone(phone);
   };
 
   const handleReset = () => {
@@ -170,13 +204,22 @@ function SupporterPortalInner() {
     setPhone('');
   };
 
+  // Full-screen spinner while loading a linked ID
+  if (linkedId && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">S</span>
+            <Heart className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-gray-800">Supporter Portal</h1>
@@ -186,7 +229,7 @@ function SupporterPortalInner() {
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-start px-4 py-10">
-        {!donor ? (
+        {!donor && !linkedId ? (
           /* Lookup form */
           <div className="w-full max-w-md">
             <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -243,16 +286,25 @@ function SupporterPortalInner() {
               No login required. Your phone number is used only to find your records.
             </p>
           </div>
+        ) : !donor && linkedId ? (
+          /* Error state for linked ID */
+          <div className="w-full max-w-md">
+            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+              <p className="text-red-600 font-medium">{error || 'Unable to load your portal.'}</p>
+            </div>
+          </div>
         ) : (
           /* Results */
           <div className="w-full max-w-2xl">
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mb-4"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Search again
-            </button>
+            {!linkedId && (
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mb-4"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Search again
+              </button>
+            )}
 
             {/* Donor card */}
             <div className="bg-white rounded-xl shadow p-5 mb-6">
