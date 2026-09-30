@@ -158,23 +158,23 @@ export default function HousesPage() {
     });
   };
 
-  const getBavanakutayimaName = (id: string) => {
+  const resolveId = (val: any): string =>
+    typeof val === 'object' && val !== null ? val._id : val ?? '';
+
+  const getBavanakutayimaName = (id: any) => {
+    if (typeof id === 'object' && id !== null) return id.name || 'Unknown';
     return allBavanakutayimas.find((b) => b._id === id)?.name || 'Unknown';
   };
 
   const filteredHouses = houses.filter((house) => {
-    // Filter by unit
     if (filters.unit) {
-      const bavanakutayima = allBavanakutayimas.find(bk => bk._id === house.bavanakutayimaId);
-      if (!bavanakutayima || bavanakutayima.unitId !== filters.unit) return false;
+      const bkId = resolveId(house.bavanakutayimaId);
+      const bavanakutayima = allBavanakutayimas.find(bk => bk._id === bkId);
+      if (!bavanakutayima || resolveId(bavanakutayima.unitId) !== filters.unit) return false;
     }
-    // Filter by bavanakutayima
-    if (filters.bavanakutayima && house.bavanakutayimaId !== filters.bavanakutayima) return false;
+    if (filters.bavanakutayima && resolveId(house.bavanakutayimaId) !== filters.bavanakutayima) return false;
     return true;
-  }).filter((house) =>
-    house.familyName.toLowerCase().includes('') ||
-    (house.hierarchicalNumber && house.hierarchicalNumber.toLowerCase().includes(''))
-  );
+  });
 
   return (
     <div className="space-y-6">
@@ -250,7 +250,7 @@ export default function HousesPage() {
                       <div className="text-sm text-gray-900">{house.headOfFamily || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                      <div className="text-sm text-gray-900">{getBavanakutayimaName(house.bavanakutayimaId)}</div>
+                      <div className="text-sm text-gray-900">{getBavanakutayimaName((house as any).bavanakutayimaId)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button onClick={() => handleEdit(house)} className="text-blue-600 hover:text-blue-900 mr-4">
