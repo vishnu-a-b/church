@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
-import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck, FiAlertCircle, FiMenu, FiSearch, FiRepeat, FiRefreshCw, FiCheckSquare, FiBookOpen, FiGift } from 'react-icons/fi';
+import { FiHome, FiUsers, FiActivity, FiDollarSign, FiUserCheck, FiAlertCircle, FiMenu, FiSearch, FiRepeat, FiRefreshCw, FiCheckSquare, FiBookOpen, FiGift, FiUserPlus } from 'react-icons/fi';
 import { BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
 import { MdOutlineAccountTree, MdPayment } from 'react-icons/md';
 import { ToastContainer } from 'react-toastify';
@@ -117,6 +117,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'Bavanakutayimas', href: '/church-admin/dashboard/bavanakutayimas', icon: BsPeople },
     { name: 'Houses', href: '/church-admin/dashboard/houses', icon: BsHouseDoor },
     { name: 'Members', href: '/church-admin/dashboard/members', icon: FiUsers },
+    { name: 'Donors', href: '/church-admin/dashboard/donors', icon: FiUserPlus },
     { name: 'Users', href: '/church-admin/dashboard/users', icon: FiUserCheck },
     { name: 'Transactions', href: '/church-admin/dashboard/transactions', icon: FiDollarSign },
     { name: 'Dues', href: '/church-admin/dashboard/dues', icon: FiAlertCircle },
