@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleAuthProvider, useRoleAuth } from '@/context/RoleAuthContext';
 import { Sidebar, MenuItem } from '@/components/Sidebar';
-import { FiHome, FiUsers, FiActivity, FiDollarSign, FiSettings, FiUserCheck, FiAlertCircle, FiRepeat, FiRefreshCw } from 'react-icons/fi';
+import { FiHome, FiUsers, FiActivity, FiDollarSign, FiSettings, FiUserCheck, FiAlertCircle, FiRepeat, FiRefreshCw, FiUserPlus } from 'react-icons/fi';
 import { BsBuilding, BsPeople, BsHouseDoor, BsNewspaper, BsCalendarEvent } from 'react-icons/bs';
 import { MdOutlineAccountTree, MdPayment } from 'react-icons/md';
 import { GiCandleFlame } from 'react-icons/gi';
@@ -33,6 +33,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     { name: 'Bavanakutayimas', href: '/super-admin/dashboard/bavanakutayimas', icon: BsPeople },
     { name: 'Houses', href: '/super-admin/dashboard/houses', icon: BsHouseDoor },
     { name: 'Members', href: '/super-admin/dashboard/members', icon: FiUsers },
+    { name: 'Donors', href: '/super-admin/dashboard/donors', icon: FiUserPlus },
     { name: 'Users', href: '/super-admin/dashboard/users', icon: FiUserCheck },
     { name: 'Transactions', href: '/super-admin/dashboard/transactions', icon: FiDollarSign },
     { name: 'Dues', href: '/super-admin/dashboard/dues', icon: FiAlertCircle },
