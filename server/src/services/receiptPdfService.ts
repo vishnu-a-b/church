@@ -56,7 +56,7 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const M        = 22;       // outer margin
     const PW       = 419;      // A5 width
-    const barH     = 56;       // navy accent bar
+    const barH     = 72;       // navy accent bar (tall enough for logo to fill it)
     const hdrH     = 24;       // table header row
     const rowH     = 22;       // table body row
     const wordsH   = 40;       // amount-in-words box
@@ -65,10 +65,10 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     const tableH   = hdrH + bodyRows * rowH + hdrH;    // header + rows + total
 
     // Dynamic page height — no wasted whitespace
-    // Fixed stack: M + bar(56) + gold(2.5) + noDate(24) + recipient(22) + gap(6) + badge(26)
-    //              + badgeGap(12) + sepToTable(10) + table + wordsGap(12) + words(40)
+    // Fixed stack: M + bar(72) + gold(2.5) + noDate(24) + recipient(22) + gap(6) + badge(22)
+    //              + badgeGap(10) + sepToTable(10) + table + wordsGap(12) + words(40)
     //              + sigSection(36) + footerSection(28) + M
-    const PH = Math.ceil(M + 56 + 2.5 + 24 + 22 + 6 + 26 + 12 + 10 + tableH + 12 + wordsH + 36 + 28 + M);
+    const PH = Math.ceil(M + 72 + 2.5 + 24 + 22 + 6 + 22 + 10 + 10 + tableH + 12 + wordsH + 36 + 28 + M);
     const CW = PW - M * 2;
 
     const doc = new PDFDocument({ size: [PW, PH], margin: 0 });
@@ -91,9 +91,9 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     doc.restore();
 
     // ── Logo ──────────────────────────────────────────────────────────
-    const logoSize = 58;
-    const logoX    = M + 13;
-    const logoY    = M + (barH - logoSize) / 2 - 1;
+    const logoSize = 64;                                   // fills barH (72) with gold ring
+    const logoX    = M + 10;
+    const logoY    = M + (barH - logoSize) / 2;           // vertically centred in bar
     const logoCX   = logoX + logoSize / 2;
     const logoCY   = logoY + logoSize / 2;
 
@@ -110,14 +110,14 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     }
 
     // ── Church name + contact ─────────────────────────────────────────
-    const nameX = logoX + logoSize + 13;
+    const nameX = logoX + logoSize + 14;
     const nameW = CW - logoSize - 26;
     doc.font('Helvetica-Bold').fontSize(14.5).fillColor('#ffffff')
-       .text("St. Mary's Church, Elthuruth", nameX, M + 10, { width: nameW });
-    doc.font('Helvetica').fontSize(7.5).fillColor('#a8c8ee')
+       .text("St. Mary's Church, Elthuruth", nameX, M + 18, { width: nameW });
+    doc.font('Helvetica').fontSize(8).fillColor('#a8c8ee')
        .text(
          'Pin: 680611  \u2022  PH: 0487 2369929  \u2022  smcelth@gmail.com',
-         nameX, M + 33, { width: nameW },
+         nameX, M + 44, { width: nameW },
        );
 
     // ── No / Date ─────────────────────────────────────────────────────
@@ -140,17 +140,17 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     doc.font('Helvetica-Bold').fontSize(9.5).fillColor(NAVY)
        .text(data.recipientName || '—', M + 100, recipientY + 6, { width: CW - 110 });
 
-    // ── RECEIPT badge ─────────────────────────────────────────────────
-    const badgeW = 144;
-    const badgeH = 26;
+    // ── RECEIPT badge — same font size as table Items header ─────────
+    const badgeW = 120;
+    const badgeH = 22;
     const badgeX = (PW - badgeW) / 2;
     const badgeY = noDateY + 24 + 22 + 6;  // after noDate + recipient row + gap
 
-    doc.roundedRect(badgeX + 2, badgeY + 2, badgeW, badgeH, 6).fill('#8a9fb8');  // shadow
-    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 6).fill(NAVY);
-    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 6).lineWidth(1.2).stroke(GOLD);
-    doc.font('Helvetica-Bold').fontSize(13).fillColor('#ffffff')
-       .text('R E C E I P T', badgeX, badgeY + 6, { width: badgeW, align: 'center' });
+    doc.roundedRect(badgeX + 1.5, badgeY + 1.5, badgeW, badgeH, 5).fill('#8a9fb8');  // shadow
+    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 5).fill(NAVY);
+    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 5).lineWidth(1).stroke(GOLD);
+    doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
+       .text('R E C E I P T', badgeX, badgeY + 5.5, { width: badgeW, align: 'center' });
 
     // ── Decorative separator ──────────────────────────────────────────
     const sepY = badgeY + badgeH + 12;
