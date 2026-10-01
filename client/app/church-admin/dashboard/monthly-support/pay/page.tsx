@@ -58,7 +58,7 @@ export default function MonthlySupportAddPaymentPage() {
   const [entryIdInput, setEntryIdInput] = useState('');
   const [memberSearch, setMemberSearch] = useState('');
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
-  const [memberStats, setMemberStats] = useState<{ totalPaid: number; dueBalance: number; lastPaidAmount: number; lastPaidDate: string | null } | null>(null);
+  const [memberStats, setMemberStats] = useState<{ totalPaid: number; paidTerms: number; dueBalance: number; lastPaidAmount: number; lastPaidDate: string | null } | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [amountInput, setAmountInput] = useState('');
   const [methodInput, setMethodInput] = useState('cash');
@@ -108,6 +108,7 @@ export default function MonthlySupportAddPaymentPage() {
         .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime())[0];
       setMemberStats({
         totalPaid,
+        paidTerms: myDues.filter((d: any) => d.isPaid).length,
         dueBalance,
         lastPaidAmount: lastPaid?.paidAmount ?? 0,
         lastPaidDate: lastPaid?.paidAt ?? null,
@@ -301,7 +302,7 @@ export default function MonthlySupportAddPaymentPage() {
               {loadingStats ? (
                 <p className="text-gray-400 text-xs">Loading payment history...</p>
               ) : memberStats ? (
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-2 gap-3 text-center mb-3">
                   <div>
                     <p className="text-xs text-gray-500">Total Paid</p>
                     <p className="font-bold text-green-700">₹{memberStats.totalPaid.toLocaleString('en-IN')}</p>
@@ -311,6 +312,12 @@ export default function MonthlySupportAddPaymentPage() {
                     <p className={`font-bold ${memberStats.dueBalance > 0 ? 'text-red-600' : 'text-gray-400'}`}>
                       {memberStats.dueBalance > 0 ? `₹${memberStats.dueBalance.toLocaleString('en-IN')}` : '—'}
                     </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-center border-t border-gray-200 pt-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Terms Paid</p>
+                    <p className="font-bold text-blue-700">{memberStats.paidTerms} month{memberStats.paidTerms !== 1 ? 's' : ''}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Last Payment</p>
