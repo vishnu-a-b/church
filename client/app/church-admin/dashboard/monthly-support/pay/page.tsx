@@ -303,37 +303,39 @@ export default function MonthlySupportAddPaymentPage() {
               {loadingStats ? (
                 <p className="text-gray-400 text-xs">Loading payment history...</p>
               ) : memberStats ? (
-                <div className="grid grid-cols-2 gap-3 text-center mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Total Paid</p>
-                    <p className="font-bold text-green-700">₹{memberStats.totalPaid.toLocaleString('en-IN')}</p>
+                <>
+                  <div className="grid grid-cols-2 gap-3 text-center mb-3">
+                    <div>
+                      <p className="text-xs text-gray-500">Total Paid</p>
+                      <p className="font-bold text-green-700">₹{memberStats.totalPaid.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Due Balance</p>
+                      <p className={`font-bold ${memberStats.dueBalance > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                        {memberStats.dueBalance > 0 ? `₹${memberStats.dueBalance.toLocaleString('en-IN')}` : '—'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Due Balance</p>
-                    <p className={`font-bold ${memberStats.dueBalance > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                      {memberStats.dueBalance > 0 ? `₹${memberStats.dueBalance.toLocaleString('en-IN')}` : '—'}
-                    </p>
+                  <div className="grid grid-cols-2 gap-3 text-center border-t border-gray-200 pt-3">
+                    <div>
+                      <p className="text-xs text-gray-500">Terms Paid</p>
+                      <p className="font-bold text-blue-700">{memberStats.paidTerms} month{memberStats.paidTerms !== 1 ? 's' : ''}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Last Payment</p>
+                      {memberStats.lastPaidDate ? (
+                        <>
+                          <p className="font-bold text-gray-700">₹{memberStats.lastPaidAmount.toLocaleString('en-IN')}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(memberStats.lastPaidDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="font-bold text-gray-400">—</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-center border-t border-gray-200 pt-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Terms Paid</p>
-                    <p className="font-bold text-blue-700">{memberStats.paidTerms} month{memberStats.paidTerms !== 1 ? 's' : ''}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Last Payment</p>
-                    {memberStats.lastPaidDate ? (
-                      <>
-                        <p className="font-bold text-gray-700">₹{memberStats.lastPaidAmount.toLocaleString('en-IN')}</p>
-                        <p className="text-xs text-gray-400">
-                          {new Date(memberStats.lastPaidDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="font-bold text-gray-400">—</p>
-                    )}
-                  </div>
-                </div>
+                </>
               ) : null}
             </div>
           )}
