@@ -156,6 +156,8 @@ import {
   getScheduledBookings,
   addPaymentToBooking,
   cancelScheduledBooking,
+  updateScheduledBooking,
+  deleteScheduledBooking,
 } from '../controllers/thirukkarmangalController';
 import {
   createMyPathavarmContribution,
@@ -915,6 +917,8 @@ router.get('/thirukkarmangal/bookings/member/:memberId', getMemberThirukkarmanga
 router.route('/thirukkarmangal/scheduled-bookings').get(getScheduledBookings).post(createScheduledBooking);
 router.put('/thirukkarmangal/scheduled-bookings/:id/payment', addPaymentToBooking);
 router.put('/thirukkarmangal/scheduled-bookings/:id/cancel', cancelScheduledBooking);
+router.put('/thirukkarmangal/scheduled-bookings/:id', updateScheduledBooking);
+router.delete('/thirukkarmangal/scheduled-bookings/:id', deleteScheduledBooking);
 
 // Pathavarm Routes (member self-service, matches /members/me/* convention; church_admin uses POST /transactions directly)
 router.post('/members/me/pathavarm', createMyPathavarmContribution);

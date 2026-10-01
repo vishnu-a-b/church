@@ -645,3 +645,59 @@ export const cancelScheduledBooking = async (req: AuthRequest, res: Response, ne
     next(error);
   }
 };
+
+export const updateScheduledBooking = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
+      res.status(403).json({ success: false, error: 'Only church admins can edit bookings' });
+      return;
+    }
+
+    const booking = await ThirukkarmangalBooking.findById(req.params.id);
+    if (!booking) { res.status(404).json({ success: false, error: 'Booking not found' }); return; }
+
+    if (req.user.role === 'church_admin' && req.user.churchId && String(booking.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Booking does not belong to your church' }); return;
+    }
+    if (booking.status !== 'pending') { res.status(400).json({ success: false, error: 'Only pending bookings can be edited' }); return; }
+
+    const { scheduledDate, notes } = req.body;
+    if (scheduledDate) booking.scheduledDate = new Date(scheduledDate);
+    if (notes !== undefined) booking.notes = notes || undefined;
+    await booking.save();
+
+    const populated = await ThirukkarmangalBooking.findById(booking._id)
+      .populate('riteId', 'nameMalayalam nameEnglish code category amount')
+      .populate('memberId', 'firstName lastName uniqueId')
+      .populate('houseId', 'familyName houseCode')
+      .populate('unitId', 'name')
+      .populate('transactionId', 'receiptNumber totalAmount paymentMethod paymentDate');
+
+    res.json({ success: true, data: populated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteScheduledBooking = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'church_admin' && req.user?.role !== 'super_admin') {
+      res.status(403).json({ success: false, error: 'Only church admins can delete bookings' });
+      return;
+    }
+
+    const booking = await ThirukkarmangalBooking.findById(req.params.id);
+    if (!booking) { res.status(404).json({ success: false, error: 'Booking not found' }); return; }
+
+    if (req.user.role === 'church_admin' && req.user.churchId && String(booking.churchId) !== String(req.user.churchId)) {
+      res.status(403).json({ success: false, error: 'Booking does not belong to your church' }); return;
+    }
+    if (booking.status === 'paid') { res.status(400).json({ success: false, error: 'Cannot delete a paid booking' }); return; }
+
+    await ThirukkarmangalBooking.deleteOne({ _id: booking._id });
+
+    res.json({ success: true, message: 'Booking deleted' });
+  } catch (error) {
+    next(error);
+  }
+};

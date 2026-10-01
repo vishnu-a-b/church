@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
 import {
   ArrowLeft, CalendarPlus, Receipt, X, ChevronLeft, ChevronRight,
-  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock,
+  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock, Pencil, Trash2,
 } from 'lucide-react';
 
 interface Church { _id: string; name: string; }
@@ -69,6 +69,12 @@ function BookingsContent() {
   const [calMonth, setCalMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
+  // Edit modal
+  const [editModalBooking, setEditModalBooking] = useState<Booking | null>(null);
+  const [editDate, setEditDate] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
   // Payment modal
   const [payModalBooking, setPayModalBooking] = useState<Booking | null>(null);
   const [payAmount, setPayAmount] = useState('');
@@ -119,6 +125,41 @@ function BookingsContent() {
   const clearFilters = () => {
     setFilterStatus(''); setFilterRite(''); setFilterFrom(''); setFilterTo('');
     fetchBookings(selectedChurchId, '', '', '', '');
+  };
+
+  const openEditModal = (b: Booking) => {
+    setEditModalBooking(b);
+    setEditDate(b.scheduledDate.slice(0, 10));
+    setEditNotes(b.notes || '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editModalBooking) return;
+    setSaving(true);
+    try {
+      await api.put(`/thirukkarmangal/scheduled-bookings/${editModalBooking._id}`, {
+        scheduledDate: editDate,
+        notes: editNotes.trim() || '',
+      });
+      toast.success('Booking updated');
+      setEditModalBooking(null);
+      fetchBookings(selectedChurchId, filterStatus, filterRite, filterFrom, filterTo);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to update');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this booking? This cannot be undone.')) return;
+    try {
+      await api.delete(`/thirukkarmangal/scheduled-bookings/${id}`);
+      toast.success('Booking deleted');
+      fetchBookings(selectedChurchId, filterStatus, filterRite, filterFrom, filterTo);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to delete');
+    }
   };
 
   const handleCancel = async (id: string) => {
@@ -377,6 +418,7 @@ function BookingsContent() {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rite</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">House</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -401,6 +443,9 @@ function BookingsContent() {
                             <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
                               {b.houseId ? b.houseId.familyName : '—'}
                             </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 max-w-[180px]">
+                              {b.notes ? <span className="line-clamp-2">{b.notes}</span> : <span className="text-gray-300">—</span>}
+                            </td>
                             <td className="px-4 py-3">
                               <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[b.status]}`}>
                                 {STATUS_ICON[b.status]}
@@ -416,22 +461,40 @@ function BookingsContent() {
                               ) : '—'}
                             </td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
-                              {b.status === 'pending' && (
-                                <>
+                              <div className="flex items-center justify-end gap-1">
+                                {b.status === 'pending' && (
                                   <button
                                     onClick={() => openPayModal(b)}
-                                    className="inline-flex items-center gap-1 text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 mr-2"
+                                    className="inline-flex items-center gap-1 text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700"
                                   >
-                                    <Receipt className="w-3 h-3" /> Add Payment
+                                    <Receipt className="w-3 h-3" /> Pay
                                   </button>
+                                )}
+                                {b.status === 'pending' && new Date(b.scheduledDate) > new Date() && (
+                                  <button
+                                    onClick={() => openEditModal(b)}
+                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1.5 rounded-lg hover:bg-blue-50"
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {new Date(b.scheduledDate) > new Date() && b.status !== 'paid' && (
+                                  <button
+                                    onClick={() => handleDelete(b._id)}
+                                    className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 px-2 py-1.5 rounded-lg hover:bg-red-50"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {b.status === 'pending' && !(new Date(b.scheduledDate) > new Date()) && (
                                   <button
                                     onClick={() => handleCancel(b._id)}
-                                    className="text-xs text-red-600 hover:text-red-800 px-2 py-1.5 rounded-lg hover:bg-red-50"
+                                    className="text-xs text-gray-500 hover:text-red-700 px-2 py-1.5 rounded-lg hover:bg-red-50"
                                   >
                                     Cancel
                                   </button>
-                                </>
-                              )}
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -525,20 +588,39 @@ function BookingsContent() {
                                 <p className="text-sm font-medium text-gray-800">{b.riteId?.nameEnglish || '—'}</p>
                                 <p className="text-xs text-gray-500 mt-0.5">{b.memberId?.firstName} {b.memberId?.lastName}</p>
                                 <p className="text-xs text-gray-500">{b.houseId?.familyName}</p>
+                                {b.notes && <p className="text-xs text-gray-400 mt-1 italic">{b.notes}</p>}
                               </div>
                               <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_BADGE[b.status]}`}>
                                 {STATUS_ICON[b.status]}
                                 {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
                               </span>
                             </div>
-                            {b.status === 'pending' && (
-                              <button
-                                onClick={() => openPayModal(b)}
-                                className="mt-2 w-full flex items-center justify-center gap-1 text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700"
-                              >
-                                <Receipt className="w-3 h-3" /> Add Payment
-                              </button>
-                            )}
+                            <div className="mt-2 flex gap-2">
+                              {b.status === 'pending' && (
+                                <button
+                                  onClick={() => openPayModal(b)}
+                                  className="flex-1 flex items-center justify-center gap-1 text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700"
+                                >
+                                  <Receipt className="w-3 h-3" /> Pay
+                                </button>
+                              )}
+                              {b.status === 'pending' && new Date(b.scheduledDate) > new Date() && (
+                                <button
+                                  onClick={() => openEditModal(b)}
+                                  className="flex items-center justify-center gap-1 text-xs text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50"
+                                >
+                                  <Pencil className="w-3 h-3" /> Edit
+                                </button>
+                              )}
+                              {new Date(b.scheduledDate) > new Date() && b.status !== 'paid' && (
+                                <button
+                                  onClick={() => handleDelete(b._id)}
+                                  className="flex items-center justify-center gap-1 text-xs text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
                             {b.transactionId && (
                               <p className="mt-1.5 text-xs text-green-700 font-mono">{b.transactionId.receiptNumber} · ₹{b.transactionId.totalAmount}</p>
                             )}
@@ -552,6 +634,57 @@ function BookingsContent() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── EDIT MODAL ── */}
+      {editModalBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="border-b px-6 py-4 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Edit Booking</h3>
+                <p className="text-sm text-gray-500">{editModalBooking.riteId?.nameEnglish} · {editModalBooking.memberId?.firstName} {editModalBooking.memberId?.lastName}</p>
+              </div>
+              <button onClick={() => setEditModalBooking(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Scheduled Date *</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <input
+                  type="text"
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  placeholder="Optional"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button onClick={() => setEditModalBooking(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  <Pencil className="w-4 h-4" />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── PAYMENT MODAL ── */}
