@@ -97,7 +97,7 @@ export const notifyTransactionMember = (transaction: any, description?: string):
       houseName: ctx.houseName,
     };
 
-    const receiptData = {
+    const baseReceiptData = {
       receiptNumber: transaction.receiptNumber,
       date: transaction.paymentDate ?? new Date(),
       items: [{ description: description ?? transaction.transactionType, amount: transaction.totalAmount }],
@@ -107,7 +107,7 @@ export const notifyTransactionMember = (transaction: any, description?: string):
     if (m) {
       const fullName = `${(m as any).firstName ?? ''} ${(m as any).lastName ?? ''}`.trim();
       sendTransactionNotification(m, { ...baseTxDetails, memberCode: (m as any).uniqueId }).catch(() => {});
-      sendReceiptViaWhatsApp((m as any).phone, receiptData, fullName, description ?? transaction.transactionType);
+      sendReceiptViaWhatsApp((m as any).phone, { ...baseReceiptData, recipientName: fullName }, fullName, description ?? transaction.transactionType);
     } else if (transaction.houseId) {
       Member.find({ houseId: transaction.houseId })
         .select('firstName lastName uniqueId email isEmailVerified emailNotificationsEnabled phone')
@@ -116,7 +116,7 @@ export const notifyTransactionMember = (transaction: any, description?: string):
           for (const hm of members) {
             const fullName = `${(hm as any).firstName ?? ''} ${(hm as any).lastName ?? ''}`.trim();
             sendTransactionNotification(hm, { ...baseTxDetails, memberCode: (hm as any).uniqueId }).catch(() => {});
-            sendReceiptViaWhatsApp((hm as any).phone, receiptData, fullName, description ?? transaction.transactionType);
+            sendReceiptViaWhatsApp((hm as any).phone, { ...baseReceiptData, recipientName: fullName }, fullName, description ?? transaction.transactionType);
           }
         })
         .catch(() => {});

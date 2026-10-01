@@ -49,6 +49,7 @@ export interface ReceiptData {
   date: Date;
   items: Array<{ description: string; amount: number }>;
   totalAmount: number;
+  recipientName?: string;
 }
 
 export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
@@ -64,10 +65,10 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     const tableH   = hdrH + bodyRows * rowH + hdrH;    // header + rows + total
 
     // Dynamic page height — no wasted whitespace
-    // Fixed stack: M + bar(56) + gold(2.5) + noDate(24) + gap(6) + badge(26)
+    // Fixed stack: M + bar(56) + gold(2.5) + noDate(24) + recipient(22) + gap(6) + badge(26)
     //              + badgeGap(12) + sepToTable(10) + table + wordsGap(12) + words(40)
     //              + sigSection(36) + footerSection(28) + M
-    const PH = Math.ceil(M + 56 + 2.5 + 24 + 6 + 26 + 12 + 10 + tableH + 12 + wordsH + 36 + 28 + M);
+    const PH = Math.ceil(M + 56 + 2.5 + 24 + 22 + 6 + 26 + 12 + 10 + tableH + 12 + wordsH + 36 + 28 + M);
     const CW = PW - M * 2;
 
     const doc = new PDFDocument({ size: [PW, PH], margin: 0 });
@@ -128,11 +129,19 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     doc.font('Helvetica-Bold').fontSize(10).fillColor(NAVY)
        .text(`Date:  ${dateStr}`, M, noDateY + 7, { width: CW - 10, align: 'right' });
 
+    // ── Received From row ─────────────────────────────────────────────
+    const recipientY = noDateY + 24;
+    doc.moveTo(M, recipientY).lineTo(M + CW, recipientY).lineWidth(0.4).stroke(LIGHT_GRAY);
+    doc.font('Helvetica').fontSize(9.5).fillColor(GRAY)
+       .text('Received From:', M + 10, recipientY + 6);
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(NAVY)
+       .text(data.recipientName || '—', M + 100, recipientY + 6, { width: CW - 110 });
+
     // ── RECEIPT badge ─────────────────────────────────────────────────
     const badgeW = 144;
     const badgeH = 26;
     const badgeX = (PW - badgeW) / 2;
-    const badgeY = noDateY + 24 + 6;
+    const badgeY = noDateY + 24 + 22 + 6;  // after noDate + recipient row + gap
 
     doc.roundedRect(badgeX + 2, badgeY + 2, badgeW, badgeH, 6).fill('#8a9fb8');  // shadow
     doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 6).fill(NAVY);
