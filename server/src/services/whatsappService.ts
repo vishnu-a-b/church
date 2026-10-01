@@ -3,11 +3,10 @@ import { generateReceiptPdf, ReceiptData } from './receiptPdfService';
 
 const OMNI_BASE = 'https://wb.omni.tatatelebusiness.com/whatsapp-cloud';
 
-function getConfig(): { apiKey: string; from: string } | null {
+function getConfig(): { apiKey: string } | null {
   const apiKey = process.env.OMNI_WA_API_KEY;
-  const from = process.env.OMNI_WA_FROM;
-  if (!apiKey || !from) return null;
-  return { apiKey, from };
+  if (!apiKey) return null;
+  return { apiKey };
 }
 
 async function uploadPdfMedia(pdfBuffer: Buffer, filename: string, apiKey: string): Promise<string> {
@@ -59,7 +58,6 @@ export const sendReceiptViaWhatsApp = (
         `${OMNI_BASE}/messages`,
         {
           messaging_product: 'whatsapp',
-          from: cfg.from,
           to: wa,
           type: 'template',
           template: {
