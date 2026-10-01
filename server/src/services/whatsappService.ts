@@ -17,7 +17,7 @@ async function uploadPdfMedia(pdfBuffer: Buffer, filename: string, apiKey: strin
   form.append('messaging_product', 'whatsapp');
 
   const res = await axios.post<{ id: string }>(`${OMNI_BASE}/media`, form, {
-    headers: { ...form.getHeaders(), apikey: apiKey },
+    headers: { ...form.getHeaders(), Authorization: apiKey },
   });
 
   const mediaId = res.data?.id;
@@ -76,7 +76,7 @@ export const sendReceiptViaWhatsApp = (
           },
         },
         {
-          headers: { apikey: cfg.apiKey, 'Content-Type': 'application/json' },
+          headers: { Authorization: cfg.apiKey, 'Content-Type': 'application/json' },
         },
       );
     })
