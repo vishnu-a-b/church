@@ -29,11 +29,7 @@ async function uploadPdfMedia(pdfBuffer: Buffer, filename: string, apiKey: strin
  * Generate a PDF receipt and send it via WhatsApp using the elthuruth_ereceipt template.
  * Fire-and-forget — never throws; errors are logged silently.
  *
- * Template body parameters (in order):
- *   {{1}} recipient first name
- *   {{2}} receipt number
- *   {{3}} amount (e.g. "Rs. 500")
- *   {{4}} description / campaign name
+ * Template: document header + body {{1}} = recipient name
  */
 export const sendReceiptViaWhatsApp = (
   phone: string | undefined,
@@ -51,9 +47,6 @@ export const sendReceiptViaWhatsApp = (
   generateReceiptPdf(receiptData)
     .then((pdfBuffer) => uploadPdfMedia(pdfBuffer, filename, cfg.apiKey))
     .then((mediaId) => {
-      const firstName = recipientName.trim().split(' ')[0];
-      const amountStr = `Rs. ${receiptData.totalAmount.toLocaleString('en-IN')}`;
-
       return axios.post(
         `${OMNI_BASE}/messages`,
         {
@@ -76,10 +69,7 @@ export const sendReceiptViaWhatsApp = (
               {
                 type: 'body',
                 parameters: [
-                  { type: 'text', text: firstName },
-                  { type: 'text', text: receiptData.receiptNumber },
-                  { type: 'text', text: amountStr },
-                  { type: 'text', text: description },
+                  { type: 'text', text: recipientName },
                 ],
               },
             ],
