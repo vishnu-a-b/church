@@ -98,11 +98,14 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     const logoCY   = logoY + logoSize / 2;
 
     if (fs.existsSync(LOGO_PATH)) {
-      doc.circle(logoCX, logoCY, logoSize / 2 + 3.5).fill(GOLD);
-      doc.circle(logoCX, logoCY, logoSize / 2 + 1.5).fill('#ffffff');
+      doc.circle(logoCX, logoCY, logoSize / 2 + 3.5).fill(GOLD);   // gold outer ring
       doc.save();
       doc.circle(logoCX, logoCY, logoSize / 2).clip();
-      doc.image(LOGO_PATH, logoX, logoY, { width: logoSize, height: logoSize });
+      doc.circle(logoCX, logoCY, logoSize / 2).fill(NAVY);           // navy background (visible as top/bottom padding)
+      // Image at natural aspect ratio (499×314 px → ~1.59:1), centered in circle
+      const imgW = logoSize;
+      const imgH = Math.round(imgW * (314 / 499));                   // ≈ 36pt
+      doc.image(LOGO_PATH, logoX, logoCY - imgH / 2, { width: imgW, height: imgH });
       doc.restore();
     }
 
