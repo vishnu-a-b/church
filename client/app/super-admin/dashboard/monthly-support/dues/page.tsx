@@ -296,15 +296,16 @@ export default function SuperAdminMonthlySupportDuesPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Date</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mode</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">No records found</td></tr>
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">No records found</td></tr>
               ) : (
                 filtered.map((due) => {
                   const mode = txField(due, 'paymentMethod');
@@ -339,6 +340,9 @@ export default function SuperAdminMonthlySupportDuesPage() {
                         ) : '—'}
                       </td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{ref || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500 max-w-[160px]">
+                        {due.notes ? <span className="line-clamp-2">{due.notes}</span> : <span className="text-gray-300">—</span>}
+                      </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                           due.isPaid ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-700'
