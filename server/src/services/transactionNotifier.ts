@@ -3,6 +3,7 @@ import House from '../models/House';
 import Church from '../models/Church';
 import SpiritualActivity from '../models/SpiritualActivity';
 import { sendTransactionNotification, TransactionDetails } from './emailService';
+import { sendReceiptViaWhatsApp } from './whatsappService';
 
 async function resolveReceiptContext(transaction: any): Promise<{ churchName?: string; houseName?: string }> {
   const [church, house] = await Promise.all([
@@ -80,7 +81,7 @@ export const notifyTransactionMember = (transaction: any, description?: string):
     resolveReceiptContext(transaction),
     transaction.memberId
       ? Member.findById(transaction.memberId)
-          .select('firstName lastName uniqueId email isEmailVerified emailNotificationsEnabled')
+          .select('firstName lastName uniqueId email isEmailVerified emailNotificationsEnabled phone')
           .lean()
       : Promise.resolve(null),
   ]).then(([ctx, m]) => {
@@ -96,15 +97,26 @@ export const notifyTransactionMember = (transaction: any, description?: string):
       houseName: ctx.houseName,
     };
 
+    const receiptData = {
+      receiptNumber: transaction.receiptNumber,
+      date: transaction.paymentDate ?? new Date(),
+      items: [{ description: description ?? transaction.transactionType, amount: transaction.totalAmount }],
+      totalAmount: transaction.totalAmount,
+    };
+
     if (m) {
+      const fullName = `${(m as any).firstName ?? ''} ${(m as any).lastName ?? ''}`.trim();
       sendTransactionNotification(m, { ...baseTxDetails, memberCode: (m as any).uniqueId }).catch(() => {});
+      sendReceiptViaWhatsApp((m as any).phone, receiptData, fullName, description ?? transaction.transactionType);
     } else if (transaction.houseId) {
       Member.find({ houseId: transaction.houseId })
-        .select('firstName lastName uniqueId email isEmailVerified emailNotificationsEnabled')
+        .select('firstName lastName uniqueId email isEmailVerified emailNotificationsEnabled phone')
         .lean()
         .then((members) => {
           for (const hm of members) {
+            const fullName = `${(hm as any).firstName ?? ''} ${(hm as any).lastName ?? ''}`.trim();
             sendTransactionNotification(hm, { ...baseTxDetails, memberCode: (hm as any).uniqueId }).catch(() => {});
+            sendReceiptViaWhatsApp((hm as any).phone, receiptData, fullName, description ?? transaction.transactionType);
           }
         })
         .catch(() => {});
