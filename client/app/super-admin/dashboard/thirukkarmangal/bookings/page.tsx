@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
 import {
   ArrowLeft, CalendarPlus, Receipt, X, ChevronLeft, ChevronRight,
-  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock, Pencil, Trash2,
+  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock, Pencil, Trash2, Download,
 } from 'lucide-react';
 
 interface Church { _id: string; name: string; }
@@ -159,6 +159,20 @@ function BookingsContent() {
       fetchBookings(selectedChurchId, filterStatus, filterRite, filterFrom, filterTo);
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to delete');
+    }
+  };
+
+  const handleDownloadReceipt = async (transactionId: string, receiptNumber: string) => {
+    try {
+      const res = await api.get(`/transactions/${transactionId}/receipt`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Receipt-${receiptNumber}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download receipt');
     }
   };
 
@@ -485,6 +499,15 @@ function BookingsContent() {
                                     className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 px-2 py-1.5 rounded-lg hover:bg-red-50"
                                   >
                                     <Trash2 className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {b.status === 'paid' && b.transactionId && (
+                                  <button
+                                    onClick={() => handleDownloadReceipt(b.transactionId!._id, b.transactionId!.receiptNumber)}
+                                    className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 px-2 py-1.5 rounded-lg hover:bg-green-50"
+                                    title="Download Receipt"
+                                  >
+                                    <Download className="w-3 h-3" />
                                   </button>
                                 )}
                                 {b.status === 'pending' && !(new Date(b.scheduledDate) > new Date()) && (

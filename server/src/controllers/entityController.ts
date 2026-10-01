@@ -24,6 +24,7 @@ import { notifyTransactionMember } from '../services/transactionNotifier';
 import { pushTransactionToEdv } from '../services/edvBridgeService';
 import edvBridgeConfig from '../config/edvBridge';
 import { computeSplitAmounts } from '../services/thirukkarmangalSplitService';
+import { generateReceiptPdf } from '../services/receiptPdfService';
 
 // Unit Controllers
 export const getAllUnits = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -1351,6 +1352,42 @@ export const getTransactionById = async (req: AuthRequest, res: Response, next: 
       return;
     }
     res.json({ success: true, data: transaction });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const downloadTransactionReceipt = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const accessFilter = await buildTransactionAccessFilter(req);
+    const tx = await Transaction.findOne({ _id: req.params.id, ...accessFilter })
+      .populate<{ memberId: { firstName: string; lastName: string } | null }>('memberId', 'firstName lastName')
+      .populate<{ houseId: { familyName: string } | null }>('houseId', 'familyName')
+      .lean();
+
+    if (!tx) {
+      res.status(404).json({ success: false, error: 'Transaction not found' });
+      return;
+    }
+
+    const member = tx.memberId as any;
+    const house  = tx.houseId as any;
+    const recipientName = member
+      ? `${member.firstName ?? ''} ${member.lastName ?? ''}`.trim()
+      : (house?.familyName ?? undefined);
+
+    const pdfBuffer = await generateReceiptPdf({
+      receiptNumber: tx.receiptNumber,
+      date: tx.paymentDate ?? new Date(),
+      recipientName,
+      notes: (tx as any).notes ?? undefined,
+      items: [{ description: (tx as any).transactionType, amount: (tx as any).totalAmount }],
+      totalAmount: (tx as any).totalAmount,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Receipt-${tx.receiptNumber}.pdf"`);
+    res.send(pdfBuffer);
   } catch (error) {
     next(error);
   }

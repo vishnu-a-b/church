@@ -27,6 +27,7 @@ import {
   deleteMember,
   getAllTransactions,
   getTransactionById,
+  downloadTransactionReceipt,
   createTransaction,
   updateTransaction,
   deleteTransaction,
@@ -717,6 +718,7 @@ router.route('/users/:id').put(updateUser).delete(deleteUser);
  *         description: Transaction deleted successfully
  */
 router.route('/transactions').get(getAllTransactions).post(createTransaction);
+router.get('/transactions/:id/receipt', downloadTransactionReceipt);
 router.route('/transactions/:id').get(getTransactionById).put(updateTransaction).delete(deleteTransaction);
 
 /**
