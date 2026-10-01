@@ -706,6 +706,9 @@ function BookingsContent() {
                 <p><span className="text-gray-500">Member:</span> <span className="font-medium">{payModalBooking.memberId?.firstName} {payModalBooking.memberId?.lastName}</span></p>
                 <p><span className="text-gray-500">House:</span> <span className="font-medium">{payModalBooking.houseId?.familyName}</span></p>
                 <p><span className="text-gray-500">Rite fee:</span> <span className="font-medium">₹{payModalBooking.riteId?.amount}</span></p>
+                {payModalBooking.notes && (
+                  <p className="mt-1"><span className="text-gray-500">Notes:</span> <span className="font-medium">{payModalBooking.notes}</span></p>
+                )}
               </div>
 
               <div>
