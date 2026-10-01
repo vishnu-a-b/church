@@ -106,9 +106,10 @@ export default function MonthlySupportAddPaymentPage() {
       const lastPaid = myDues
         .filter((d: any) => d.isPaid && d.paidAt)
         .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime())[0];
+      const memberAmount = entry?.amount ?? plan?.defaultAmount ?? 0;
       setMemberStats({
         totalPaid,
-        paidTerms: myDues.filter((d: any) => d.isPaid).length,
+        paidTerms: memberAmount > 0 ? Math.floor(totalPaid / memberAmount) : 0,
         dueBalance,
         lastPaidAmount: lastPaid?.paidAmount ?? 0,
         lastPaidDate: lastPaid?.paidAt ?? null,
