@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
-import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const paymentSchema = z.object({
@@ -41,7 +41,8 @@ export default function SuperAdminMonthlySupportDuesPage() {
   const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [periodFilter, setPeriodFilter] = useState('');
   const [contributorFilter, setContributorFilter] = useState('');
-  const [search, setSearch] = useState('');
+  const [contributorSearch, setContributorSearch] = useState('');
+  const [showContributorDropdown, setShowContributorDropdown] = useState(false);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedDue, setSelectedDue] = useState<MonthlySupportDue | null>(null);
@@ -146,14 +147,13 @@ export default function SuperAdminMonthlySupportDuesPage() {
 
 
   const filtered = useMemo(() => {
-    let result = dues;
-    if (contributorFilter) result = result.filter((d) => d.dueForName === contributorFilter);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter((d) => d.dueForName.toLowerCase().includes(q));
-    }
-    return result;
-  }, [dues, contributorFilter, search]);
+    if (!contributorFilter) return dues;
+    return dues.filter((d) => d.dueForName === contributorFilter);
+  }, [dues, contributorFilter]);
+
+  const filteredContributorNames = registeredNames.filter((n) =>
+    !contributorSearch || n.toLowerCase().includes(contributorSearch.toLowerCase())
+  );
 
   const totalOutstanding = filtered.reduce((s, d) => s + (d.isPaid ? 0 : d.balance), 0);
   const totalPaid = filtered.reduce((s, d) => s + d.paidAmount, 0);
@@ -237,28 +237,49 @@ export default function SuperAdminMonthlySupportDuesPage() {
         </div>
       </div>
 
-      {/* Search / contributor filter */}
+      {/* Contributor filter — search picker */}
       <div className="bg-white rounded-lg shadow p-3 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-600 whitespace-nowrap">Member:</label>
-          <select
-            value={contributorFilter}
-            onChange={(e) => setContributorFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 max-w-xs"
-          >
-            <option value="">All members</option>
-            {registeredNames.map((name) => <option key={name} value={name}>{name}</option>)}
-          </select>
-        </div>
-        <div className="relative flex-1 min-w-[180px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search contributor name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
-          />
+        <label className="text-sm font-medium text-gray-600 whitespace-nowrap">Member:</label>
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          {contributorFilter ? (
+            <div className="flex items-center gap-2 border border-purple-400 bg-purple-50 rounded-lg px-3 py-2">
+              <span className="flex-1 text-sm font-medium text-gray-800">{contributorFilter}</span>
+              <button type="button" onClick={() => { setContributorFilter(''); setContributorSearch(''); }} className="text-gray-400 hover:text-red-500">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search contributor..."
+                value={contributorSearch}
+                onChange={(e) => { setContributorSearch(e.target.value); setShowContributorDropdown(true); }}
+                onFocus={() => setShowContributorDropdown(true)}
+                onBlur={() => setTimeout(() => setShowContributorDropdown(false), 150)}
+                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+              />
+            </>
+          )}
+          {showContributorDropdown && !contributorFilter && (
+            <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-56 overflow-y-auto">
+              {filteredContributorNames.length === 0 ? (
+                <p className="text-sm text-gray-400 p-3">No results</p>
+              ) : (
+                filteredContributorNames.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onMouseDown={() => { setContributorFilter(name); setContributorSearch(''); setShowContributorDropdown(false); }}
+                    className="w-full text-left px-3 py-2.5 hover:bg-purple-50 text-sm border-b border-gray-50 last:border-0 text-gray-800"
+                  >
+                    {name}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 
