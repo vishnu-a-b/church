@@ -485,7 +485,7 @@ function BookingsContent() {
                                     <Receipt className="w-3 h-3" /> Pay
                                   </button>
                                 )}
-                                {b.status === 'pending' && new Date(b.scheduledDate) > new Date() && (
+                                {b.status === 'pending' && (
                                   <button
                                     onClick={() => openEditModal(b)}
                                     className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1.5 rounded-lg hover:bg-blue-50"
@@ -493,7 +493,7 @@ function BookingsContent() {
                                     <Pencil className="w-3 h-3" />
                                   </button>
                                 )}
-                                {new Date(b.scheduledDate) > new Date() && b.status !== 'paid' && (
+                                {b.status !== 'paid' && (
                                   <button
                                     onClick={() => handleDelete(b._id)}
                                     className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 px-2 py-1.5 rounded-lg hover:bg-red-50"
@@ -628,7 +628,7 @@ function BookingsContent() {
                                   <Receipt className="w-3 h-3" /> Pay
                                 </button>
                               )}
-                              {b.status === 'pending' && new Date(b.scheduledDate) > new Date() && (
+                              {b.status === 'pending' && (
                                 <button
                                   onClick={() => openEditModal(b)}
                                   className="flex items-center justify-center gap-1 text-xs text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50"
@@ -636,7 +636,7 @@ function BookingsContent() {
                                   <Pencil className="w-3 h-3" /> Edit
                                 </button>
                               )}
-                              {new Date(b.scheduledDate) > new Date() && b.status !== 'paid' && (
+                              {b.status !== 'paid' && (
                                 <button
                                   onClick={() => handleDelete(b._id)}
                                   className="flex items-center justify-center gap-1 text-xs text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50"

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "tsc && cp -r src/assets dist/assets",
     "type-check": "tsc --noEmit",
     "seed": "ts-node-dev --transpile-only src/seed.ts",
     "seed:new": "ts-node-dev --transpile-only src/seedNew.ts",
