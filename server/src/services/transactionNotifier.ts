@@ -102,6 +102,7 @@ export const notifyTransactionMember = (transaction: any, description?: string):
       date: transaction.paymentDate ?? new Date(),
       items: [{ description: description ?? transaction.transactionType, amount: transaction.totalAmount }],
       totalAmount: transaction.totalAmount,
+      notes: transaction.notes || undefined,
     };
 
     if (m) {

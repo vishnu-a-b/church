@@ -5,11 +5,9 @@ import fs from 'fs';
 const LOGO_PATH = path.join(__dirname, '../assets/church-logo.jpg');
 
 const NAVY       = '#1e3a5f';
-const GOLD       = '#c8a84b';
-const GRAY       = '#555555';
-const LIGHT_GRAY = '#c8c8c8';
-const HDR_BG     = '#eef2f7';
-const BOX_BG     = '#f4f7fb';
+const GRAY       = '#666666';
+const LIGHT_GRAY = '#cccccc';
+const HDR_BG     = '#f0f4f8';
 
 function amountInWords(amount: number): string {
   const ones = [
@@ -50,25 +48,22 @@ export interface ReceiptData {
   items: Array<{ description: string; amount: number }>;
   totalAmount: number;
   recipientName?: string;
+  notes?: string;
 }
 
 export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const M        = 22;       // outer margin
-    const PW       = 419;      // A5 width
-    const barH     = 72;       // navy accent bar (tall enough for logo to fill it)
-    const hdrH     = 24;       // table header row
-    const rowH     = 22;       // table body row
-    const wordsH   = 40;       // amount-in-words box
-
+    const M      = 28;
+    const PW     = 419;
+    const rowH   = 22;
+    const hdrH   = 24;
     const bodyRows = Math.max(data.items.length, 3);
-    const tableH   = hdrH + bodyRows * rowH + hdrH;    // header + rows + total
+    const tableH = hdrH + bodyRows * rowH + hdrH;
 
-    // Dynamic page height — no wasted whitespace
-    // Fixed stack: M + bar(72) + gold(2.5) + noDate(24) + recipient(22) + gap(6) + badge(22)
-    //              + badgeGap(10) + sepToTable(10) + table + wordsGap(12) + words(40)
-    //              + sigSection(36) + footerSection(28) + M
-    const PH = Math.ceil(M + 72 + 2.5 + 24 + 22 + 6 + 22 + 10 + 10 + tableH + 12 + wordsH + 36 + 28 + M);
+    // Fixed heights: M + logo(70) + divider(1) + gap(8) + noDate(20) + recipient(20)
+    //   + gap(10) + receipt-label(20) + divider(1) + gap(8) + table + gap(10)
+    //   + words(30) + gap(10) + sig(20) + gap(8) + footer(16) + M
+    const PH = Math.ceil(M + 70 + 1 + 8 + 20 + 20 + 10 + 20 + 1 + 8 + tableH + 10 + 30 + 10 + 20 + 8 + 16 + M);
     const CW = PW - M * 2;
 
     const doc = new PDFDocument({ size: [PW, PH], margin: 0 });
@@ -77,173 +72,137 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    // ── Card ─────────────────────────────────────────────────────────
-    // shadow
-    doc.roundedRect(M + 2, M + 2, CW, PH - M * 2, 10).fill('#c4cbd5');
-    // white card
-    doc.roundedRect(M, M, CW, PH - M * 2, 10).fill('#ffffff').lineWidth(0.8).stroke(NAVY);
+    // ── Outer border ──────────────────────────────────────────────────
+    doc.rect(M - 8, M - 8, CW + 16, PH - M * 2 + 16).lineWidth(1).stroke(NAVY);
 
-    // ── Accent bar (clipped to card) ──────────────────────────────────
-    doc.save();
-    doc.roundedRect(M, M, CW, PH - M * 2, 10).clip();
-    doc.rect(M, M, CW, barH).fill(NAVY);
-    doc.rect(M, M + barH, CW, 2.5).fill(GOLD);
-    doc.restore();
+    let y = M;
 
-    // ── Logo ──────────────────────────────────────────────────────────
-    const logoSize = 64;                                   // fills barH (72) with gold ring
-    const logoX    = M + 10;
-    const logoY    = M + (barH - logoSize) / 2;           // vertically centred in bar
+    // ── Header: logo + church info ────────────────────────────────────
+    const logoSize = 56;
+    const logoX    = M;
     const logoCX   = logoX + logoSize / 2;
-    const logoCY   = logoY + logoSize / 2;
+    const logoCY   = y + logoSize / 2 + 7;
 
     if (fs.existsSync(LOGO_PATH)) {
-      doc.circle(logoCX, logoCY, logoSize / 2 + 3.5).fill(GOLD);   // gold outer ring
       doc.save();
       doc.circle(logoCX, logoCY, logoSize / 2).clip();
-      doc.circle(logoCX, logoCY, logoSize / 2).fill(NAVY);           // navy background (visible as top/bottom padding)
-      // Image at natural aspect ratio (499×314 px → ~1.59:1), centered in circle
-      const imgW = logoSize;
-      const imgH = Math.round(imgW * (314 / 499));                   // ≈ 36pt
-      doc.image(LOGO_PATH, logoX, logoCY - imgH / 2, { width: imgW, height: imgH });
+      // Scale by height to fill circle fully (image is 499×314, landscape)
+      const imgH = logoSize;
+      const imgW = Math.round(imgH * (499 / 314));        // wider than circle — crops sides
+      doc.image(LOGO_PATH, logoCX - imgW / 2, logoCY - imgH / 2, { width: imgW, height: imgH });
       doc.restore();
+      doc.circle(logoCX, logoCY, logoSize / 2).lineWidth(1.5).stroke(NAVY);
     }
 
-    // ── Church name + contact ─────────────────────────────────────────
-    const nameX = logoX + logoSize + 14;
-    const nameW = CW - logoSize - 26;
-    doc.font('Helvetica-Bold').fontSize(14.5).fillColor('#ffffff')
-       .text("St. Mary's Church, Elthuruth", nameX, M + 18, { width: nameW });
-    doc.font('Helvetica').fontSize(8).fillColor('#a8c8ee')
-       .text(
-         'Pin: 680611  \u2022  PH: 0487 2369929  \u2022  smcelth@gmail.com',
-         nameX, M + 44, { width: nameW },
-       );
+    const textX = M + logoSize + 12;
+    const textW = CW - logoSize - 12;
+    doc.font('Helvetica-Bold').fontSize(16).fillColor(NAVY)
+       .text("St. Mary's Church, Elthuruth", textX, y + 14, { width: textW });
+    doc.font('Helvetica').fontSize(8.5).fillColor(GRAY)
+       .text('Pin: 680611  \u2022  PH: 0487 2369929  \u2022  smcelth@gmail.com',
+             textX, y + 38, { width: textW });
+
+    y += 70;
+
+    // ── Horizontal divider ────────────────────────────────────────────
+    doc.moveTo(M - 8, y).lineTo(M + CW + 8, y).lineWidth(1).stroke(NAVY);
+    y += 1 + 8;
 
     // ── No / Date ─────────────────────────────────────────────────────
-    const noDateY = M + barH + 2.5;
-    doc.rect(M, noDateY, CW, 24).fill(HDR_BG);
-
     const dateStr = data.date.toLocaleDateString('en-IN', {
       day: '2-digit', month: '2-digit', year: 'numeric',
     });
     doc.font('Helvetica').fontSize(10).fillColor(NAVY)
-       .text(`No:  ${data.receiptNumber}`, M + 10, noDateY + 7);
+       .text(`No:  ${data.receiptNumber}`, M, y);
     doc.font('Helvetica-Bold').fontSize(10).fillColor(NAVY)
-       .text(`Date:  ${dateStr}`, M, noDateY + 7, { width: CW - 10, align: 'right' });
+       .text(`Date:  ${dateStr}`, M, y, { width: CW, align: 'right' });
+    y += 20;
 
-    // ── Received From row ─────────────────────────────────────────────
-    const recipientY = noDateY + 24;
-    doc.moveTo(M, recipientY).lineTo(M + CW, recipientY).lineWidth(0.4).stroke(LIGHT_GRAY);
-    doc.font('Helvetica').fontSize(9.5).fillColor(GRAY)
-       .text('Received From:', M + 10, recipientY + 6);
-    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(NAVY)
-       .text(data.recipientName || '—', M + 100, recipientY + 6, { width: CW - 110 });
+    // ── Received From ─────────────────────────────────────────────────
+    doc.font('Helvetica').fontSize(10).fillColor(GRAY)
+       .text('Received From:', M, y);
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(NAVY)
+       .text(data.recipientName || '—', M + 96, y, { width: CW - 96 });
+    y += 20 + 10;
 
-    // ── RECEIPT badge — same font size as table Items header ─────────
-    const badgeW = 120;
-    const badgeH = 22;
-    const badgeX = (PW - badgeW) / 2;
-    const badgeY = noDateY + 24 + 22 + 6;  // after noDate + recipient row + gap
-
-    doc.roundedRect(badgeX + 1.5, badgeY + 1.5, badgeW, badgeH, 5).fill('#8a9fb8');  // shadow
-    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 5).fill(NAVY);
-    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 5).lineWidth(1).stroke(GOLD);
-    doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
-       .text('R E C E I P T', badgeX, badgeY + 5.5, { width: badgeW, align: 'center' });
-
-    // ── Decorative separator ──────────────────────────────────────────
-    const sepY = badgeY + badgeH + 12;
-    const midX = PW / 2;
-    doc.moveTo(M + 12, sepY).lineTo(midX - 10, sepY).lineWidth(0.7).stroke(LIGHT_GRAY);
-    doc.circle(midX, sepY, 3.5).fill(NAVY);
-    doc.moveTo(midX + 10, sepY).lineTo(M + CW - 12, sepY).lineWidth(0.7).stroke(LIGHT_GRAY);
+    // ── RECEIPT label ─────────────────────────────────────────────────
+    doc.font('Helvetica-Bold').fontSize(11).fillColor(NAVY)
+       .text('R E C E I P T', M, y, { width: CW, align: 'center' });
+    y += 20;
+    doc.moveTo(M - 8, y).lineTo(M + CW + 8, y).lineWidth(0.6).stroke(LIGHT_GRAY);
+    y += 1 + 8;
 
     // ── Items Table ───────────────────────────────────────────────────
-    const tableY   = sepY + 10;
     const colItemW = Math.floor(CW * 0.67);
     const colAmtW  = CW - colItemW;
+    const tableY   = y;
 
-    // shadow + card
-    doc.roundedRect(M + 1.5, tableY + 1.5, CW, tableH, 5).fill('#c4cbd5');
-    doc.roundedRect(M, tableY, CW, tableH, 5).fill('#ffffff').lineWidth(0.7).stroke(NAVY);
+    // Table outer border
+    doc.rect(M, tableY, CW, tableH).lineWidth(0.8).stroke(NAVY);
 
-    // Header (clipped rounded top)
-    doc.save();
-    doc.roundedRect(M, tableY, CW, hdrH, 5).clip();
+    // Header fill
     doc.rect(M, tableY, CW, hdrH).fill(NAVY);
-    doc.restore();
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
-       .text('Items', M + 10, tableY + 7, { width: colItemW - 14 });
+       .text('Items', M + 8, tableY + 7, { width: colItemW - 12 });
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
-       .text('Amount', M + colItemW + 4, tableY + 7, { width: colAmtW - 10, align: 'right' });
+       .text('Amount', M + colItemW + 4, tableY + 7, { width: colAmtW - 8, align: 'right' });
 
     // Column divider
     doc.moveTo(M + colItemW, tableY + hdrH)
        .lineTo(M + colItemW, tableY + tableH)
        .lineWidth(0.5).stroke(LIGHT_GRAY);
 
-    // Body rows — only shade cells that have data
+    // Body rows
     for (let i = 0; i < bodyRows; i++) {
       const rowY = tableY + hdrH + i * rowH;
       doc.moveTo(M, rowY).lineTo(M + CW, rowY).lineWidth(0.4).stroke(LIGHT_GRAY);
-
       const item = data.items[i];
       if (item) {
-        if (i % 2 === 0) doc.rect(M, rowY, CW, rowH).fill('#f6f9fc');
         doc.font('Helvetica').fontSize(10).fillColor(NAVY)
-           .text(item.description, M + 10, rowY + 6, { width: colItemW - 18 });
+           .text(item.description, M + 8, rowY + 6, { width: colItemW - 16 });
+        // notes on the first item row only
+        if (i === 0 && data.notes) {
+          doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(GRAY)
+             .text(data.notes, M + 8, rowY + 6 + 11, { width: colItemW - 16 });
+        }
         doc.font('Helvetica').fontSize(10).fillColor(NAVY)
            .text(`Rs. ${item.amount.toLocaleString('en-IN')}`, M + colItemW + 4, rowY + 6, {
-             width: colAmtW - 10, align: 'right',
+             width: colAmtW - 8, align: 'right',
            });
       }
     }
 
     // Total row
     const totalRowY = tableY + hdrH + bodyRows * rowH;
-    doc.save();
-    doc.roundedRect(M, tableY, CW, tableH, 5).clip();
-    doc.rect(M, totalRowY, CW, hdrH).fill(HDR_BG);
-    doc.restore();
     doc.moveTo(M, totalRowY).lineTo(M + CW, totalRowY).lineWidth(1).stroke(NAVY);
+    doc.rect(M, totalRowY, CW, hdrH).fill(HDR_BG);
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY)
-       .text('Total Amount', M + 10, totalRowY + 7, { width: colItemW - 18, align: 'right' });
-    doc.font('Helvetica-Bold').fontSize(11).fillColor(NAVY)
+       .text('Total Amount', M + 8, totalRowY + 7, { width: colItemW - 16, align: 'right' });
+    doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY)
        .text(`Rs. ${data.totalAmount.toLocaleString('en-IN')}`, M + colItemW + 4, totalRowY + 7, {
-         width: colAmtW - 10, align: 'right',
+         width: colAmtW - 8, align: 'right',
        });
 
+    y = tableY + tableH + 10;
+
     // ── Amount in Words ───────────────────────────────────────────────
-    const wordsY = tableY + tableH + 12;
-    const words  = amountInWords(data.totalAmount);
-
-    doc.roundedRect(M, wordsY, CW, wordsH, 5).fill(BOX_BG).lineWidth(0.6).stroke(LIGHT_GRAY);
-    // left accent strip
-    doc.save();
-    doc.roundedRect(M, wordsY, CW, wordsH, 5).clip();
-    doc.rect(M, wordsY, 4.5, wordsH).fill(NAVY);
-    doc.restore();
-
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor(NAVY)
-       .text('Amount in Words:', M + 12, wordsY + 6);
-    doc.font('Helvetica-Oblique').fontSize(9).fillColor(NAVY)
-       .text(words, M + 12, wordsY + 20, { width: CW - 20 });
+    const words = amountInWords(data.totalAmount);
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(NAVY).text('Amount in Words:  ', M, y, { continued: true });
+    doc.font('Helvetica-Oblique').fontSize(9).fillColor(NAVY).text(words, { width: CW - 4 });
+    y += 30;
 
     // ── Authorized Signatory ──────────────────────────────────────────
-    const sigY = wordsY + wordsH + 14;
-    const sigRight = M + CW - 10;
-    doc.moveTo(sigRight - 130, sigY).lineTo(sigRight, sigY).lineWidth(0.6).stroke(LIGHT_GRAY);
-    doc.font('Helvetica').fontSize(8).fillColor(GRAY)
-       .text('Authorized Signatory', sigRight - 130, sigY + 4, { width: 130, align: 'center' });
+    doc.moveTo(M + CW - 130, y).lineTo(M + CW, y).lineWidth(0.6).stroke(LIGHT_GRAY);
+    doc.font('Helvetica').fontSize(8.5).fillColor(GRAY)
+       .text('Authorized Signatory', M + CW - 130, y + 4, { width: 130, align: 'center' });
+    y += 20 + 8;
 
     // ── Footer ────────────────────────────────────────────────────────
-    const footerY = sigY + 22;
-    doc.moveTo(M + 20, footerY).lineTo(M + CW - 20, footerY).lineWidth(0.5).stroke(LIGHT_GRAY);
+    doc.moveTo(M - 8, y).lineTo(M + CW + 8, y).lineWidth(0.5).stroke(LIGHT_GRAY);
     doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(GRAY)
        .text(
          'This is an electronically generated receipt and does not require further validation.',
-         M + 10, footerY + 6, { width: CW - 20, align: 'center' },
+         M, y + 4, { width: CW, align: 'center' },
        );
 
     doc.end();
