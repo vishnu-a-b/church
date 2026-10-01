@@ -3,9 +3,14 @@ import path from 'path';
 import fs from 'fs';
 
 const LOGO_PATH = path.join(__dirname, '../assets/church-logo.jpg');
-const DARK_NAVY = '#2d3a4a';
-const GRAY = '#888888';
-const LIGHT_GRAY = '#cccccc';
+
+// Color palette
+const NAVY      = '#1e3a5f';
+const NAVY_MID  = '#2d4f78';
+const GRAY      = '#666666';
+const LIGHT_GRAY = '#c8c8c8';
+const HDR_BG    = '#eef2f7';   // very light blue for header area
+const ROW_BG    = '#f7f9fc';   // alternate row tint
 
 function amountInWords(amount: number): string {
   const ones = [
@@ -27,7 +32,6 @@ function amountInWords(amount: number): string {
 
   const intPart = Math.floor(amount);
   const decPart = Math.round((amount - intPart) * 100);
-
   if (intPart === 0 && decPart === 0) return 'Zero Only';
 
   const parts: string[] = [];
@@ -51,147 +55,168 @@ export interface ReceiptData {
 
 export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    // A5 page
-    const doc = new PDFDocument({
-      size: 'A5',
-      margins: { top: 30, bottom: 30, left: 30, right: 30 },
-    });
+    const doc = new PDFDocument({ size: 'A5', margin: 0 });
 
     const chunks: Buffer[] = [];
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    const { width: pageWidth, height: pageHeight } = doc.page;
-    const margin = 30;
-    const contentWidth = pageWidth - margin * 2;
+    const PW = doc.page.width;   // ~419
+    const PH = doc.page.height;  // ~595
+    const M  = 24;               // outer margin
+    const CW = PW - M * 2;      // content width ~371
 
-    // Outer rounded border
-    doc.roundedRect(margin - 10, margin - 10, contentWidth + 20, pageHeight - margin * 2 + 20, 12)
-       .stroke(LIGHT_GRAY);
+    // ── Outer card ──────────────────────────────────────────────────
+    // Shadow layer (offset, light gray)
+    doc.roundedRect(M + 2, M + 2, CW, PH - M * 2, 10).fill('#d8dde6');
+    // White card
+    doc.roundedRect(M, M, CW, PH - M * 2, 10).fill('#ffffff');
+    // Thin navy border
+    doc.roundedRect(M, M, CW, PH - M * 2, 10).lineWidth(0.8).stroke(NAVY);
 
-    // ---- HEADER: Logo + Church name ----
-    const logoSize = 60;
-    const logoX = margin;
-    const logoY = margin + 4;
+    // ── Top accent bar (clipped to card shape) ───────────────────────
+    doc.save();
+    doc.roundedRect(M, M, CW, PH - M * 2, 10).clip();
+    doc.rect(M, M, CW, 52).fill(NAVY);
+    // thin gold line at bottom of bar
+    doc.rect(M, M + 52, CW, 2).fill('#c8a84b');
+    doc.restore();
+
+    // ── HEADER (overlaid on accent bar) ──────────────────────────────
+    const logoSize = 56;
+    const logoX = M + 14;
+    const logoY = M + (52 - logoSize) / 2;   // vertically centred in bar
 
     if (fs.existsSync(LOGO_PATH)) {
+      // White ring behind logo
+      doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 3).fill('#ffffff');
+      // Circular-clipped photo
       doc.save();
       doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2).clip();
       doc.image(LOGO_PATH, logoX, logoY, { width: logoSize, height: logoSize });
       doc.restore();
     }
 
-    const textX = logoX + logoSize + 14;
-    const textW = contentWidth - logoSize - 14;
-    doc.font('Helvetica-Bold').fontSize(15).fillColor(DARK_NAVY)
-       .text("St. Mary's Church, Elthuruth", textX, logoY + 10, { width: textW });
-    doc.font('Helvetica').fontSize(10).fillColor(GRAY)
-       .text('Archdiocese of Thrissur', textX, logoY + 34, { width: textW });
+    // Church name & contact (white text on dark bar)
+    const nameX = logoX + logoSize + 12;
+    const nameW = CW - logoSize - 28;
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#ffffff')
+       .text("St. Mary's Church, Elthuruth", nameX, M + 9, { width: nameW });
+    doc.font('Helvetica').fontSize(7.5).fillColor('#c8dcf5')
+       .text('Pin: 680611  \u2022  PH: 0487 2369929  \u2022  smcelth@gmail.com',
+             nameX, M + 30, { width: nameW });
 
-    // Horizontal rule
-    const ruleY = logoY + logoSize + 12;
-    doc.moveTo(margin, ruleY).lineTo(margin + contentWidth, ruleY).lineWidth(1).stroke(DARK_NAVY);
-
-    // ---- No + DATE ----
-    const infoY = ruleY + 14;
+    // ── No / DATE row ────────────────────────────────────────────────
+    const infoY = M + 54 + 10;
     const dateStr = data.date.toLocaleDateString('en-IN', {
       day: '2-digit', month: '2-digit', year: 'numeric',
     });
-    doc.font('Helvetica').fontSize(10).fillColor(DARK_NAVY)
-       .text(`No  ${data.receiptNumber}`, margin, infoY);
-    doc.font('Helvetica-Bold').fontSize(10).fillColor(DARK_NAVY)
-       .text(`DATE ${dateStr}`, margin, infoY, { width: contentWidth, align: 'right' });
+    // Light background for this row
+    doc.rect(M, infoY - 4, CW, 22).fill(HDR_BG);
+    doc.font('Helvetica').fontSize(10).fillColor(NAVY)
+       .text(`No:  ${data.receiptNumber}`, M + 12, infoY + 2);
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(NAVY)
+       .text(`Date:  ${dateStr}`, M, infoY + 2, { width: CW - 12, align: 'right' });
 
-    // ---- RECEIPT badge ----
-    const badgeW = 120;
+    // ── RECEIPT badge ────────────────────────────────────────────────
+    const badgeW = 130;
     const badgeH = 26;
-    const badgeX = (pageWidth - badgeW) / 2;
-    const badgeY = infoY + 20;
-    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 5).fill(DARK_NAVY);
+    const badgeX = (PW - badgeW) / 2;
+    const badgeY = infoY + 28;
+    // Outer glow / shadow
+    doc.roundedRect(badgeX + 1.5, badgeY + 1.5, badgeW, badgeH, 6).fill(NAVY_MID);
+    // Badge fill
+    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 6).fill(NAVY);
+    // Badge text
     doc.font('Helvetica-Bold').fontSize(13).fillColor('#ffffff')
-       .text('RECEIPT', badgeX, badgeY + 6, { width: badgeW, align: 'center' });
+       .text('R E C E I P T', badgeX, badgeY + 6, { width: badgeW, align: 'center' });
 
-    // ---- Dashed separator ----
+    // ── Dashed separator ─────────────────────────────────────────────
     const dashY = badgeY + badgeH + 10;
     doc.save();
     doc.dash(4, { space: 4 });
-    doc.moveTo(margin, dashY).lineTo(margin + contentWidth, dashY).lineWidth(0.8).stroke(LIGHT_GRAY);
+    doc.moveTo(M + 10, dashY).lineTo(M + CW - 10, dashY).lineWidth(0.8).stroke(LIGHT_GRAY);
     doc.undash();
     doc.restore();
 
-    // ---- Items Table ----
-    const tableY = dashY + 12;
-    const colItemW = Math.floor(contentWidth * 0.67);
-    const colAmtW = contentWidth - colItemW;
-    const rowH = 22;
-    const bodyRows = Math.max(data.items.length, 5); // min 5 body rows for spacing
-    const totalRows = 1 + bodyRows + 1; // header + body + total
-    const tableH = totalRows * rowH;
+    // ── Items Table ──────────────────────────────────────────────────
+    const tableY  = dashY + 10;
+    const colItemW = Math.floor(CW * 0.67);
+    const colAmtW  = CW - colItemW;
+    const rowH     = 22;
+    const bodyRows = Math.max(data.items.length, 5);
+    const tableH   = (1 + bodyRows + 1) * rowH;   // header + body + total
 
+    // Table shadow
+    doc.roundedRect(M + 1.5, tableY + 1.5, CW, tableH, 5).fill('#d8dde6');
     // Table outer border
-    doc.lineWidth(0.8);
-    doc.roundedRect(margin, tableY, contentWidth, tableH, 4).stroke(DARK_NAVY);
+    doc.roundedRect(M, tableY, CW, tableH, 5).lineWidth(0.8).stroke(NAVY).fill('#ffffff');
 
-    // Header row fill
-    doc.rect(margin, tableY, contentWidth, rowH).fill(DARK_NAVY);
+    // Header fill
+    doc.save();
+    doc.roundedRect(M, tableY, CW, rowH, 5).clip();
+    doc.rect(M, tableY, CW, rowH).fill(NAVY);
+    doc.restore();
 
     // Header text
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#ffffff')
-       .text('Items', margin + 8, tableY + 6, { width: colItemW - 12 });
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#ffffff')
-       .text('Amount', margin + colItemW + 4, tableY + 6, { width: colAmtW - 8, align: 'right' });
+    doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
+       .text('Items', M + 10, tableY + 6, { width: colItemW - 14 });
+    doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
+       .text('Amount', M + colItemW + 4, tableY + 6, { width: colAmtW - 10, align: 'right' });
 
     // Vertical column divider
-    doc.moveTo(margin + colItemW, tableY).lineTo(margin + colItemW, tableY + tableH)
-       .stroke(DARK_NAVY);
+    doc.moveTo(M + colItemW, tableY + rowH).lineTo(M + colItemW, tableY + tableH)
+       .lineWidth(0.8).stroke(LIGHT_GRAY);
 
     // Item rows
     data.items.forEach((item, i) => {
       const rowY = tableY + rowH * (i + 1);
-      doc.moveTo(margin, rowY).lineTo(margin + contentWidth, rowY)
-         .lineWidth(0.5).stroke(LIGHT_GRAY);
-      doc.font('Helvetica').fontSize(10).fillColor(DARK_NAVY)
-         .text(item.description, margin + 8, rowY + 6, { width: colItemW - 16 });
-      doc.font('Helvetica').fontSize(10).fillColor(DARK_NAVY)
-         .text(`Rs. ${item.amount.toLocaleString('en-IN')}`, margin + colItemW + 4, rowY + 6, {
-           width: colAmtW - 8, align: 'right',
+      // Alternate row tint
+      if (i % 2 === 0) doc.rect(M, rowY, CW, rowH).fill(ROW_BG);
+      doc.moveTo(M, rowY).lineTo(M + CW, rowY).lineWidth(0.5).stroke(LIGHT_GRAY);
+      doc.font('Helvetica').fontSize(10).fillColor(NAVY)
+         .text(item.description, M + 10, rowY + 6, { width: colItemW - 18 });
+      doc.font('Helvetica').fontSize(10).fillColor(NAVY)
+         .text(`Rs. ${item.amount.toLocaleString('en-IN')}`, M + colItemW + 4, rowY + 6, {
+           width: colAmtW - 10, align: 'right',
          });
     });
 
-    // Total row
+    // Total row background
     const totalRowY = tableY + rowH * (bodyRows + 1);
-    doc.moveTo(margin, totalRowY).lineTo(margin + contentWidth, totalRowY)
-       .lineWidth(1).stroke(DARK_NAVY);
-    doc.font('Helvetica-Bold').fontSize(10).fillColor(DARK_NAVY)
-       .text('Total Amount', margin + 8, totalRowY + 6, { width: colItemW - 16, align: 'right' });
-    doc.font('Helvetica-Bold').fontSize(10).fillColor(DARK_NAVY)
-       .text(`Rs. ${data.totalAmount.toLocaleString('en-IN')}`, margin + colItemW + 4, totalRowY + 6, {
-         width: colAmtW - 8, align: 'right',
+    doc.rect(M, totalRowY, CW, rowH).fill(HDR_BG);
+    doc.moveTo(M, totalRowY).lineTo(M + CW, totalRowY).lineWidth(1).stroke(NAVY);
+    doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY)
+       .text('Total Amount', M + 10, totalRowY + 6, { width: colItemW - 18, align: 'right' });
+    doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY)
+       .text(`Rs. ${data.totalAmount.toLocaleString('en-IN')}`, M + colItemW + 4, totalRowY + 6, {
+         width: colAmtW - 10, align: 'right',
        });
 
-    // ---- Amount in Words ----
-    const wordsY = tableY + tableH + 16;
-    const words = amountInWords(data.totalAmount);
-    doc.font('Helvetica').fontSize(10).fillColor(DARK_NAVY).text('Amount in Words', margin, wordsY);
-    // dotted line after label
+    // ── Amount in Words ──────────────────────────────────────────────
+    const wordsY = tableY + tableH + 14;
+    const words  = amountInWords(data.totalAmount);
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(NAVY)
+       .text('Amount in Words:', M + 12, wordsY);
     doc.save();
     doc.dash(2, { space: 3 });
-    doc.moveTo(margin + 115, wordsY + 10).lineTo(margin + contentWidth, wordsY + 10)
-       .lineWidth(0.7).stroke(LIGHT_GRAY);
+    doc.moveTo(M + 12, wordsY + 16).lineTo(M + CW - 12, wordsY + 16)
+       .lineWidth(0.6).stroke(LIGHT_GRAY);
     doc.undash();
     doc.restore();
-    doc.font('Helvetica').fontSize(9).fillColor(DARK_NAVY)
-       .text(words, margin + 118, wordsY + 1, { width: contentWidth - 118 });
+    doc.font('Helvetica-Oblique').fontSize(9).fillColor(NAVY)
+       .text(words, M + 12, wordsY + 18, { width: CW - 24 });
 
-    // ---- Footer ----
-    const footerY = pageHeight - margin - 16;
-    doc.font('Helvetica').fontSize(8).fillColor(GRAY)
+    // ── Footer ───────────────────────────────────────────────────────
+    const footerY = PH - M - 22;
+    // thin separator above footer
+    doc.moveTo(M + 20, footerY - 6).lineTo(M + CW - 20, footerY - 6)
+       .lineWidth(0.5).stroke(LIGHT_GRAY);
+    doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(GRAY)
        .text(
          'This is an electronically generated receipt and does not require further validation.',
-         margin,
-         footerY,
-         { width: contentWidth, align: 'center' },
+         M + 12, footerY, { width: CW - 24, align: 'center' },
        );
 
     doc.end();
