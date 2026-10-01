@@ -287,6 +287,7 @@ export default function ThirukkarmangalBookingsPage() {
                     <span className="text-sm text-gray-600">{b.memberId?.firstName} {b.memberId?.lastName}</span>
                     <span className="mx-2 text-gray-400">·</span>
                     <span className="text-sm text-gray-500">{formatDate(b.scheduledDate)}</span>
+                    {b.notes && <span className="ml-2 text-xs text-gray-400 italic">— {b.notes}</span>}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-medium ${daysLeft === 0 ? 'text-red-600' : daysLeft <= 3 ? 'text-orange-600' : 'text-amber-600'}`}>
