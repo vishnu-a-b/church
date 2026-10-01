@@ -116,7 +116,7 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
 
   const [planMemberSearch, setPlanMemberSearch] = useState('');
 
-  const [editingDonor, setEditingDonor] = useState<{ id: string; name: string; phone: string; address: string; notes: string; jgccNo: string } | null>(null);
+  const [editingDonor, setEditingDonor] = useState<{ id: string; name: string; phone: string; email: string; address: string; notes: string; jgccNo: string } | null>(null);
   const [savingDonor, setSavingDonor] = useState(false);
   const [generatingQR, setGeneratingQR] = useState(false);
 
@@ -284,6 +284,7 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
         id: donorId,
         name: d.name || '',
         phone: d.phone || '',
+        email: d.email || '',
         address: d.address || '',
         notes: d.notes || '',
         jgccNo: jgccMatch ? jgccMatch[1].trim() : '',
@@ -310,6 +311,7 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
       const res = await api.put(`/donors/${editingDonor.id}`, {
         name: editingDonor.name,
         phone: editingDonor.phone,
+        email: editingDonor.email.trim() || undefined,
         address: editingDonor.address,
         notes: updatedNotes,
       });
@@ -919,6 +921,16 @@ export default function SuperAdminMonthlySupportPlanFormPage() {
                   type="text"
                   value={editingDonor.phone}
                   onChange={(e) => setEditingDonor({ ...editingDonor, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editingDonor.email}
+                  onChange={(e) => setEditingDonor({ ...editingDonor, email: e.target.value })}
+                  placeholder="optional"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
