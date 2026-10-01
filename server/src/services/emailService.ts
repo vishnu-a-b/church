@@ -59,6 +59,7 @@ export interface TransactionDetails {
   paymentMethod: string;
   paymentDate: Date;
   campaignName?: string;
+  notes?: string;
   spiritualActivities?: SpiritualActivitySummary[];
   churchName?: string;
   houseName?: string;
@@ -514,6 +515,10 @@ export const sendTransactionNotification = async (
               <td style="padding:4px 0; font-size:11px; color:#999;">Description</td>
               <td style="padding:4px 0; font-size:13px; color:#222;">${transactionDetails.campaignName}</td>
             </tr>` : ''}
+            ${transactionDetails.notes ? `<tr>
+              <td style="padding:4px 0; font-size:11px; color:#999;">Notes</td>
+              <td style="padding:4px 0; font-size:13px; color:#222;">${transactionDetails.notes}</td>
+            </tr>` : ''}
             <tr>
               <td style="padding:4px 0; font-size:11px; color:#999;">Payment Method</td>
               <td style="padding:4px 0; font-size:13px; color:#222;">${transactionDetails.paymentMethod.replace(/_/g, ' ').toUpperCase()}</td>
@@ -596,7 +601,7 @@ RECEIVED FROM
   Name:         ${recipientFullName}${transactionDetails.memberCode ? `\n  Member Code:  ${transactionDetails.memberCode}` : ''}${transactionDetails.houseName ? `\n  House/Family: ${transactionDetails.houseName}` : ''}
 
 PAYMENT DETAILS
-  Type:         ${transactionTypeLabel}${transactionDetails.campaignName ? `\n  Description:  ${transactionDetails.campaignName}` : ''}
+  Type:         ${transactionTypeLabel}${transactionDetails.campaignName ? `\n  Description:  ${transactionDetails.campaignName}` : ''}${transactionDetails.notes ? `\n  Notes:        ${transactionDetails.notes}` : ''}
   Method:       ${transactionDetails.paymentMethod.replace(/_/g, ' ').toUpperCase()}
   Amount:       ${formattedAmount}
 ${spiritualActivitiesText}

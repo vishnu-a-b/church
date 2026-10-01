@@ -91,6 +91,7 @@ export const notifyTransactionMember = (transaction: any, description?: string):
       paymentMethod: transaction.paymentMethod,
       paymentDate: transaction.paymentDate,
       campaignName: description,
+      notes: transaction.notes || undefined,
       churchName: ctx.churchName,
       houseName: ctx.houseName,
     };
