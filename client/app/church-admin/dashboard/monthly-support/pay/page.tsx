@@ -37,6 +37,13 @@ const planMemberName = (m: MonthlySupportMember): string => {
 
 const planMemberIsDonor = (m: MonthlySupportMember): boolean => !!m.donorId;
 
+const planMemberJgcc = (m: MonthlySupportMember): string | null => {
+  if (!m.donorId || typeof m.donorId === 'string') return null;
+  const notes: string = (m.donorId as any).notes || '';
+  const match = notes.match(/JGCC_NOS:([^|]+)/);
+  return match ? match[1].trim() : null;
+};
+
 export default function MonthlySupportAddPaymentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -96,7 +103,9 @@ export default function MonthlySupportAddPaymentPage() {
 
   const filteredPlanMembers = (plan?.members || []).filter((m) => {
     const term = memberSearch.toLowerCase();
-    return !term || planMemberName(m).toLowerCase().includes(term);
+    if (!term) return true;
+    const jgcc = planMemberJgcc(m) || '';
+    return planMemberName(m).toLowerCase().includes(term) || jgcc.toLowerCase().includes(term);
   });
 
   const handleSubmit = async () => {
@@ -196,13 +205,18 @@ export default function MonthlySupportAddPaymentPage() {
             <div className="relative">
               {selectedMemberName ? (
                 <div className="flex items-center gap-2 border border-green-400 bg-green-50 rounded-lg px-3 py-2">
-                  <span className="flex-1 text-sm font-medium text-gray-800">
+                  <span className="flex-1 text-sm font-medium text-gray-800 flex flex-wrap items-center gap-1.5">
                     {planMemberName(selectedMemberName)}
                     {planMemberIsDonor(selectedMemberName) && (
-                      <span className="ml-1.5 text-xs text-amber-600 font-normal">Outside Donor</span>
+                      <span className="text-xs text-amber-600 font-normal">Outside Donor</span>
+                    )}
+                    {planMemberJgcc(selectedMemberName) && (
+                      <span className="text-xs text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">
+                        {planMemberJgcc(selectedMemberName)}
+                      </span>
                     )}
                   </span>
-                  <button type="button" onClick={clearEntry} className="text-gray-400 hover:text-red-500">
+                  <button type="button" onClick={clearEntry} className="text-gray-400 hover:text-red-500 shrink-0">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -230,12 +244,19 @@ export default function MonthlySupportAddPaymentPage() {
                         key={planMemberId(m)}
                         type="button"
                         onMouseDown={() => { handleEntryChange(planMemberId(m)); setMemberSearch(''); setShowMemberDropdown(false); }}
-                        className="w-full text-left px-3 py-2.5 hover:bg-purple-50 text-sm border-b border-gray-50 last:border-0 flex items-center gap-2"
+                        className="w-full text-left px-3 py-2.5 hover:bg-purple-50 text-sm border-b border-gray-50 last:border-0"
                       >
-                        <span className="font-medium text-gray-800">{planMemberName(m)}</span>
-                        {planMemberIsDonor(m) && (
-                          <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Outside Donor</span>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-medium text-gray-800">{planMemberName(m)}</span>
+                          {planMemberIsDonor(m) && (
+                            <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Outside Donor</span>
+                          )}
+                          {planMemberJgcc(m) && (
+                            <span className="text-xs text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded font-mono">
+                              {planMemberJgcc(m)}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))
                   )}
