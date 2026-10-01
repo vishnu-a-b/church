@@ -127,7 +127,7 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
 
     // ── RECEIPT label ─────────────────────────────────────────────────
     doc.font('Helvetica-Bold').fontSize(11).fillColor(NAVY)
-       .text('R E C E I P T', M, y, { width: CW, align: 'center' });
+       .text('RECEIPT', M, y, { width: CW, align: 'center' });
     y += 20;
     doc.moveTo(M - 8, y).lineTo(M + CW + 8, y).lineWidth(0.6).stroke(LIGHT_GRAY);
     y += 1 + 8;

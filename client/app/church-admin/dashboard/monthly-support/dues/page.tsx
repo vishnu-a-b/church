@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
-import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X, Eye, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const paymentSchema = z.object({
@@ -22,7 +22,7 @@ const METHOD_LABELS: Record<string, string> = {
   cheque: 'Cheque',
 };
 
-function txField(due: MonthlySupportDue, field: 'paymentMethod' | 'referenceNo' | 'paymentDate') {
+function txField(due: MonthlySupportDue, field: 'paymentMethod' | 'referenceNo' | 'paymentDate' | 'receiptNumber' | '_id') {
   const tx = due.transactionId;
   if (!tx || typeof tx === 'string') return undefined;
   return (tx as any)[field];
@@ -51,6 +51,10 @@ export default function MonthlySupportDuesPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [generatingDues, setGeneratingDues] = useState(false);
   const [paymentErrors, setPaymentErrors] = useState<FieldErrors>({});
+
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewDue, setViewDue] = useState<MonthlySupportDue | null>(null);
+  const [downloadingReceipt, setDownloadingReceipt] = useState(false);
 
   // Fetch full contributor list once per plan (independent of period/unpaid filters)
   useEffect(() => {
@@ -97,6 +101,28 @@ export default function MonthlySupportDuesPage() {
       toast.error(error.response?.data?.error || 'Failed to generate dues');
     } finally {
       setGeneratingDues(false);
+    }
+  };
+
+  const openViewModal = (due: MonthlySupportDue) => {
+    setViewDue(due);
+    setShowViewModal(true);
+  };
+
+  const handleDownloadReceipt = async (transactionId: string, receiptNumber: string) => {
+    setDownloadingReceipt(true);
+    try {
+      const response = await api.get(`/transactions/${transactionId}/receipt`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Receipt-${receiptNumber}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download receipt');
+    } finally {
+      setDownloadingReceipt(false);
     }
   };
 
@@ -348,7 +374,14 @@ export default function MonthlySupportDuesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {!due.isPaid && (
+                        {due.isPaid ? (
+                          <button
+                            onClick={() => openViewModal(due)}
+                            className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 text-xs font-medium"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> View
+                          </button>
+                        ) : (
                           <button
                             onClick={() => openPaymentModal(due)}
                             className="flex items-center gap-1 bg-teal-600 text-white px-3 py-1.5 rounded-lg hover:bg-teal-700 text-xs font-medium"
@@ -365,6 +398,84 @@ export default function MonthlySupportDuesPage() {
           </table>
         </div>
       </div>
+
+      {/* View Payment Modal */}
+      {showViewModal && viewDue && (() => {
+        const txId   = txField(viewDue, '_id');
+        const txRcpt = txField(viewDue, 'receiptNumber');
+        const mode   = txField(viewDue, 'paymentMethod');
+        const ref    = txField(viewDue, 'referenceNo');
+        const pd     = txField(viewDue, 'paymentDate') || viewDue.paidAt;
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Payment Details</h3>
+                <button onClick={() => { setShowViewModal(false); setViewDue(null); }} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mb-5">{viewDue.dueForName} · {viewDue.periodMonth}</p>
+              <div className="space-y-3 text-sm">
+                {txRcpt && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Receipt No.</span>
+                    <span className="font-medium text-gray-800">{txRcpt}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Amount Paid</span>
+                  <span className="font-semibold text-green-700">₹{viewDue.paidAmount.toLocaleString('en-IN')}</span>
+                </div>
+                {pd && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Payment Date</span>
+                    <span className="font-medium text-gray-800">{new Date(pd).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                )}
+                {mode && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Payment Mode</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      mode === 'cash' ? 'bg-green-50 text-green-700' :
+                      mode === 'bank_transfer' ? 'bg-blue-50 text-blue-700' :
+                      mode === 'upi' ? 'bg-violet-50 text-violet-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {METHOD_LABELS[mode] ?? mode}
+                    </span>
+                  </div>
+                )}
+                {ref && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Reference No.</span>
+                    <span className="font-medium text-gray-800">{ref}</span>
+                  </div>
+                )}
+                {viewDue.notes && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Notes</span>
+                    <span className="font-medium text-gray-800 text-right max-w-[60%]">{viewDue.notes}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button onClick={() => { setShowViewModal(false); setViewDue(null); }} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">Close</button>
+                {txId && (
+                  <button
+                    onClick={() => handleDownloadReceipt(txId, txRcpt || txId)}
+                    disabled={downloadingReceipt}
+                    className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    {downloadingReceipt ? 'Downloading...' : 'Download Receipt'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Payment Modal */}
       {showPaymentModal && selectedDue && (

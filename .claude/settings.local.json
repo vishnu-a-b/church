@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(/Users/vishnuab/Official/Church/recreate-member.sh)"
+    ]
+  }
+}

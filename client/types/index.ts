@@ -268,7 +268,7 @@ export interface MonthlySupportDue {
   isPaid: boolean;
   paidAmount: number;
   balance: number;
-  transactionId?: string | { _id: string; paymentMethod?: string; referenceNo?: string; paymentDate?: Date };
+  transactionId?: string | { _id: string; paymentMethod?: string; referenceNo?: string; paymentDate?: Date; receiptNumber?: string };
   paidAt?: Date;
   dueDate: Date;
   createdAt: Date;
