@@ -1363,6 +1363,7 @@ export const downloadTransactionReceipt = async (req: AuthRequest, res: Response
     const tx = await Transaction.findOne({ _id: req.params.id, ...accessFilter })
       .populate<{ memberId: { firstName: string; lastName: string } | null }>('memberId', 'firstName lastName')
       .populate<{ houseId: { familyName: string } | null }>('houseId', 'familyName')
+      .populate<{ donorId: { name: string } | null }>('donorId', 'name')
       .lean();
 
     if (!tx) {
@@ -1372,9 +1373,10 @@ export const downloadTransactionReceipt = async (req: AuthRequest, res: Response
 
     const member = tx.memberId as any;
     const house  = tx.houseId as any;
+    const donor  = (tx as any).donorId as any;
     const recipientName = member
       ? `${member.firstName ?? ''} ${member.lastName ?? ''}`.trim()
-      : (house?.familyName ?? undefined);
+      : (house?.familyName ?? donor?.name ?? undefined);
 
     const pdfBuffer = await generateReceiptPdf({
       receiptNumber: tx.receiptNumber,

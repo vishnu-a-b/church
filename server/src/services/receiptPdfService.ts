@@ -53,12 +53,13 @@ export interface ReceiptData {
 
 export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const M      = 28;
-    const PW     = 419;
-    const rowH   = 22;
-    const hdrH   = 24;
-    const bodyRows = Math.max(data.items.length, 3);
-    const tableH = hdrH + bodyRows * rowH + hdrH;
+    const M          = 28;
+    const PW         = 419;
+    const rowH       = 22;
+    const firstRowH  = data.notes ? rowH + 16 : rowH;  // extra height for notes line
+    const hdrH       = 24;
+    const bodyRows   = Math.max(data.items.length, 3);
+    const tableH     = hdrH + firstRowH + (bodyRows - 1) * rowH + hdrH;
 
     // Fixed heights: M + logo(70) + divider(1) + gap(8) + noDate(20) + recipient(20)
     //   + gap(10) + receipt-label(20) + divider(1) + gap(8) + table + gap(10)
@@ -154,7 +155,7 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
 
     // Body rows
     for (let i = 0; i < bodyRows; i++) {
-      const rowY = tableY + hdrH + i * rowH;
+      const rowY = tableY + hdrH + (i === 0 ? 0 : firstRowH + (i - 1) * rowH);
       doc.moveTo(M, rowY).lineTo(M + CW, rowY).lineWidth(0.4).stroke(LIGHT_GRAY);
       const item = data.items[i];
       if (item) {
@@ -163,7 +164,7 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
         // notes on the first item row only
         if (i === 0 && data.notes) {
           doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(GRAY)
-             .text(data.notes, M + 8, rowY + 6 + 11, { width: colItemW - 16 });
+             .text(data.notes, M + 8, rowY + 6 + 13, { width: colItemW - 16 });
         }
         doc.font('Helvetica').fontSize(10).fillColor(NAVY)
            .text(`Rs. ${item.amount.toLocaleString('en-IN')}`, M + colItemW + 4, rowY + 6, {
@@ -173,7 +174,7 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     }
 
     // Total row
-    const totalRowY = tableY + hdrH + bodyRows * rowH;
+    const totalRowY = tableY + hdrH + firstRowH + (bodyRows - 1) * rowH;
     doc.moveTo(M, totalRowY).lineTo(M + CW, totalRowY).lineWidth(1).stroke(NAVY);
     doc.rect(M, totalRowY, CW, hdrH).fill(HDR_BG);
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY)
