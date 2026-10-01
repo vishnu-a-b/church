@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportMember } from '@/types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Search, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const paySchema = z.object({
@@ -49,6 +49,8 @@ export default function MonthlySupportAddPaymentPage() {
   const [formErrors, setFormErrors] = useState<FieldErrors>({});
 
   const [entryIdInput, setEntryIdInput] = useState('');
+  const [memberSearch, setMemberSearch] = useState('');
+  const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [amountInput, setAmountInput] = useState('');
   const [methodInput, setMethodInput] = useState('cash');
   const [referenceNo, setReferenceNo] = useState('');
@@ -81,6 +83,21 @@ export default function MonthlySupportAddPaymentPage() {
     const entry = plan?.members.find((m) => planMemberId(m) === value);
     setAmountInput(String(entry?.amount ?? plan?.defaultAmount ?? ''));
   };
+
+  const clearEntry = () => {
+    setEntryIdInput('');
+    setAmountInput('');
+    setMemberSearch('');
+  };
+
+  const selectedMemberName = entryIdInput
+    ? plan?.members.find((m) => planMemberId(m) === entryIdInput)
+    : null;
+
+  const filteredPlanMembers = (plan?.members || []).filter((m) => {
+    const term = memberSearch.toLowerCase();
+    return !term || planMemberName(m).toLowerCase().includes(term);
+  });
 
   const handleSubmit = async () => {
     if (!plan) return;
@@ -176,18 +193,55 @@ export default function MonthlySupportAddPaymentPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Member / Donor *</label>
-            <select
-              value={entryIdInput}
-              onChange={(e) => handleEntryChange(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2"
-            >
-              <option value="">Choose...</option>
-              {plan.members.map((m) => (
-                <option key={planMemberId(m)} value={planMemberId(m)}>
-                  {planMemberName(m)}{planMemberIsDonor(m) ? ' (Outside Donor)' : ''}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              {selectedMemberName ? (
+                <div className="flex items-center gap-2 border border-green-400 bg-green-50 rounded-lg px-3 py-2">
+                  <span className="flex-1 text-sm font-medium text-gray-800">
+                    {planMemberName(selectedMemberName)}
+                    {planMemberIsDonor(selectedMemberName) && (
+                      <span className="ml-1.5 text-xs text-amber-600 font-normal">Outside Donor</span>
+                    )}
+                  </span>
+                  <button type="button" onClick={clearEntry} className="text-gray-400 hover:text-red-500">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search member or donor..."
+                    value={memberSearch}
+                    onChange={(e) => { setMemberSearch(e.target.value); setShowMemberDropdown(true); }}
+                    onFocus={() => setShowMemberDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowMemberDropdown(false), 150)}
+                    className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${formErrors.entryId ? 'border-red-400' : 'border-gray-300'}`}
+                  />
+                </>
+              )}
+              {showMemberDropdown && !selectedMemberName && (
+                <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-56 overflow-y-auto">
+                  {filteredPlanMembers.length === 0 ? (
+                    <p className="text-sm text-gray-400 p-3">No results</p>
+                  ) : (
+                    filteredPlanMembers.map((m) => (
+                      <button
+                        key={planMemberId(m)}
+                        type="button"
+                        onMouseDown={() => { handleEntryChange(planMemberId(m)); setMemberSearch(''); setShowMemberDropdown(false); }}
+                        className="w-full text-left px-3 py-2.5 hover:bg-purple-50 text-sm border-b border-gray-50 last:border-0 flex items-center gap-2"
+                      >
+                        <span className="font-medium text-gray-800">{planMemberName(m)}</span>
+                        {planMemberIsDonor(m) && (
+                          <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Outside Donor</span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
             <FieldError message={formErrors.entryId} />
           </div>
 
