@@ -58,6 +58,8 @@ export default function MonthlySupportAddPaymentPage() {
   const [entryIdInput, setEntryIdInput] = useState('');
   const [memberSearch, setMemberSearch] = useState('');
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+  const [memberStats, setMemberStats] = useState<{ totalPaid: number; dueBalance: number; lastPaidAmount: number; lastPaidDate: string | null } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [amountInput, setAmountInput] = useState('');
   const [methodInput, setMethodInput] = useState('cash');
   const [referenceNo, setReferenceNo] = useState('');
@@ -85,16 +87,43 @@ export default function MonthlySupportAddPaymentPage() {
     }
   };
 
-  const handleEntryChange = (value: string) => {
+  const handleEntryChange = async (value: string) => {
     setEntryIdInput(value);
     const entry = plan?.members.find((m) => planMemberId(m) === value);
     setAmountInput(String(entry?.amount ?? plan?.defaultAmount ?? ''));
+    setMemberStats(null);
+    if (!planId || !value) return;
+    setLoadingStats(true);
+    try {
+      const res = await api.get(`/monthly-support-plans/${planId}/dues`);
+      const allDues: any[] = res.data?.data || [];
+      const myDues = allDues.filter((d: any) => {
+        const id = typeof d.dueForId === 'object' ? d.dueForId?._id : d.dueForId;
+        return id === value;
+      });
+      const totalPaid = myDues.reduce((s: number, d: any) => s + (d.paidAmount || 0), 0);
+      const dueBalance = myDues.filter((d: any) => !d.isPaid).reduce((s: number, d: any) => s + (d.balance || 0), 0);
+      const lastPaid = myDues
+        .filter((d: any) => d.isPaid && d.paidAt)
+        .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime())[0];
+      setMemberStats({
+        totalPaid,
+        dueBalance,
+        lastPaidAmount: lastPaid?.paidAmount ?? 0,
+        lastPaidDate: lastPaid?.paidAt ?? null,
+      });
+    } catch {
+      // non-critical — just don't show stats
+    } finally {
+      setLoadingStats(false);
+    }
   };
 
   const clearEntry = () => {
     setEntryIdInput('');
     setAmountInput('');
     setMemberSearch('');
+    setMemberStats(null);
   };
 
   const selectedMemberName = entryIdInput
@@ -265,6 +294,41 @@ export default function MonthlySupportAddPaymentPage() {
             </div>
             <FieldError message={formErrors.entryId} />
           </div>
+
+          {/* Member stats */}
+          {selectedMemberName && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+              {loadingStats ? (
+                <p className="text-gray-400 text-xs">Loading payment history...</p>
+              ) : memberStats ? (
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <p className="text-xs text-gray-500">Total Paid</p>
+                    <p className="font-bold text-green-700">₹{memberStats.totalPaid.toLocaleString('en-IN')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Due Balance</p>
+                    <p className={`font-bold ${memberStats.dueBalance > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                      {memberStats.dueBalance > 0 ? `₹${memberStats.dueBalance.toLocaleString('en-IN')}` : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Last Payment</p>
+                    {memberStats.lastPaidDate ? (
+                      <>
+                        <p className="font-bold text-gray-700">₹{memberStats.lastPaidAmount.toLocaleString('en-IN')}</p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(memberStats.lastPaidDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-bold text-gray-400">—</p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹) *</label>
