@@ -633,6 +633,26 @@ export const getDrawsForPlan = async (req: AuthRequest, res: Response, next: Nex
 };
 
 // Member/Donor self-service: my monthly support dues
+export const deleteDue = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'super_admin') {
+      res.status(403).json({ success: false, error: 'Only super admins can delete dues' });
+      return;
+    }
+    const due = await MonthlySupportDue.findById(req.params.id);
+    if (!due) { res.status(404).json({ success: false, error: 'Due not found' }); return; }
+
+    // If paid, also remove the linked transaction
+    if (due.transactionId) {
+      await Transaction.findByIdAndDelete(due.transactionId);
+    }
+    await MonthlySupportDue.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Due deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getMyMonthlySupportDues = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const dueForId = req.user?.memberId || req.user?.donorId;

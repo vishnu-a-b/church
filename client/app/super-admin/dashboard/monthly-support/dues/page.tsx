@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
-import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X, Eye, Download, Printer } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X, Eye, Download, Printer, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const paymentSchema = z.object({
@@ -135,6 +135,17 @@ export default function SuperAdminMonthlySupportDuesPage() {
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch {
       toast.error('Failed to print receipt');
+    }
+  };
+
+  const handleDeleteDue = async (dueId: string, label: string) => {
+    if (!confirm(`Delete due "${label}"? This will also remove the linked transaction if paid. This cannot be undone.`)) return;
+    try {
+      await api.delete(`/monthly-support-dues/${dueId}`);
+      toast.success('Due deleted');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to delete due');
     }
   };
 
@@ -389,21 +400,30 @@ export default function SuperAdminMonthlySupportDuesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {due.isPaid ? (
+                        <div className="flex items-center gap-2">
+                          {due.isPaid ? (
+                            <button
+                              onClick={() => openViewModal(due)}
+                              className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 text-xs font-medium"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> View
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openPaymentModal(due)}
+                              className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 text-xs font-medium"
+                            >
+                              <DollarSign className="w-3.5 h-3.5" /> Collect
+                            </button>
+                          )}
                           <button
-                            onClick={() => openViewModal(due)}
-                            className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 text-xs font-medium"
+                            onClick={() => handleDeleteDue(due._id, `${due.dueForName} – ${due.periodMonth}`)}
+                            className="inline-flex items-center text-xs text-red-600 hover:text-red-800 px-2 py-1.5 rounded-lg hover:bg-red-50"
+                            title="Delete Due"
                           >
-                            <Eye className="w-3.5 h-3.5" /> View
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        ) : (
-                          <button
-                            onClick={() => openPaymentModal(due)}
-                            className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 text-xs font-medium"
-                          >
-                            <DollarSign className="w-3.5 h-3.5" /> Collect
-                          </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   );

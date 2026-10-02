@@ -5,7 +5,7 @@ import { DataTable } from '@/components/DataTable';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { ColumnDef } from '@tanstack/react-table';
 import { createRoleApi } from '@/lib/roleApi';
-import { TrendingUp, FileDown } from 'lucide-react';
+import { TrendingUp, FileDown, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 
@@ -228,6 +228,17 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleDeleteTransaction = async (id: string, receiptNumber: string) => {
+    if (!confirm(`Delete transaction ${receiptNumber}? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/transactions/${id}`);
+      toast.success('Transaction deleted');
+      fetchTransactions();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to delete transaction');
+    }
+  };
+
   const columns: ColumnDef<Transaction>[] = [
     {
       accessorKey: 'receiptNumber',
@@ -281,6 +292,19 @@ export default function TransactionsPage() {
       accessorKey: 'notes',
       header: 'Notes',
       cell: ({ row }) => row.original.notes || '-',
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <button
+          onClick={() => handleDeleteTransaction(row.original._id, row.original.receiptNumber)}
+          className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 px-2 py-1.5 rounded-lg hover:bg-red-50"
+          title="Delete Transaction"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      ),
     },
   ];
 

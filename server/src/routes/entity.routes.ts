@@ -127,6 +127,7 @@ import {
   conductDraw as conductMonthlySupportDraw,
   getDrawsForPlan as getMonthlySupportDraws,
   getMyMonthlySupportDues,
+  deleteDue as deleteMonthlySupportDue,
 } from '../controllers/monthlySupportController';
 import {
   createDonor,
@@ -904,6 +905,7 @@ router.post('/monthly-support-plans/:id/pay', addMonthlySupportPaymentForMember)
 router.post('/monthly-support-plans/:id/draw', conductMonthlySupportDraw);
 router.get('/monthly-support-plans/:id/draws', getMonthlySupportDraws);
 router.get('/monthly-support-dues/mine', getMyMonthlySupportDues);
+router.delete('/monthly-support-dues/:id', deleteMonthlySupportDue);
 
 // Thirukkarmangal Rite Routes (master list)
 router.route('/thirukkarmangal/rites').get(getAllRites).post(createRite);

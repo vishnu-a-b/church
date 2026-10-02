@@ -692,7 +692,14 @@ export const deleteScheduledBooking = async (req: AuthRequest, res: Response, ne
     if (req.user.role === 'church_admin' && req.user.churchId && String(booking.churchId) !== String(req.user.churchId)) {
       res.status(403).json({ success: false, error: 'Booking does not belong to your church' }); return;
     }
-    if (booking.status === 'paid') { res.status(400).json({ success: false, error: 'Cannot delete a paid booking' }); return; }
+    if (booking.status === 'paid' && req.user?.role !== 'super_admin') {
+      res.status(400).json({ success: false, error: 'Cannot delete a paid booking' }); return;
+    }
+
+    // Super admin deleting a paid booking: also remove the linked transaction
+    if (booking.status === 'paid' && booking.transactionId) {
+      await Transaction.findByIdAndDelete(booking.transactionId);
+    }
 
     await ThirukkarmangalBooking.deleteOne({ _id: booking._id });
 
