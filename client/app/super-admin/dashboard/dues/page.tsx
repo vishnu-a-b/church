@@ -6,8 +6,9 @@ import { createRoleApi } from '@/lib/roleApi';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
-import { AlertCircle, DollarSign, CheckCircle, X } from 'lucide-react';
+import { AlertCircle, DollarSign, CheckCircle, X, FileDown } from 'lucide-react';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 
 const paymentSchema = z.object({
   amount: z.coerce.number({ invalid_type_error: 'Enter a valid amount' }).positive('Amount must be greater than 0'),
@@ -189,6 +190,22 @@ export default function DuesPage() {
   const memberDues = dues.filter(d => d.type === 'member');
   const houseDues = dues.filter(d => d.type === 'house');
 
+  const handleExportToExcel = () => {
+    const data = dues.map((d, i) => ({
+      '#': i + 1,
+      'Name': d.name,
+      'Type': d.type,
+      'Campaign': d.campaignName || '',
+      'Due Amount (₹)': d.dueAmount,
+      'Paid Amount (₹)': d.paidAmount,
+      'Remaining (₹)': d.remainingAmount,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Dues');
+    XLSX.writeFile(wb, `Dues_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -197,6 +214,13 @@ export default function DuesPage() {
           <h1 className="text-2xl font-bold text-gray-800">Dues Management</h1>
           <p className="text-gray-600 text-sm">Manage and process campaign and stothrakazhcha dues</p>
         </div>
+        <button
+          onClick={handleExportToExcel}
+          disabled={dues.length === 0}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
+        >
+          <FileDown className="w-4 h-4" /> Export Excel
+        </button>
       </div>
 
       {/* Stats Cards */}

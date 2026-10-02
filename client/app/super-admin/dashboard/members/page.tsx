@@ -8,8 +8,10 @@ import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { ColumnDef } from '@tanstack/react-table';
 import { FiTrash, FiEdit2, FiUsers, FiPlus, FiX } from 'react-icons/fi';
+import { FileDown } from 'lucide-react';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 
 const addMemberSchema = z
   .object({
@@ -445,6 +447,28 @@ export default function SuperAdminMembersPage() {
 
   const membersWithLogin = members.filter(m => m.username).length;
 
+  const handleExportToExcel = () => {
+    const data = filteredMembers.map((m, i) => ({
+      '#': i + 1,
+      'ID': m.uniqueId || m.hierarchicalNumber || '',
+      'First Name': m.firstName,
+      'Last Name': m.lastName || '',
+      'Phone': m.phone || '',
+      'Email': m.email || '',
+      'Gender': m.gender || '',
+      'Date of Birth': m.dateOfBirth ? new Date(m.dateOfBirth).toLocaleDateString('en-IN') : '',
+      'Baptism Name': m.baptismName || '',
+      'Role': m.role || '',
+      'Username': m.username || '',
+      'Active': m.isActive ? 'Yes' : 'No',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [5,12,15,15,14,25,8,14,15,12,15,6].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Members');
+    XLSX.writeFile(wb, `Members_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -452,12 +476,21 @@ export default function SuperAdminMembersPage() {
           <h1 className="text-2xl font-bold text-gray-800">Members Management</h1>
           <p className="text-gray-600 text-sm">Manage all members and their login credentials</p>
         </div>
-        <button
-          onClick={openAddModal}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-        >
-          <FiPlus /> Add Member
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportToExcel}
+            disabled={filteredMembers.length === 0}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          >
+            <FileDown className="w-4 h-4" /> Export Excel
+          </button>
+          <button
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          >
+            <FiPlus /> Add Member
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

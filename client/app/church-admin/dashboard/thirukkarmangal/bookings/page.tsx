@@ -4,9 +4,10 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 import {
   ArrowLeft, CalendarPlus, Receipt, X, ChevronLeft, ChevronRight,
-  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock, Pencil, Trash2, Download, Printer,
+  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock, Pencil, Trash2, Download, Printer, FileDown,
 } from 'lucide-react';
 
 interface RiteRef { _id: string; nameMalayalam: string; nameEnglish: string; amount: number; }
@@ -285,12 +286,38 @@ export default function ThirukkarmangalBookingsPage() {
             <p className="text-gray-500 text-sm">Schedule rites and record payments</p>
           </div>
         </div>
-        <Link
-          href="/church-admin/dashboard/thirukkarmangal/bookings/new"
-          className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors text-sm"
-        >
-          <CalendarPlus className="w-4 h-4" /> New Booking
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const data = bookings.map((b, i) => ({
+                '#': i + 1,
+                'Date': new Date(b.scheduledDate).toLocaleDateString('en-IN'),
+                'Rite': b.riteId?.nameEnglish || '',
+                'Member': b.memberId ? `${b.memberId.firstName} ${b.memberId.lastName}` : '',
+                'House': b.houseId?.familyName || '',
+                'Unit': b.unitId?.name || '',
+                'Status': b.status,
+                'Receipt #': b.transactionId?.receiptNumber || '',
+                'Amount (₹)': b.transactionId?.totalAmount || '',
+                'Notes': b.notes || '',
+              }));
+              const ws = XLSX.utils.json_to_sheet(data);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+              XLSX.writeFile(wb, `Thirukkarmangal_${new Date().toISOString().split('T')[0]}.xlsx`);
+            }}
+            disabled={bookings.length === 0}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
+          >
+            <FileDown className="w-4 h-4" /> Export Excel
+          </button>
+          <Link
+            href="/church-admin/dashboard/thirukkarmangal/bookings/new"
+            className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors text-sm"
+          >
+            <CalendarPlus className="w-4 h-4" /> New Booking
+          </Link>
+        </div>
       </div>
 
       {/* Reminders */}

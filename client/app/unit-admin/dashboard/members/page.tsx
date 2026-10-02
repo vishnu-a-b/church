@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { createRoleApi } from '@/lib/roleApi';
-import { Eye, User } from 'lucide-react';
+import { Eye, User, FileDown } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { SearchableSelect } from '@/components/SearchableSelect';
@@ -186,9 +187,23 @@ export default function UnitAdminMembersPage() {
               <p className="text-sm text-gray-500">View all members in your unit</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-            <Eye className="w-5 h-5 text-blue-600" />
-            <span className="text-sm font-medium text-blue-700">Read-Only Access</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const data = members.map((m, i) => ({ '#': i+1, 'ID': m.uniqueId||m.hierarchicalNumber||'', 'First Name': m.firstName, 'Last Name': m.lastName||'', 'Phone': m.phone||'', 'Email': m.email||'', 'Gender': m.gender||'', 'Active': m.isActive ? 'Yes' : 'No' }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Members');
+                XLSX.writeFile(wb, `Members_${new Date().toISOString().split('T')[0]}.xlsx`);
+              }}
+              disabled={members.length === 0}
+              className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
+            >
+              <FileDown className="w-4 h-4" /> Export Excel
+            </button>
+            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <Eye className="w-5 h-5 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700">Read-Only Access</span>
+            </div>
           </div>
         </div>
 

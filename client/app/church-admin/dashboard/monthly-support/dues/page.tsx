@@ -7,7 +7,8 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
-import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X, Eye, Download, Printer } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X, Eye, Download, Printer, FileDown } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 
 const paymentSchema = z.object({
@@ -219,15 +220,39 @@ export default function MonthlySupportDuesPage() {
           <h2 className="text-2xl font-bold text-gray-800">{plan ? plan.name : 'Monthly Support Dues'}</h2>
           {plan?.description && <p className="text-gray-600">{plan.description}</p>}
         </div>
-        <button
-          onClick={handleGenerateDues}
-          disabled={generatingDues}
-          title="Dues are otherwise only created by a daily 7am job"
-          className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm flex-shrink-0"
-        >
-          <RefreshCw className={`w-4 h-4 ${generatingDues ? 'animate-spin' : ''}`} />
-          {generatingDues ? 'Generating...' : "Generate This Month's Dues"}
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => {
+              const data = filtered.map((d, i) => ({
+                '#': i + 1,
+                'Contributor': d.dueForName,
+                'Period': d.periodMonth,
+                'Due Amount (₹)': d.dueAmount,
+                'Paid Amount (₹)': d.paidAmount,
+                'Balance (₹)': d.balance,
+                'Status': d.isPaid ? 'Paid' : 'Unpaid',
+                'Receipt #': (d.transactionId as any)?.receiptNumber || '',
+              }));
+              const ws = XLSX.utils.json_to_sheet(data);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, 'Monthly Support Dues');
+              XLSX.writeFile(wb, `MonthlySupport_${new Date().toISOString().split('T')[0]}.xlsx`);
+            }}
+            disabled={filtered.length === 0}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
+          >
+            <FileDown className="w-4 h-4" /> Export Excel
+          </button>
+          <button
+            onClick={handleGenerateDues}
+            disabled={generatingDues}
+            title="Dues are otherwise only created by a daily 7am job"
+            className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
+          >
+            <RefreshCw className={`w-4 h-4 ${generatingDues ? 'animate-spin' : ''}`} />
+            {generatingDues ? 'Generating...' : "Generate This Month's Dues"}
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}
