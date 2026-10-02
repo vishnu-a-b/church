@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { FieldError } from '@/components/FieldError';
 import { validateForm, FieldErrors } from '@/lib/validation';
 import { MonthlySupportPlan, MonthlySupportDue } from '@/types';
-import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X, Eye, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle, DollarSign, RefreshCw, Search, X, Eye, Download, Printer } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const paymentSchema = z.object({
@@ -123,6 +123,18 @@ export default function MonthlySupportDuesPage() {
       toast.error('Failed to download receipt');
     } finally {
       setDownloadingReceipt(false);
+    }
+  };
+
+  const handlePrintReceipt = async (transactionId: string) => {
+    try {
+      const response = await api.get(`/transactions/${transactionId}/receipt`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const win = window.open(url, '_blank');
+      if (win) win.onload = () => win.print();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch {
+      toast.error('Failed to print receipt');
     }
   };
 
@@ -462,14 +474,23 @@ export default function MonthlySupportDuesPage() {
               <div className="flex justify-end gap-3 mt-6">
                 <button onClick={() => { setShowViewModal(false); setViewDue(null); }} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">Close</button>
                 {txId && (
-                  <button
-                    onClick={() => handleDownloadReceipt(txId, txRcpt || txId)}
-                    disabled={downloadingReceipt}
-                    className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 text-sm"
-                  >
-                    <Download className="w-4 h-4" />
-                    {downloadingReceipt ? 'Downloading...' : 'Download Receipt'}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handlePrintReceipt(txId)}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
+                    >
+                      <Printer className="w-4 h-4" />
+                      Print Receipt
+                    </button>
+                    <button
+                      onClick={() => handleDownloadReceipt(txId, txRcpt || txId)}
+                      disabled={downloadingReceipt}
+                      className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 text-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      {downloadingReceipt ? 'Downloading...' : 'Download Receipt'}
+                    </button>
+                  </>
                 )}
               </div>
             </div>

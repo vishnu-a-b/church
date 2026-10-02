@@ -53,19 +53,32 @@ export interface ReceiptData {
 
 export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const M          = 28;
-    const PW         = 419;
-    const rowH       = 22;
-    const firstRowH  = data.notes ? rowH + 16 : rowH;  // extra height for notes line
-    const hdrH       = 24;
-    const bodyRows   = Math.max(data.items.length, 3);
-    const tableH     = hdrH + firstRowH + (bodyRows - 1) * rowH + hdrH;
+    const M        = 28;
+    const PW       = 419;
+    const PH       = 595;   // Fixed A5 height
+    const CW       = PW - M * 2;
 
-    // Fixed heights: M + logo(70) + divider(1) + gap(8) + noDate(20) + recipient(20)
-    //   + gap(10) + receipt-label(20) + divider(1) + gap(8) + table + gap(10)
-    //   + words(30) + gap(10) + sig(20) + gap(8) + footer(16) + M
-    const PH = Math.ceil(M + 70 + 1 + 8 + 20 + 20 + 10 + 20 + 1 + 8 + tableH + 10 + 30 + 10 + 20 + 8 + 16 + M);
-    const CW = PW - M * 2;
+    const logoSize = 70;    // enlarged logo
+    const headerH  = 86;    // logo(70) + top-pad(9) + bottom-pad(7)
+    const hdrH     = 26;    // table header row height
+    const bodyRows = Math.max(data.items.length, 4);
+
+    // tableH fills whatever A5 space remains after all fixed sections:
+    // M + headerH + div(9) + noDate(20) + recipient(30) + label(20) + div(9)
+    // + gapAfterTable(10) + words(30) + sig(20) + sigGap(8) + footer(20) + M
+    const overhead = M + headerH + 9 + 20 + 30 + 20 + 9 + 10 + 30 + 20 + 8 + 20 + M; // 318
+    const tableH   = PH - overhead;  // 277
+
+    const totalBodyH = tableH - 2 * hdrH;
+    let rowH: number;
+    let firstRowH: number;
+    if (data.notes) {
+      rowH      = (totalBodyH - 16) / bodyRows;
+      firstRowH = rowH + 16;
+    } else {
+      rowH      = totalBodyH / bodyRows;
+      firstRowH = rowH;
+    }
 
     const doc = new PDFDocument({ size: [PW, PH], margin: 0 });
     const chunks: Buffer[] = [];
@@ -79,35 +92,34 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     let y = M;
 
     // ── Header: logo + church info ────────────────────────────────────
-    const logoSize = 56;
-    const logoX    = M;
-    const logoCX   = logoX + logoSize / 2;
-    const logoCY   = y + logoSize / 2 + 7;
+    const logoX  = M;
+    const logoCX = logoX + logoSize / 2;
+    const logoCY = y + logoSize / 2 + 8;
 
     if (fs.existsSync(LOGO_PATH)) {
       doc.save();
       doc.circle(logoCX, logoCY, logoSize / 2).clip();
       // Scale by height to fill circle fully (image is 499×314, landscape)
       const imgH = logoSize;
-      const imgW = Math.round(imgH * (499 / 314));        // wider than circle — crops sides
+      const imgW = Math.round(imgH * (499 / 314));
       doc.image(LOGO_PATH, logoCX - imgW / 2, logoCY - imgH / 2, { width: imgW, height: imgH });
       doc.restore();
       doc.circle(logoCX, logoCY, logoSize / 2).lineWidth(1.5).stroke(NAVY);
     }
 
-    const textX = M + logoSize + 12;
-    const textW = CW - logoSize - 12;
-    doc.font('Helvetica-Bold').fontSize(16).fillColor(NAVY)
-       .text("St. Mary's Church, Elthuruth", textX, y + 14, { width: textW });
-    doc.font('Helvetica').fontSize(8.5).fillColor(GRAY)
+    const textX = M + logoSize + 14;
+    const textW = CW - logoSize - 14;
+    doc.font('Helvetica-Bold').fontSize(17).fillColor(NAVY)
+       .text("St. Mary's Church, Elthuruth", textX, y + 20, { width: textW });
+    doc.font('Helvetica').fontSize(9.5).fillColor(NAVY)
        .text('Pin: 680611  \u2022  PH: 0487 2369929  \u2022  smcelth@gmail.com',
-             textX, y + 38, { width: textW });
+             textX, y + 50, { width: textW });
 
-    y += 70;
+    y += headerH;  // y = 114
 
     // ── Horizontal divider ────────────────────────────────────────────
     doc.moveTo(M - 8, y).lineTo(M + CW + 8, y).lineWidth(1).stroke(NAVY);
-    y += 1 + 8;
+    y += 1 + 8;    // y = 123
 
     // ── No / Date ─────────────────────────────────────────────────────
     const dateStr = data.date.toLocaleDateString('en-IN', {
@@ -117,21 +129,21 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
        .text(`No:  ${data.receiptNumber}`, M, y);
     doc.font('Helvetica-Bold').fontSize(10).fillColor(NAVY)
        .text(`Date:  ${dateStr}`, M, y, { width: CW, align: 'right' });
-    y += 20;
+    y += 20;       // y = 143
 
     // ── Received From ─────────────────────────────────────────────────
     doc.font('Helvetica').fontSize(10).fillColor(GRAY)
        .text('Received From:', M, y);
     doc.font('Helvetica-Bold').fontSize(10).fillColor(NAVY)
        .text(data.recipientName || '—', M + 96, y, { width: CW - 96 });
-    y += 20 + 10;
+    y += 20 + 10;  // y = 173
 
     // ── RECEIPT label ─────────────────────────────────────────────────
     doc.font('Helvetica-Bold').fontSize(11).fillColor(NAVY)
        .text('RECEIPT', M, y, { width: CW, align: 'center' });
-    y += 20;
+    y += 20;       // y = 193
     doc.moveTo(M - 8, y).lineTo(M + CW + 8, y).lineWidth(0.6).stroke(LIGHT_GRAY);
-    y += 1 + 8;
+    y += 1 + 8;    // y = 202
 
     // ── Items Table ───────────────────────────────────────────────────
     const colItemW = Math.floor(CW * 0.67);
@@ -144,59 +156,62 @@ export function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
     // Header fill
     doc.rect(M, tableY, CW, hdrH).fill(NAVY);
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
-       .text('Items', M + 8, tableY + 7, { width: colItemW - 12 });
+       .text('Items', M + 8, tableY + 8, { width: colItemW - 12 });
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#ffffff')
-       .text('Amount', M + colItemW + 4, tableY + 7, { width: colAmtW - 8, align: 'right' });
+       .text('Amount', M + colItemW + 4, tableY + 8, { width: colAmtW - 8, align: 'right' });
 
     // Column divider
     doc.moveTo(M + colItemW, tableY + hdrH)
        .lineTo(M + colItemW, tableY + tableH)
        .lineWidth(0.5).stroke(LIGHT_GRAY);
 
-    // Body rows
+    // Body rows — text vertically centered in each row
     for (let i = 0; i < bodyRows; i++) {
-      const rowY = tableY + hdrH + (i === 0 ? 0 : firstRowH + (i - 1) * rowH);
+      const rowY      = tableY + hdrH + (i === 0 ? 0 : firstRowH + (i - 1) * rowH);
+      const currRowH  = i === 0 ? firstRowH : rowH;
+      const textY     = rowY + Math.round(currRowH / 2) - 6;
       doc.moveTo(M, rowY).lineTo(M + CW, rowY).lineWidth(0.4).stroke(LIGHT_GRAY);
       const item = data.items[i];
       if (item) {
         doc.font('Helvetica').fontSize(10).fillColor(NAVY)
-           .text(item.description, M + 8, rowY + 6, { width: colItemW - 16 });
+           .text(item.description, M + 8, textY, { width: colItemW - 16 });
         // notes on the first item row only
         if (i === 0 && data.notes) {
           doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(GRAY)
-             .text(data.notes, M + 8, rowY + 6 + 13, { width: colItemW - 16 });
+             .text(data.notes, M + 8, textY + 13, { width: colItemW - 16 });
         }
         doc.font('Helvetica').fontSize(10).fillColor(NAVY)
-           .text(`Rs. ${item.amount.toLocaleString('en-IN')}`, M + colItemW + 4, rowY + 6, {
+           .text(`Rs. ${item.amount.toLocaleString('en-IN')}`, M + colItemW + 4, textY, {
              width: colAmtW - 8, align: 'right',
            });
       }
     }
 
     // Total row
-    const totalRowY = tableY + hdrH + firstRowH + (bodyRows - 1) * rowH;
+    const totalRowY    = tableY + hdrH + firstRowH + (bodyRows - 1) * rowH;
+    const totalCenterY = totalRowY + Math.round(hdrH / 2) - 6;
     doc.moveTo(M, totalRowY).lineTo(M + CW, totalRowY).lineWidth(1).stroke(NAVY);
     doc.rect(M, totalRowY, CW, hdrH).fill(HDR_BG);
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY)
-       .text('Total Amount', M + 8, totalRowY + 7, { width: colItemW - 16, align: 'right' });
+       .text('Total Amount', M + 8, totalCenterY, { width: colItemW - 16, align: 'right' });
     doc.font('Helvetica-Bold').fontSize(10.5).fillColor(NAVY)
-       .text(`Rs. ${data.totalAmount.toLocaleString('en-IN')}`, M + colItemW + 4, totalRowY + 7, {
+       .text(`Rs. ${data.totalAmount.toLocaleString('en-IN')}`, M + colItemW + 4, totalCenterY, {
          width: colAmtW - 8, align: 'right',
        });
 
-    y = tableY + tableH + 10;
+    y = tableY + tableH + 10;  // y = 489
 
     // ── Amount in Words ───────────────────────────────────────────────
     const words = amountInWords(data.totalAmount);
     doc.font('Helvetica-Bold').fontSize(9).fillColor(NAVY).text('Amount in Words:  ', M, y, { continued: true });
     doc.font('Helvetica-Oblique').fontSize(9).fillColor(NAVY).text(words, { width: CW - 4 });
-    y += 30;
+    y += 30;       // y = 519
 
     // ── Authorized Signatory ──────────────────────────────────────────
     doc.moveTo(M + CW - 130, y).lineTo(M + CW, y).lineWidth(0.6).stroke(LIGHT_GRAY);
     doc.font('Helvetica').fontSize(8.5).fillColor(GRAY)
        .text('Authorized Signatory', M + CW - 130, y + 4, { width: 130, align: 'center' });
-    y += 20 + 8;
+    y += 20 + 8;   // y = 547
 
     // ── Footer ────────────────────────────────────────────────────────
     doc.moveTo(M - 8, y).lineTo(M + CW + 8, y).lineWidth(0.5).stroke(LIGHT_GRAY);

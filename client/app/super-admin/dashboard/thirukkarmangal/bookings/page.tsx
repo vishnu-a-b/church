@@ -7,7 +7,7 @@ import { createRoleApi } from '@/lib/roleApi';
 import { toast } from 'react-toastify';
 import {
   ArrowLeft, CalendarPlus, Receipt, X, ChevronLeft, ChevronRight,
-  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock, Pencil, Trash2, Download,
+  Bell, ListFilter, Calendar, Flame, CheckCircle2, XCircle, Clock, Pencil, Trash2, Download, Printer,
 } from 'lucide-react';
 
 interface Church { _id: string; name: string; }
@@ -173,6 +173,18 @@ function BookingsContent() {
       URL.revokeObjectURL(url);
     } catch {
       toast.error('Failed to download receipt');
+    }
+  };
+
+  const handlePrintReceipt = async (transactionId: string) => {
+    try {
+      const res = await api.get(`/transactions/${transactionId}/receipt`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const win = window.open(url, '_blank');
+      if (win) win.onload = () => win.print();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch {
+      toast.error('Failed to print receipt');
     }
   };
 
@@ -502,13 +514,22 @@ function BookingsContent() {
                                   </button>
                                 )}
                                 {b.status === 'paid' && b.transactionId && (
-                                  <button
-                                    onClick={() => handleDownloadReceipt(b.transactionId!._id, b.transactionId!.receiptNumber)}
-                                    className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 px-2 py-1.5 rounded-lg hover:bg-green-50"
-                                    title="Download Receipt"
-                                  >
-                                    <Download className="w-3 h-3" />
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={() => handlePrintReceipt(b.transactionId!._id)}
+                                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1.5 rounded-lg hover:bg-blue-50"
+                                      title="Print Receipt"
+                                    >
+                                      <Printer className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDownloadReceipt(b.transactionId!._id, b.transactionId!.receiptNumber)}
+                                      className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 px-2 py-1.5 rounded-lg hover:bg-green-50"
+                                      title="Download Receipt"
+                                    >
+                                      <Download className="w-3 h-3" />
+                                    </button>
+                                  </>
                                 )}
                                 {b.status === 'pending' && !(new Date(b.scheduledDate) > new Date()) && (
                                   <button
@@ -646,7 +667,23 @@ function BookingsContent() {
                               )}
                             </div>
                             {b.transactionId && (
-                              <p className="mt-1.5 text-xs text-green-700 font-mono">{b.transactionId.receiptNumber} · ₹{b.transactionId.totalAmount}</p>
+                              <div className="mt-1.5 flex items-center gap-2">
+                                <p className="text-xs text-green-700 font-mono">{b.transactionId.receiptNumber} · ₹{b.transactionId.totalAmount}</p>
+                                <button
+                                  onClick={() => handlePrintReceipt(b.transactionId!._id)}
+                                  className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 px-1.5 py-1 rounded hover:bg-blue-50"
+                                  title="Print Receipt"
+                                >
+                                  <Printer className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadReceipt(b.transactionId!._id, b.transactionId!.receiptNumber)}
+                                  className="inline-flex items-center text-xs text-green-600 hover:text-green-800 px-1.5 py-1 rounded hover:bg-green-50"
+                                  title="Download Receipt"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </button>
+                              </div>
                             )}
                           </div>
                         ))}
