@@ -132,7 +132,6 @@ export default function SuperAdminEdvSyncPage() {
         paymentMethod: editForm.paymentMethod,
         paymentDate: editForm.paymentDate,
         notes: editForm.notes || undefined,
-        edvSyncError: null,
       });
       toast.success('Transaction updated');
       setEditingTxn(null);
