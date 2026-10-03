@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createRoleApi } from '@/lib/roleApi';
-import { RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle, CheckCircle, Pencil, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Church {
@@ -22,6 +22,13 @@ interface PendingTransaction {
   createdAt: string;
 }
 
+interface EditForm {
+  totalAmount: string;
+  paymentMethod: string;
+  paymentDate: string;
+  notes: string;
+}
+
 export default function SuperAdminEdvSyncPage() {
   const api = createRoleApi('super_admin');
   const [churches, setChurches] = useState<Church[]>([]);
@@ -30,6 +37,10 @@ export default function SuperAdminEdvSyncPage() {
   const [loading, setLoading] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [retryingAll, setRetryingAll] = useState(false);
+  const [editingTxn, setEditingTxn] = useState<PendingTransaction | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({ totalAmount: '', paymentMethod: 'cash', paymentDate: '', notes: '' });
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChurches();
@@ -97,6 +108,56 @@ export default function SuperAdminEdvSyncPage() {
     }
   };
 
+  const openEdit = (txn: PendingTransaction) => {
+    setEditingTxn(txn);
+    setEditForm({
+      totalAmount: String(txn.totalAmount),
+      paymentMethod: txn.paymentMethod,
+      paymentDate: txn.paymentDate.split('T')[0],
+      notes: txn.notes || '',
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTxn) return;
+    const amount = Number(editForm.totalAmount);
+    if (!amount || amount <= 0) {
+      toast.error('Enter a valid amount');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.put(`/transactions/${editingTxn._id}`, {
+        totalAmount: amount,
+        paymentMethod: editForm.paymentMethod,
+        paymentDate: editForm.paymentDate,
+        notes: editForm.notes || undefined,
+        edvSyncError: null,
+      });
+      toast.success('Transaction updated');
+      setEditingTxn(null);
+      fetchPending();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string, receiptNumber: string) => {
+    if (!confirm(`Delete transaction ${receiptNumber}? This cannot be undone.`)) return;
+    setDeletingId(id);
+    try {
+      await api.delete(`/transactions/${id}`);
+      toast.success('Transaction deleted');
+      fetchPending();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to delete');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Church Selector */}
@@ -144,7 +205,7 @@ export default function SuperAdminEdvSyncPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -183,14 +244,31 @@ export default function SuperAdminEdvSyncPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleRetry(t._id)}
-                        disabled={retryingId === t._id}
-                        className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
-                      >
-                        <RefreshCw className={`w-3.5 h-3.5 ${retryingId === t._id ? 'animate-spin' : ''}`} />
-                        Retry
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleRetry(t._id)}
+                          disabled={retryingId === t._id}
+                          className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${retryingId === t._id ? 'animate-spin' : ''}`} />
+                          Retry
+                        </button>
+                        <button
+                          onClick={() => openEdit(t)}
+                          className="p-1.5 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          title="Edit voucher"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(t._id, t.receiptNumber)}
+                          disabled={deletingId === t._id}
+                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          title="Delete voucher"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -199,6 +277,87 @@ export default function SuperAdminEdvSyncPage() {
           </table>
         </div>
       </div>
+
+      {/* Edit Voucher Modal */}
+      {editingTxn && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Edit Voucher</h3>
+              <button onClick={() => setEditingTxn(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              {editingTxn.receiptNumber} — {editingTxn.transactionType}
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹) *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editForm.totalAmount}
+                  onChange={(e) => setEditForm({ ...editForm, totalAmount: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <select
+                  value={editForm.paymentMethod}
+                  onChange={(e) => setEditForm({ ...editForm, paymentMethod: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="upi">UPI</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                <input
+                  type="date"
+                  value={editForm.paymentDate}
+                  onChange={(e) => setEditForm({ ...editForm, paymentDate: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  placeholder="Optional notes"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingTxn(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={saving}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
